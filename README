@@ -1,0 +1,236 @@
+OTC Fund Prototype
+
+Blockchain-based OTC Fund Simulation (Local Anvil + Solidity + API + Web UI)
+
+This repository contains a full-stack prototype of a blockchain-based OTC fund platform.
+It simulates fund subscription, redemption, NAV posting, and audit export using:
+
+Solidity smart contracts (FundToken + NAVRegistry)
+
+Local Ethereum network (Anvil, Foundry toolchain)
+
+Node.js API middleware
+
+Next.js web UI with role-based portals
+
+All transactions are simulated locally and do not involve real assets.
+
+1. System Architecture (High-Level)
+┌────────────┐        ┌──────────────┐        ┌────────────┐
+│  Web UI    │ ─────▶ │  API Server  │ ─────▶ │  Contracts │
+│ (Next.js)  │        │ (Node/TS)    │        │ (Solidity) │
+└────────────┘        └──────────────┘        └────────────┘
+                                                    │
+                                                    ▼
+                                                ┌────────┐
+                                                │ Anvil  │
+                                                │  EVM   │
+                                                └────────┘
+
+2. Prerequisites
+
+Ensure the following are installed:
+
+Node.js ≥ 18
+
+pnpm (npm install -g pnpm)
+
+Foundry (Forge, Anvil)
+
+Install Foundry:
+
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
+
+
+Verify:
+
+forge --version
+anvil --version
+
+3. Repository Structure
+otc-prototype/
+├── apps/
+│   ├── api/          # Backend API (Node.js + TypeScript)
+│   └── web/          # Frontend UI (Next.js)
+├── contracts/        # Solidity smart contracts (Foundry)
+├── README.md
+
+4. Step-by-Step: Running the Full System
+
+You will need four terminals.
+
+Terminal 1 — Start Local Blockchain (Anvil)
+anvil
+
+
+Expected output:
+
+Chain ID: 31337
+
+RPC: http://127.0.0.1:8545
+
+10 pre-funded test accounts
+
+⚠️ Leave this running
+
+Terminal 2 — Deploy Smart Contracts
+cd contracts
+forge build
+forge test -vv
+
+
+Deploy contracts:
+
+forge script script/Deploy.s.sol:Deploy \
+  --rpc-url http://127.0.0.1:8545 \
+  --broadcast \
+  --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+
+
+Expected output:
+
+FundToken:    0x...
+NAVRegistry:  0x...
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+
+
+These addresses are required by the API.
+
+Terminal 3 — Start Backend API
+cd apps/api
+pnpm install
+pnpm dev
+
+
+API runs on:
+
+http://localhost:3001
+
+Health Check
+curl http://localhost:3001/health
+
+Terminal 4 — Start Web UI
+cd apps/web
+pnpm install
+pnpm dev
+
+
+Open browser:
+
+http://localhost:3000
+
+5. Available Web Portals
+Home
+
+Entry point
+
+Navigation to all roles
+
+Investor Portal
+
+View token balance
+
+Subscribe (mint fund tokens)
+
+Redeem (burn fund tokens)
+
+View risk status
+
+Manager Console
+
+Post NAV on-chain
+
+View latest NAV
+
+Simulates fund administrator actions
+
+Auditor View
+
+Export CSV of:
+
+NAV postings
+
+Subscriptions
+
+Redemptions
+
+Demonstrates immutable audit trail
+
+6. API Endpoints (Key)
+Health
+GET /health
+
+Risk Status
+GET /risk
+
+Token Balance
+GET /token/balance/:address
+
+Subscribe (Mint)
+POST /token/subscribe
+{
+  "amount": "1000000000000000000"
+}
+
+Redeem (Burn)
+POST /token/redeem
+{
+  "amount": "1000000000000000000"
+}
+
+Post NAV (Manager)
+POST /nav/post
+{
+  "nav": "123456789",
+  "asOf": 1710000000
+}
+
+Latest NAV
+GET /nav/latest
+
+Audit Export
+GET /audit/export
+
+
+Returns CSV.
+
+7. Simulation Notes (Important)
+
+All ETH is test ETH
+
+All transactions are local-only
+
+No real KYC, money, or external oracle is used
+
+NAV values are manually supplied
+
+The system demonstrates architecture and control flow, not production deployment
+
+8. Common Troubleshooting
+forge: command not found
+export PATH="$HOME/.foundry/bin:$PATH"
+
+API fails with BigInt error
+
+The API serializes on-chain numeric fields as strings to avoid "Do not know how to serialize a BigInt".
+
+Web UI does not update
+
+Ensure API is running
+
+Refresh page
+
+Check browser console
+
+9. Resetting the System
+
+To reset all state:
+
+Stop Anvil
+
+Restart Anvil
+
+Redeploy contracts
+
+Restart API + Web
