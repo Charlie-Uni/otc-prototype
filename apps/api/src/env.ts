@@ -14,8 +14,14 @@ const EnvSchema = z.object({
   PRIVATE_KEY: z
     .string()
     .regex(/^0x[0-9a-fA-F]{64}$/, "Invalid private key"),
+  ORACLE_PRIVATE_KEY: z
+    .string()
+    .regex(/^0x[0-9a-fA-F]{64}$/, "Invalid oracle private key"),
   FUND_TOKEN_ADDRESS: z.string().refine(isAddress, "Invalid address"),
   NAV_REGISTRY_ADDRESS: z.string().refine(isAddress, "Invalid address"),
+  RISK_REGISTRY_ADDRESS: z.string().refine(isAddress, "Invalid address"),
+  FUND_ID_LABEL: z.string().min(1).default("OTC_FUND_1"),
+  PUBLIC_DISCLOSURE_DELAY_SEC: z.coerce.number().int().min(0).default(0),
   PORT: z.coerce.number().default(3001),
   DATABASE_URL: z.string().optional(),
 });
@@ -32,6 +38,7 @@ export const ENV = {
   ...raw,
   FUND_TOKEN_ADDRESS: getAddress(raw.FUND_TOKEN_ADDRESS),
   NAV_REGISTRY_ADDRESS: getAddress(raw.NAV_REGISTRY_ADDRESS),
+  RISK_REGISTRY_ADDRESS: getAddress(raw.RISK_REGISTRY_ADDRESS),
 };
 
 /**
@@ -40,7 +47,11 @@ export const ENV = {
 console.log("ENV LOADED:", {
   RPC_URL: ENV.RPC_URL,
   PRIVATE_KEY: ENV.PRIVATE_KEY.slice(0, 10) + "...",
+  ORACLE_PRIVATE_KEY: ENV.ORACLE_PRIVATE_KEY.slice(0, 10) + "...",
   FUND_TOKEN_ADDRESS: ENV.FUND_TOKEN_ADDRESS,
   NAV_REGISTRY_ADDRESS: ENV.NAV_REGISTRY_ADDRESS,
+  RISK_REGISTRY_ADDRESS: ENV.RISK_REGISTRY_ADDRESS,
+  FUND_ID_LABEL: ENV.FUND_ID_LABEL,
+  PUBLIC_DISCLOSURE_DELAY_SEC: ENV.PUBLIC_DISCLOSURE_DELAY_SEC,
   PORT: ENV.PORT,
 });

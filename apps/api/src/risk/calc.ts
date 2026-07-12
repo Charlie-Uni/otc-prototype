@@ -1,0 +1,70 @@
+export const MAX_BPS = 10_000;
+export const RED_SCORE_BPS = 7_000;
+export const YELLOW_SCORE_BPS = 4_000;
+
+export type RiskLevel = 'green' | 'yellow' | 'red';
+
+export type RiskMetrics = {
+  valuationHaircutBps: number;
+  redemptionPressureBps: number;
+  redemptionQueueRatioBps: number;
+  liquidityShortfallBps: number;
+  stalePricingRiskBps: number;
+  investorConcentrationBps: number;
+};
+
+export function normalizeStalePricingRiskBps(ageSec: number, maxStaleAgeSec: number): number {
+  if (!Number.isInteger(ageSec) || ageSec < 0) {
+    throw new Error('INVALID_STALE_AGE');
+  }
+  if (!Number.isInteger(maxStaleAgeSec) || maxStaleAgeSec <= 0) {
+    throw new Error('INVALID_MAX_STALE_AGE');
+  }
+  return Math.min(MAX_BPS, Math.floor((ageSec * MAX_BPS) / maxStaleAgeSec));
+}
+
+export function computeInvestorConcentrationBps(holderSharesBps: number[]): number {
+  const total = holderSharesBps.reduce((sum, share) => sum + share, 0);
+  if (total !== MAX_BPS) {
+    throw new Error('HOLDER_SHARES_MUST_SUM_10000');
+  }
+
+  const hhiNumerator = holderSharesBps.reduce((sum, share) => sum + share * share, 0);
+  return Math.floor(hhiNumerator / MAX_BPS);
+}
+
+export function computeLiquidityShortfallBps(liquidityBufferRatioBps: number): number {
+  if (!Number.isInteger(liquidityBufferRatioBps) || liquidityBufferRatioBps < 0) {
+    throw new Error('INVALID_LIQUIDITY_BUFFER_RATIO');
+  }
+  return Math.max(0, MAX_BPS - liquidityBufferRatioBps);
+}
+
+export function computeWeightedRiskScoreBps(metrics: RiskMetrics, weightsBps: number[]): number {
+  if (weightsBps.length !== 6) {
+    throw new Error('INVALID_WEIGHTS_LENGTH');
+  }
+  const totalWeight = weightsBps.reduce((sum, weight) => sum + weight, 0);
+  if (totalWeight !== MAX_BPS) {
+    throw new Error('WEIGHTS_MUST_SUM_10000');
+  }
+
+  const values = [
+    metrics.valuationHaircutBps,
+    metrics.redemptionPressureBps,
+    metrics.redemptionQueueRatioBps,
+    metrics.liquidityShortfallBps,
+    metrics.stalePricingRiskBps,
+    metrics.investorConcentrationBps,
+  ];
+
+  const scoreNumerator = values.reduce((sum, value, index) => sum + value * weightsBps[index], 0);
+  return Math.floor(scoreNumerator / MAX_BPS);
+}
+
+export function riskLevelFor(scoreBps: number, gated: boolean): RiskLevel {
+  if (gated) return 'red';
+  if (scoreBps >= RED_SCORE_BPS) return 'red';
+  if (scoreBps >= YELLOW_SCORE_BPS) return 'yellow';
+  return 'green';
+}
