@@ -78,6 +78,47 @@ contract RiskRegistryTest is Test {
         registry.submitMetrics(fundId, metrics, 3_000, 1, uint64(block.timestamp), payloadHash);
     }
 
+    function testSubmitMetricsRevertsWhenFundIdIsZero() public {
+        vm.expectRevert(bytes("INVALID_FUND"));
+        registry.submitMetrics(bytes32(0), _lowRiskMetrics(), 3_000, 1, uint64(block.timestamp), payloadHash);
+    }
+
+    function testSubmitMetricsRevertsWhenOccurredAtIsZero() public {
+        vm.expectRevert(bytes("INVALID_OCCURRED_AT"));
+        registry.submitMetrics(fundId, _lowRiskMetrics(), 3_000, 1, 0, payloadHash);
+    }
+
+    function testFuzz_SubmitAnyValidMetricsFollowsKappaRule(
+        uint16 a,
+        uint16 b,
+        uint16 c,
+        uint16 d,
+        uint16 e,
+        uint16 f,
+        uint16 score
+    ) public {
+        a = uint16(bound(a, 0, 10_000));
+        b = uint16(bound(b, 0, 10_000));
+        c = uint16(bound(c, 0, 10_000));
+        d = uint16(bound(d, 0, 10_000));
+        e = uint16(bound(e, 0, 10_000));
+        f = uint16(bound(f, 0, 10_000));
+        score = uint16(bound(score, 0, 10_000));
+
+        RiskRegistry.RiskMetrics memory metrics = RiskRegistry.RiskMetrics({
+            valuationHaircutBps: a,
+            redemptionPressureBps: b,
+            redemptionQueueRatioBps: c,
+            liquidityShortfallBps: d,
+            stalePricingRiskBps: e,
+            investorConcentrationBps: f
+        });
+
+        registry.submitMetrics(fundId, metrics, score, 1, uint64(block.timestamp), payloadHash);
+
+        assertEq(registry.isGated(fundId), score > registry.defaultKappaBps());
+    }
+
     function testOnlyRiskOracleCanSubmitMetrics() public {
         vm.prank(stranger);
         vm.expectRevert();
