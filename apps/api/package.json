@@ -3,6 +3,7 @@
     "type": "module",
     "scripts": {
         "dev": "tsx src/index.ts",
+        "test:risk": "tsx --test src/risk/*.test.ts",
         "test": "jest"
     },
     "dependencies": {
