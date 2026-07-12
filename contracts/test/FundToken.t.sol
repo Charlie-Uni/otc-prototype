@@ -52,7 +52,7 @@ contract FundTokenTest is Test {
     function testGateBlocksAndReleaseRestoresRedemption() public {
         token.mint(alice, 1e18);
 
-        risk.submitMetrics(fundId, _highRiskMetrics(), 8_000, 1, uint64(block.timestamp), payloadHash);
+        risk.submitMetrics(fundId, _highRiskMetrics(), _score(_highRiskMetrics()), 1, uint64(block.timestamp), payloadHash);
         assertTrue(risk.isGated(fundId));
 
         vm.expectRevert(bytes("REDEMPTION_GATED"));
@@ -77,5 +77,17 @@ contract FundTokenTest is Test {
             stalePricingRiskBps: 7_500,
             investorConcentrationBps: 7_800
         });
+    }
+
+    function _score(RiskRegistry.RiskMetrics memory metrics) private pure returns (uint16) {
+        return uint16(
+            (
+                uint256(metrics.valuationHaircutBps) * 2_000 + uint256(metrics.redemptionPressureBps) * 2_000
+                    + uint256(metrics.redemptionQueueRatioBps) * 2_000
+                    + uint256(metrics.liquidityShortfallBps) * 2_000
+                    + uint256(metrics.stalePricingRiskBps) * 1_000
+                    + uint256(metrics.investorConcentrationBps) * 1_000
+            ) / 10_000
+        );
     }
 }

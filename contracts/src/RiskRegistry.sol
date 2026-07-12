@@ -29,6 +29,7 @@ contract RiskRegistry is AccessControl {
         bytes32 fundId;
         RiskMetrics metrics;
         uint16 riskScoreBps;
+        uint16 kappaBps;
         uint64 weightsConfigId;
         uint64 occurredAt;
         uint64 submittedAt;
@@ -122,13 +123,16 @@ contract RiskRegistry is AccessControl {
         require(occurredAt > 0, "INVALID_OCCURRED_AT");
         _validateMetrics(metrics);
         _validateBps(riskScoreBps);
+        require(_computeRiskScoreBps(metrics, weightsConfigId) == riskScoreBps, "SCORE_MISMATCH");
 
         uint64 submittedAt = uint64(block.timestamp);
+        uint16 kappaBps = effectiveKappaBps(fundId);
         bytes32 metricsHash = keccak256(abi.encode(fundId, metrics, riskScoreBps, weightsConfigId, occurredAt));
         RiskSnapshot memory snapshot = RiskSnapshot({
             fundId: fundId,
             metrics: metrics,
             riskScoreBps: riskScoreBps,
+            kappaBps: kappaBps,
             weightsConfigId: weightsConfigId,
             occurredAt: occurredAt,
             submittedAt: submittedAt,
@@ -152,7 +156,6 @@ contract RiskRegistry is AccessControl {
             msg.sender
         );
 
-        uint16 kappaBps = effectiveKappaBps(fundId);
         if (riskScoreBps > kappaBps) {
             emit RiskWarningEvent(
                 fundId,
@@ -257,5 +260,17 @@ contract RiskRegistry is AccessControl {
 
     function _validateBps(uint16 value) private pure {
         require(value <= MAX_BPS, "BPS_OUT_OF_RANGE");
+    }
+
+    function _computeRiskScoreBps(RiskMetrics calldata metrics, uint64 weightsConfigId) private view returns (uint16) {
+        uint16[6] storage weights = weightsConfigs[weightsConfigId].weightBps;
+        uint256 numerator = uint256(metrics.valuationHaircutBps) * weights[0]
+            + uint256(metrics.redemptionPressureBps) * weights[1]
+            + uint256(metrics.redemptionQueueRatioBps) * weights[2]
+            + uint256(metrics.liquidityShortfallBps) * weights[3]
+            + uint256(metrics.stalePricingRiskBps) * weights[4]
+            + uint256(metrics.investorConcentrationBps) * weights[5];
+
+        return uint16(numerator / MAX_BPS);
     }
 }

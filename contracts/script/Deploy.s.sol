@@ -9,7 +9,10 @@ import {RiskRegistry} from "src/RiskRegistry.sol";
 contract Deploy is Script {
     function run() external {
         address admin = vm.envAddress("DEPLOYER");
-        bytes32 fundId = keccak256("OTC_FUND_1");
+        uint256 oraclePrivateKey = vm.envUint("ORACLE_PRIVATE_KEY");
+        address oracle = vm.addr(oraclePrivateKey);
+        string memory fundIdLabel = vm.envOr("FUND_ID_LABEL", string("OTC_FUND_1"));
+        bytes32 fundId = keccak256(bytes(fundIdLabel));
         uint16[6] memory weights = [uint16(2_000), 2_000, 2_000, 2_000, 1_000, 1_000];
         vm.startBroadcast();
         FundToken token = new FundToken(admin, "OTC Fund", "OTCF");
@@ -18,11 +21,14 @@ contract Deploy is Script {
         // grant roles for self-contained demo
         token.grantRole(token.SUBSCRIPTION_ROLE(), admin);
         token.grantRole(token.REDEMPTION_ROLE(), admin);
+        risk.grantRole(risk.RISK_ORACLE_ROLE(), oracle);
         token.setRiskGate(address(risk), fundId);
         vm.stopBroadcast();
 
         console2.log("FundToken:", address(token));
         console2.log("NAVRegistry:", address(nav));
         console2.log("RiskRegistry:", address(risk));
+        console2.log("RiskOracle:", oracle);
+        console2.log("FundIdLabel:", fundIdLabel);
     }
 }
