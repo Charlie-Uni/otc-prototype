@@ -12,8 +12,7 @@ VC_HASH_B="${VC_HASH_B:-0x000000000000000000000000000000000000000000000000000000
 VC_HASH_C="${VC_HASH_C:-0x00000000000000000000000000000000000000000000000000000000000000c3}"
 VC_HASH_D="${VC_HASH_D:-0x00000000000000000000000000000000000000000000000000000000000000d4}"
 REDEEM_AMOUNT="${REDEEM_AMOUNT:-1}"
-NOW_SEC="$(date +%s)"
-LAST_VALUATION_SEC="$((NOW_SEC - 7200))"
+QUEUE_AMOUNT="${QUEUE_AMOUNT:-1800}"
 
 printf '%s\n' '--- mark investor eligibility on chain ---'
 curl -sS -X POST "$API_URL/kyc/mark-eligible" \
@@ -51,16 +50,29 @@ curl -sS -X POST "$API_URL/token/subscribe" \
   -d "{\"to\":\"$HOLDER_D\",\"amount\":\"1000\"}"
 printf '\n'
 
+printf '%s\n' '--- request redemption into queue ---'
+curl -sS -X POST "$API_URL/token/redeem" \
+  -H 'content-type: application/json' \
+  -d "{\"from\":\"$HOLDER_A\",\"amount\":\"$QUEUE_AMOUNT\"}"
+printf '\n'
+curl -sS "$API_URL/token/redemption-queue"
+printf '\n'
+
+printf '%s\n' '--- post NAV for chain-derived stale pricing timestamp ---'
+NAV_AS_OF="$(date +%s)"
+curl -sS -X POST "$API_URL/nav/post" \
+  -H 'content-type: application/json' \
+  -d "{\"nav\":\"1000000\",\"asOf\":$NAV_AS_OF}"
+printf '\n'
+
+NOW_SEC="$(date +%s)"
 RISK_RESPONSE="$(
   curl -sS -X POST "$API_URL/risk/submit" \
   -H 'content-type: application/json' \
   -d "{
     \"occurredAt\": $NOW_SEC,
     \"valuationHaircutBps\": 1200,
-    \"redemptionPressureBps\": 2500,
-    \"redemptionQueueRatioBps\": 1800,
-    \"liquidityBufferRatioBps\": 6500,
-    \"lastValuationUpdateAt\": $LAST_VALUATION_SEC
+    \"liquidityBufferRatioBps\": 6500
   }"
 )"
 printf '%s\n' "$RISK_RESPONSE"
@@ -72,6 +84,31 @@ fi
 
 if [[ "$RISK_RESPONSE" != *'"investorConcentrationBps":3000'* ]]; then
   printf 'Expected InvestorConcentration HHI to be 3000 bps from seeded holders.\n' >&2
+  exit 1
+fi
+
+if [[ "$RISK_RESPONSE" != *'"redemptionQueueRatioBps":1800'* ]]; then
+  printf 'Expected RedemptionQueueRatio to be 1800 bps from queued redemption state.\n' >&2
+  exit 1
+fi
+
+if [[ "$RISK_RESPONSE" != *'"redemptionQueueSource":"chain"'* ]]; then
+  printf 'Expected risk submission to derive redemption queue ratio from chain state.\n' >&2
+  exit 1
+fi
+
+if [[ "$RISK_RESPONSE" != *'"redemptionPressureBps":1800'* ]]; then
+  printf 'Expected RedemptionPressure to be 1800 bps from redemption request events.\n' >&2
+  exit 1
+fi
+
+if [[ "$RISK_RESPONSE" != *'"redemptionPressureSource":"chain"'* ]]; then
+  printf 'Expected risk submission to derive redemption pressure from chain events.\n' >&2
+  exit 1
+fi
+
+if [[ "$RISK_RESPONSE" != *'"stalePricingSource":"chain"'* ]]; then
+  printf 'Expected risk submission to derive stale pricing timestamp from NAVRegistry.\n' >&2
   exit 1
 fi
 
@@ -90,7 +127,6 @@ curl -sS -X POST "$API_URL/risk/submit" \
     \"occurredAt\": $GATE_NOW_SEC,
     \"valuationHaircutBps\": 9000,
     \"redemptionPressureBps\": 9000,
-    \"redemptionQueueRatioBps\": 9000,
     \"liquidityBufferRatioBps\": 0,
     \"lastValuationUpdateAt\": $GATE_LAST_VALUATION_SEC
   }"
