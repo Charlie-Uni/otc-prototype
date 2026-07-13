@@ -75,22 +75,39 @@ contract RiskRegistryTest is Test {
         metrics.valuationHaircutBps = 10_001;
 
         vm.expectRevert(bytes("BPS_OUT_OF_RANGE"));
-        registry.submitMetrics(fundId, metrics, _score(_lowRiskMetrics()), 1, uint64(block.timestamp), payloadHash);
+        registry.submitMetrics(fundId, metrics, 1, uint64(block.timestamp), payloadHash);
     }
 
     function testSubmitMetricsRevertsWhenFundIdIsZero() public {
         vm.expectRevert(bytes("INVALID_FUND"));
-        registry.submitMetrics(bytes32(0), _lowRiskMetrics(), _score(_lowRiskMetrics()), 1, uint64(block.timestamp), payloadHash);
+        registry.submitMetrics(bytes32(0), _lowRiskMetrics(), 1, uint64(block.timestamp), payloadHash);
     }
 
     function testSubmitMetricsRevertsWhenOccurredAtIsZero() public {
         vm.expectRevert(bytes("INVALID_OCCURRED_AT"));
-        registry.submitMetrics(fundId, _lowRiskMetrics(), _score(_lowRiskMetrics()), 1, 0, payloadHash);
+        registry.submitMetrics(fundId, _lowRiskMetrics(), 1, 0, payloadHash);
     }
 
-    function testSubmitMetricsRevertsWhenScoreDoesNotMatchWeights() public {
-        vm.expectRevert(bytes("SCORE_MISMATCH"));
-        registry.submitMetrics(fundId, _lowRiskMetrics(), _score(_lowRiskMetrics()) + 1, 1, uint64(block.timestamp), payloadHash);
+    function testComputeRiskScoreBpsUsesStoredWeights() public view {
+        assertEq(registry.computeRiskScoreBps(_lowRiskMetrics(), 1), _score(_lowRiskMetrics()));
+    }
+
+    function testComputeRiskScoreBpsFollowsThesisMetricOrder() public view {
+        RiskRegistry.RiskMetrics memory metrics = RiskRegistry.RiskMetrics({
+            valuationHaircutBps: 1_000,
+            redemptionPressureBps: 2_000,
+            redemptionQueueRatioBps: 3_000,
+            liquidityShortfallBps: 4_000,
+            stalePricingRiskBps: 5_000,
+            investorConcentrationBps: 6_000
+        });
+
+        assertEq(registry.computeRiskScoreBps(metrics, 1), 3_100);
+    }
+
+    function testComputeRiskScoreBpsRejectsUnknownWeights() public {
+        vm.expectRevert(bytes("UNKNOWN_WEIGHTS"));
+        registry.computeRiskScoreBps(_lowRiskMetrics(), 2);
     }
 
     function testFuzz_SubmitAnyValidMetricsFollowsKappaRule(
@@ -118,7 +135,7 @@ contract RiskRegistryTest is Test {
         });
         uint16 score = _score(metrics);
 
-        registry.submitMetrics(fundId, metrics, score, 1, uint64(block.timestamp), payloadHash);
+        registry.submitMetrics(fundId, metrics, 1, uint64(block.timestamp), payloadHash);
 
         assertEq(registry.isGated(fundId), score > registry.defaultKappaBps());
     }
@@ -126,7 +143,7 @@ contract RiskRegistryTest is Test {
     function testOnlyRiskOracleCanSubmitMetrics() public {
         vm.prank(stranger);
         vm.expectRevert();
-        registry.submitMetrics(fundId, _lowRiskMetrics(), _score(_lowRiskMetrics()), 1, uint64(block.timestamp), payloadHash);
+        registry.submitMetrics(fundId, _lowRiskMetrics(), 1, uint64(block.timestamp), payloadHash);
     }
 
     function testLowRiskSnapshotDoesNotGateFund() public {
@@ -134,7 +151,7 @@ contract RiskRegistryTest is Test {
         vm.warp(1_710_000_100);
 
         uint16 riskScoreBps = _score(_lowRiskMetrics());
-        uint256 snapshotId = registry.submitMetrics(fundId, _lowRiskMetrics(), riskScoreBps, 1, occurredAt, payloadHash);
+        uint256 snapshotId = registry.submitMetrics(fundId, _lowRiskMetrics(), 1, occurredAt, payloadHash);
 
         RiskRegistry.RiskSnapshot memory snapshot = registry.latestSnapshot(fundId);
         assertEq(snapshotId, 0);
@@ -153,7 +170,7 @@ contract RiskRegistryTest is Test {
 
     function testRiskScoreEqualToKappaDoesNotGateFund() public {
         RiskRegistry.RiskMetrics memory metrics = _flatMetrics(7_000);
-        registry.submitMetrics(fundId, metrics, _score(metrics), 1, uint64(block.timestamp), payloadHash);
+        registry.submitMetrics(fundId, metrics, 1, uint64(block.timestamp), payloadHash);
 
         assertFalse(registry.isGated(fundId));
     }
@@ -204,18 +221,18 @@ contract RiskRegistryTest is Test {
             metricsHash
         );
 
-        registry.submitMetrics(fundId, metrics, riskScoreBps, weightsConfigId, occurredAt, payloadHash);
+        registry.submitMetrics(fundId, metrics, weightsConfigId, occurredAt, payloadHash);
 
         assertTrue(registry.isGated(fundId));
     }
 
     function testRepeatedHighRiskWarningDoesNotRetriggerGate() public {
-        registry.submitMetrics(fundId, _highRiskMetrics(), _score(_highRiskMetrics()), 1, uint64(block.timestamp), payloadHash);
+        registry.submitMetrics(fundId, _highRiskMetrics(), 1, uint64(block.timestamp), payloadHash);
         assertTrue(registry.isGated(fundId));
 
         vm.recordLogs();
         RiskRegistry.RiskMetrics memory updatedHighRiskMetrics = _flatMetrics(8_500);
-        registry.submitMetrics(fundId, updatedHighRiskMetrics, _score(updatedHighRiskMetrics), 1, uint64(block.timestamp), payloadHash);
+        registry.submitMetrics(fundId, updatedHighRiskMetrics, 1, uint64(block.timestamp), payloadHash);
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
         bytes32 warningSignature =
@@ -244,7 +261,7 @@ contract RiskRegistryTest is Test {
         assertEq(registry.effectiveKappaBps(fundId), 5_000);
 
         RiskRegistry.RiskMetrics memory metrics = _flatMetrics(6_000);
-        registry.submitMetrics(fundId, metrics, _score(metrics), 1, uint64(block.timestamp), payloadHash);
+        registry.submitMetrics(fundId, metrics, 1, uint64(block.timestamp), payloadHash);
 
         assertTrue(registry.isGated(fundId));
     }
@@ -255,7 +272,7 @@ contract RiskRegistryTest is Test {
         assertEq(registry.activeWeightsConfigId(), 2);
 
         vm.expectRevert(bytes("INACTIVE_WEIGHTS"));
-        registry.submitMetrics(fundId, _lowRiskMetrics(), _score(_lowRiskMetrics()), 1, uint64(block.timestamp), payloadHash);
+        registry.submitMetrics(fundId, _lowRiskMetrics(), 1, uint64(block.timestamp), payloadHash);
 
         (uint16[6] memory oldWeights, uint64 oldMaxStaleAgeSec, bytes32 oldWeightsHash, bool oldExists) =
             registry.getWeightsConfig(1);
@@ -291,7 +308,7 @@ contract RiskRegistryTest is Test {
     }
 
     function testOnlyRegulatorCanReleaseGate() public {
-        registry.submitMetrics(fundId, _highRiskMetrics(), _score(_highRiskMetrics()), 1, uint64(block.timestamp), payloadHash);
+        registry.submitMetrics(fundId, _highRiskMetrics(), 1, uint64(block.timestamp), payloadHash);
         assertTrue(registry.isGated(fundId));
 
         vm.prank(stranger);
@@ -306,7 +323,7 @@ contract RiskRegistryTest is Test {
     }
 
     function testGateReleaseEmitsAuditableReasonHash() public {
-        registry.submitMetrics(fundId, _highRiskMetrics(), _score(_highRiskMetrics()), 1, uint64(block.timestamp), payloadHash);
+        registry.submitMetrics(fundId, _highRiskMetrics(), 1, uint64(block.timestamp), payloadHash);
 
         bytes32 reasonHash = keccak256("risk normalized");
         vm.warp(1_710_000_200);

@@ -112,72 +112,79 @@ contract RiskRegistry is AccessControl {
     function submitMetrics(
         bytes32 fundId,
         RiskMetrics calldata metrics,
-        uint16 riskScoreBps,
         uint64 weightsConfigId,
         uint64 occurredAt,
         bytes32 payloadHash
     ) external onlyRole(RISK_ORACLE_ROLE) returns (uint256 snapshotId) {
         require(fundId != bytes32(0), "INVALID_FUND");
         require(weightsConfigId == activeWeightsConfigId, "INACTIVE_WEIGHTS");
-        require(weightsConfigs[weightsConfigId].exists, "UNKNOWN_WEIGHTS");
         require(occurredAt > 0, "INVALID_OCCURRED_AT");
-        _validateMetrics(metrics);
-        _validateBps(riskScoreBps);
-        require(_computeRiskScoreBps(metrics, weightsConfigId) == riskScoreBps, "SCORE_MISMATCH");
+        uint16 riskScoreBps = computeRiskScoreBps(metrics, weightsConfigId);
 
         uint64 submittedAt = uint64(block.timestamp);
-        uint16 kappaBps = effectiveKappaBps(fundId);
         bytes32 metricsHash = keccak256(abi.encode(fundId, metrics, riskScoreBps, weightsConfigId, occurredAt));
-        RiskSnapshot memory snapshot = RiskSnapshot({
+        riskHistory[fundId].push(RiskSnapshot({
             fundId: fundId,
             metrics: metrics,
             riskScoreBps: riskScoreBps,
-            kappaBps: kappaBps,
+            kappaBps: effectiveKappaBps(fundId),
             weightsConfigId: weightsConfigId,
             occurredAt: occurredAt,
             submittedAt: submittedAt,
             metricsHash: metricsHash,
             payloadHash: payloadHash,
             submittedBy: msg.sender
-        });
-
-        riskHistory[fundId].push(snapshot);
+        }));
         snapshotId = riskHistory[fundId].length - 1;
 
-        emit RiskMetricsSubmitted(
-            fundId,
-            snapshotId,
-            riskScoreBps,
-            weightsConfigId,
-            occurredAt,
-            submittedAt,
-            metricsHash,
-            payloadHash,
-            msg.sender
-        );
+        RiskSnapshot storage snapshot = riskHistory[fundId][snapshotId];
+        _emitRiskMetricsSubmitted(snapshotId, snapshot);
+        _applyRiskControl(snapshotId, snapshot);
+    }
 
-        if (riskScoreBps > kappaBps) {
+    function computeRiskScoreBps(RiskMetrics calldata metrics, uint64 weightsConfigId) public view returns (uint16) {
+        require(weightsConfigs[weightsConfigId].exists, "UNKNOWN_WEIGHTS");
+        _validateMetrics(metrics);
+        return _computeRiskScoreBps(metrics, weightsConfigId);
+    }
+
+    function _emitRiskMetricsSubmitted(uint256 snapshotId, RiskSnapshot storage snapshot) private {
+        emit RiskMetricsSubmitted(
+            snapshot.fundId,
+            snapshotId,
+            snapshot.riskScoreBps,
+            snapshot.weightsConfigId,
+            snapshot.occurredAt,
+            snapshot.submittedAt,
+            snapshot.metricsHash,
+            snapshot.payloadHash,
+            snapshot.submittedBy
+        );
+    }
+
+    function _applyRiskControl(uint256 snapshotId, RiskSnapshot storage snapshot) private {
+        if (snapshot.riskScoreBps > snapshot.kappaBps) {
             emit RiskWarningEvent(
-                fundId,
+                snapshot.fundId,
                 snapshotId,
-                riskScoreBps,
-                kappaBps,
+                snapshot.riskScoreBps,
+                snapshot.kappaBps,
                 GATE_RULE_ID,
-                occurredAt,
-                submittedAt,
-                metricsHash
+                snapshot.occurredAt,
+                snapshot.submittedAt,
+                snapshot.metricsHash
             );
-            if (!gated[fundId]) {
-                gated[fundId] = true;
+            if (!gated[snapshot.fundId]) {
+                gated[snapshot.fundId] = true;
                 emit GateTriggered(
-                    fundId,
+                    snapshot.fundId,
                     snapshotId,
-                    riskScoreBps,
-                    kappaBps,
+                    snapshot.riskScoreBps,
+                    snapshot.kappaBps,
                     GATE_RULE_ID,
-                    occurredAt,
-                    submittedAt,
-                    metricsHash
+                    snapshot.occurredAt,
+                    snapshot.submittedAt,
+                    snapshot.metricsHash
                 );
             }
         }
