@@ -40,28 +40,6 @@ export function computeLiquidityShortfallBps(liquidityBufferRatioBps: number): n
   return Math.max(0, MAX_BPS - liquidityBufferRatioBps);
 }
 
-export function computeWeightedRiskScoreBps(metrics: RiskMetrics, weightsBps: number[]): number {
-  if (weightsBps.length !== 6) {
-    throw new Error('INVALID_WEIGHTS_LENGTH');
-  }
-  const totalWeight = weightsBps.reduce((sum, weight) => sum + weight, 0);
-  if (totalWeight !== MAX_BPS) {
-    throw new Error('WEIGHTS_MUST_SUM_10000');
-  }
-
-  const values = [
-    metrics.valuationHaircutBps,
-    metrics.redemptionPressureBps,
-    metrics.redemptionQueueRatioBps,
-    metrics.liquidityShortfallBps,
-    metrics.stalePricingRiskBps,
-    metrics.investorConcentrationBps,
-  ];
-
-  const scoreNumerator = values.reduce((sum, value, index) => sum + value * weightsBps[index], 0);
-  return Math.floor(scoreNumerator / MAX_BPS);
-}
-
 export function riskLevelFor(scoreBps: number, gated: boolean): RiskLevel {
   if (gated) return 'red';
   if (scoreBps >= RED_SCORE_BPS) return 'red';

@@ -2,14 +2,13 @@ import { FastifyInstance } from 'fastify';
 import { encodeAbiParameters, keccak256 } from 'viem';
 import { z } from 'zod';
 import { getAuditEntries, recordAudit } from '../audit/log';
-import { fundId, riskRegistry } from '../chain';
+import { fundId, riskRegistry, rpc } from '../chain';
 import { ENV } from '../env';
 import {
   MAX_BPS,
   RiskMetrics,
   computeInvestorConcentrationBps,
   computeLiquidityShortfallBps,
-  computeWeightedRiskScoreBps,
   normalizeStalePricingRiskBps,
   riskLevelFor,
 } from '../risk/calc';
@@ -47,7 +46,6 @@ const SubmitRiskSchema = z.object({
 
 type WeightsConfig = {
   id: number;
-  weightsBps: number[];
   maxStaleAgeSec: number;
   weightsHash: `0x${string}`;
 };
@@ -59,7 +57,6 @@ type ResolvedRiskInput = z.infer<typeof SubmitRiskSchema> & {
 type ComputedRisk = {
   config: WeightsConfig;
   metrics: RiskMetrics;
-  riskScoreBps: number;
   payloadHash: `0x${string}`;
   holderSource: 'request' | 'chain';
   holderSnapshot?: HolderShareSnapshot;
@@ -116,14 +113,13 @@ function normalizeSnapshot(raw: any): RiskSnapshot {
 async function readActiveWeightsConfig(): Promise<WeightsConfig> {
   const c = riskRegistry as any;
   const activeId = Number(await c.read.activeWeightsConfigId());
-  const [weightsRaw, maxStaleAgeRaw, weightsHash, exists] = await c.read.getWeightsConfig([BigInt(activeId)]);
+  const [, maxStaleAgeRaw, weightsHash, exists] = await c.read.getWeightsConfig([BigInt(activeId)]);
   if (!exists) {
     throw new Error('ACTIVE_WEIGHTS_NOT_FOUND');
   }
 
   return {
     id: activeId,
-    weightsBps: Array.from(weightsRaw).map((weight) => Number(weight)),
     maxStaleAgeSec: Number(maxStaleAgeRaw),
     weightsHash,
   };
@@ -158,7 +154,7 @@ function buildMetrics(body: ResolvedRiskInput, config: WeightsConfig): RiskMetri
   };
 }
 
-function payloadHashFor(body: ResolvedRiskInput, metrics: RiskMetrics, config: WeightsConfig, riskScoreBps: number) {
+function payloadHashFor(body: ResolvedRiskInput, metrics: RiskMetrics, config: WeightsConfig) {
   return keccak256(encodeAbiParameters(
     [
       { name: 'occurredAt', type: 'uint64' },
@@ -174,7 +170,6 @@ function payloadHashFor(body: ResolvedRiskInput, metrics: RiskMetrics, config: W
       { name: 'liquidityShortfallMetricBps', type: 'uint16' },
       { name: 'stalePricingRiskMetricBps', type: 'uint16' },
       { name: 'investorConcentrationMetricBps', type: 'uint16' },
-      { name: 'riskScoreBps', type: 'uint16' },
       { name: 'weightsConfigId', type: 'uint64' },
       { name: 'maxStaleAgeSec', type: 'uint64' },
       { name: 'weightsHash', type: 'bytes32' },
@@ -193,7 +188,6 @@ function payloadHashFor(body: ResolvedRiskInput, metrics: RiskMetrics, config: W
       metrics.liquidityShortfallBps,
       metrics.stalePricingRiskBps,
       metrics.investorConcentrationBps,
-      riskScoreBps,
       BigInt(config.id),
       BigInt(config.maxStaleAgeSec),
       config.weightsHash,
@@ -206,9 +200,8 @@ async function computeFromChainConfig(body: z.infer<typeof SubmitRiskSchema>): P
   const holderState = await resolveHolderShares(body);
   const resolvedBody = { ...body, holderSharesBps: holderState.holderSharesBps };
   const metrics = buildMetrics(resolvedBody, config);
-  const riskScoreBps = computeWeightedRiskScoreBps(metrics, config.weightsBps);
-  const payloadHash = payloadHashFor(resolvedBody, metrics, config, riskScoreBps);
-  return { config, metrics, riskScoreBps, payloadHash, ...holderState };
+  const payloadHash = payloadHashFor(resolvedBody, metrics, config);
+  return { config, metrics, payloadHash, ...holderState };
 }
 
 async function submitWithOneConfigRetry(body: z.infer<typeof SubmitRiskSchema>) {
@@ -220,13 +213,17 @@ async function submitWithOneConfigRetry(body: z.infer<typeof SubmitRiskSchema>) 
       const tx = await c.write.submitMetrics([
         fundId,
         computed.metrics,
-        computed.riskScoreBps,
         BigInt(computed.config.id),
         BigInt(body.occurredAt),
         computed.payloadHash,
       ]);
+      await rpc.waitForTransactionReceipt({ hash: tx });
+      const snapshot = await readLatestSnapshot();
+      if (!snapshot || snapshot.payloadHash !== computed.payloadHash || snapshot.weightsConfigId !== computed.config.id) {
+        throw new Error('RISK_SNAPSHOT_CONFIRMATION_FAILED');
+      }
 
-      return { tx, retried: attempt > 0, ...computed };
+      return { tx, snapshot, retried: attempt > 0, ...computed };
     } catch (error) {
       if (attempt === 0 && messageOf(error).includes('INACTIVE_WEIGHTS')) {
         continue;
@@ -330,7 +327,7 @@ export default async function (app: FastifyInstance) {
 
     recordAudit('risk.submit', {
       fundId,
-      riskScoreBps: result.riskScoreBps,
+      riskScoreBps: result.snapshot.riskScoreBps,
       weightsConfigId: result.config.id,
       holderSource: result.holderSource,
       holderSnapshot: result.holderSnapshot,
@@ -342,7 +339,7 @@ export default async function (app: FastifyInstance) {
       tx: result.tx,
       fundId,
       metrics: result.metrics,
-      riskScoreBps: result.riskScoreBps,
+      riskScoreBps: result.snapshot.riskScoreBps,
       weightsConfigId: result.config.id,
       weightsHash: result.config.weightsHash,
       maxStaleAgeSec: result.config.maxStaleAgeSec,

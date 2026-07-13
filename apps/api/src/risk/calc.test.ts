@@ -3,7 +3,6 @@ import test from 'node:test';
 import {
   computeLiquidityShortfallBps,
   computeInvestorConcentrationBps,
-  computeWeightedRiskScoreBps,
   normalizeStalePricingRiskBps,
   riskLevelFor,
 } from './calc';
@@ -21,22 +20,6 @@ test('computes investor concentration as HHI from full holder shares', () => {
 test('computes liquidity shortfall and clamps surplus buffers to zero', () => {
   assert.equal(computeLiquidityShortfallBps(6_500), 3_500);
   assert.equal(computeLiquidityShortfallBps(12_000), 0);
-});
-
-test('computes six-factor weighted risk score in thesis metric order', () => {
-  const score = computeWeightedRiskScoreBps(
-    {
-      valuationHaircutBps: 1_000,
-      redemptionPressureBps: 2_000,
-      redemptionQueueRatioBps: 3_000,
-      liquidityShortfallBps: 4_000,
-      stalePricingRiskBps: 5_000,
-      investorConcentrationBps: 6_000,
-    },
-    [2_000, 2_000, 2_000, 2_000, 1_000, 1_000],
-  );
-
-  assert.equal(score, 3_100);
 });
 
 test('forces public risk level to red while gate is active', () => {

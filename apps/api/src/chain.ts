@@ -46,7 +46,7 @@ export const token = getContract({
     'function mint(address to, uint256 amount) external',
     'function burnFrom(address from, uint256 amount) external',
     'function balanceOf(address a) view returns (uint256)',
-    'function setWhitelisted(address a, bool ok) external',
+    'function setWhitelisted(address investor, bool eligible, bytes32 vcHash) external',
   ]),
   client: clients as any,
 });
@@ -57,7 +57,8 @@ export const riskRegistry = getContract({
   abi: parseAbi([
     'function activeWeightsConfigId() view returns (uint64)',
     'function getWeightsConfig(uint64 weightsConfigId) view returns (uint16[6] weightBps, uint64 maxStaleAgeSec, bytes32 weightsHash, bool exists)',
-    'function submitMetrics(bytes32 fundId, (uint16 valuationHaircutBps, uint16 redemptionPressureBps, uint16 redemptionQueueRatioBps, uint16 liquidityShortfallBps, uint16 stalePricingRiskBps, uint16 investorConcentrationBps) metrics, uint16 riskScoreBps, uint64 weightsConfigId, uint64 occurredAt, bytes32 payloadHash) returns (uint256 snapshotId)',
+    'function submitMetrics(bytes32 fundId, (uint16 valuationHaircutBps, uint16 redemptionPressureBps, uint16 redemptionQueueRatioBps, uint16 liquidityShortfallBps, uint16 stalePricingRiskBps, uint16 investorConcentrationBps) metrics, uint64 weightsConfigId, uint64 occurredAt, bytes32 payloadHash) returns (uint256 snapshotId)',
+    'function computeRiskScoreBps((uint16 valuationHaircutBps, uint16 redemptionPressureBps, uint16 redemptionQueueRatioBps, uint16 liquidityShortfallBps, uint16 stalePricingRiskBps, uint16 investorConcentrationBps) metrics, uint64 weightsConfigId) view returns (uint16)',
     'function latestSnapshot(bytes32 fundId) view returns ((bytes32 fundId, (uint16 valuationHaircutBps, uint16 redemptionPressureBps, uint16 redemptionQueueRatioBps, uint16 liquidityShortfallBps, uint16 stalePricingRiskBps, uint16 investorConcentrationBps) metrics, uint16 riskScoreBps, uint16 kappaBps, uint64 weightsConfigId, uint64 occurredAt, uint64 submittedAt, bytes32 metricsHash, bytes32 payloadHash, address submittedBy) snapshot)',
     'function snapshotAt(bytes32 fundId, uint256 index) view returns ((bytes32 fundId, (uint16 valuationHaircutBps, uint16 redemptionPressureBps, uint16 redemptionQueueRatioBps, uint16 liquidityShortfallBps, uint16 stalePricingRiskBps, uint16 investorConcentrationBps) metrics, uint16 riskScoreBps, uint16 kappaBps, uint64 weightsConfigId, uint64 occurredAt, uint64 submittedAt, bytes32 metricsHash, bytes32 payloadHash, address submittedBy) snapshot)',
     'function historyLength(bytes32 fundId) view returns (uint256)',
