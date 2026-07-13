@@ -1,4 +1,4 @@
-import { getAddress, parseAbiItem, zeroAddress } from 'viem';
+import { getAddress, parseAbiItem } from 'viem';
 import { MAX_BPS } from './calc';
 
 type Address = `0x${string}`;
@@ -14,23 +14,20 @@ export type HolderBalance = {
   balance: bigint;
 };
 
-const transferEvent = parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 value)');
+const shareBalanceUpdatedEvent = parseAbiItem(
+  'event ShareBalanceUpdated(address indexed investor, uint256 balance, uint256 totalSupply, bytes32 indexed reason)',
+);
 
 function normalizeAddress(address: Address): Address {
   return getAddress(address) as Address;
 }
 
-function applyDelta(balances: Map<Address, bigint>, holder: Address, delta: bigint) {
-  const current = balances.get(holder) ?? 0n;
-  const next = current + delta;
-  if (next < 0n) {
-    throw new Error('NEGATIVE_HOLDER_BALANCE');
-  }
-  if (next === 0n) {
+function setBalance(balances: Map<Address, bigint>, holder: Address, balance: bigint) {
+  if (balance === 0n) {
     balances.delete(holder);
     return;
   }
-  balances.set(holder, next);
+  balances.set(holder, balance);
 }
 
 export function balancesToHolderSharesBps(holderBalances: HolderBalance[]): number[] {
@@ -75,6 +72,17 @@ export function balancesToHolderSharesBps(holderBalances: HolderBalance[]): numb
   return allocations.map((entry) => entry.bps);
 }
 
+export function assertHolderRegistryMatchesTotalSupply(
+  holderBalances: HolderBalance[],
+  expectedTotalSupply: bigint,
+): bigint {
+  const reconstructedTotalSupply = holderBalances.reduce((sum, entry) => sum + entry.balance, 0n);
+  if (reconstructedTotalSupply !== expectedTotalSupply) {
+    throw new Error('HOLDER_REGISTRY_TOTAL_SUPPLY_MISMATCH');
+  }
+  return reconstructedTotalSupply;
+}
+
 export async function readHolderShareSnapshot(): Promise<HolderShareSnapshot> {
   const [{ ENV }, { rpc }] = await Promise.all([
     import('../env'),
@@ -83,27 +91,25 @@ export async function readHolderShareSnapshot(): Promise<HolderShareSnapshot> {
   const balances = new Map<Address, bigint>();
   const logs = await rpc.getLogs({
     address: ENV.FUND_TOKEN_ADDRESS as Address,
-    event: transferEvent,
+    event: shareBalanceUpdatedEvent,
     fromBlock: 0n,
     toBlock: 'latest',
   });
 
+  let latestEventTotalSupply: bigint | null = null;
   for (const log of logs) {
-    const from = normalizeAddress(log.args.from as Address);
-    const to = normalizeAddress(log.args.to as Address);
-    const value = log.args.value as bigint;
-
-    if (from !== zeroAddress) {
-      applyDelta(balances, from, -value);
-    }
-    if (to !== zeroAddress) {
-      applyDelta(balances, to, value);
-    }
+    const investor = normalizeAddress(log.args.investor as Address);
+    const balance = log.args.balance as bigint;
+    latestEventTotalSupply = log.args.totalSupply as bigint;
+    setBalance(balances, investor, balance);
   }
 
   const holderBalances = Array.from(balances.entries()).map(([holder, balance]) => ({ holder, balance }));
   const holderSharesBps = balancesToHolderSharesBps(holderBalances);
-  const totalSupply = holderBalances.reduce((sum, entry) => sum + entry.balance, 0n);
+  const totalSupply = assertHolderRegistryMatchesTotalSupply(
+    holderBalances,
+    latestEventTotalSupply ?? 0n,
+  );
 
   return {
     holderSharesBps,

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { balancesToHolderSharesBps } from './holdings';
+import { assertHolderRegistryMatchesTotalSupply, balancesToHolderSharesBps } from './holdings';
 
 test('converts holder balances to bps with largest remainder allocation', () => {
   assert.deepEqual(
@@ -28,4 +28,23 @@ test('ignores zero balances and preserves exact 10000 total', () => {
 
 test('rejects empty holder state', () => {
   assert.throws(() => balancesToHolderSharesBps([]), /NO_HOLDERS/);
+});
+
+test('verifies reconstructed holder registry against latest event totalSupply', () => {
+  const totalSupply = assertHolderRegistryMatchesTotalSupply([
+    { holder: '0x0000000000000000000000000000000000000001', balance: 4n },
+    { holder: '0x0000000000000000000000000000000000000002', balance: 6n },
+  ], 10n);
+
+  assert.equal(totalSupply, 10n);
+});
+
+test('rejects holder registry when balances do not match latest event totalSupply', () => {
+  assert.throws(
+    () => assertHolderRegistryMatchesTotalSupply([
+      { holder: '0x0000000000000000000000000000000000000001', balance: 4n },
+      { holder: '0x0000000000000000000000000000000000000002', balance: 6n },
+    ], 9n),
+    /HOLDER_REGISTRY_TOTAL_SUPPLY_MISMATCH/,
+  );
 });
