@@ -8,13 +8,14 @@ import {RiskRegistry} from "src/RiskRegistry.sol";
 
 contract Deploy is Script {
     function run() external {
-        address admin = vm.envAddress("DEPLOYER");
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        address admin = vm.addr(deployerPrivateKey);
         uint256 oraclePrivateKey = vm.envUint("ORACLE_PRIVATE_KEY");
         address oracle = vm.addr(oraclePrivateKey);
         string memory fundIdLabel = vm.envOr("FUND_ID_LABEL", string("OTC_FUND_1"));
         bytes32 fundId = keccak256(bytes(fundIdLabel));
         uint16[6] memory weights = [uint16(2_000), 2_000, 2_000, 2_000, 1_000, 1_000];
-        vm.startBroadcast();
+        vm.startBroadcast(deployerPrivateKey);
         FundToken token = new FundToken(admin, "OTC Fund", "OTCF");
         NAVRegistry nav = new NAVRegistry(admin);
         RiskRegistry risk = new RiskRegistry(admin, weights, uint64(30 days), 7_000);

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.30;
 
 import {AccessControl} from "openzeppelin/access/AccessControl.sol";
+import {SafeCast} from "openzeppelin/utils/math/SafeCast.sol";
 
 contract RiskRegistry is AccessControl {
     uint16 public constant MAX_BPS = 10_000;
@@ -278,6 +279,8 @@ contract RiskRegistry is AccessControl {
             + uint256(metrics.stalePricingRiskBps) * weights[4]
             + uint256(metrics.investorConcentrationBps) * weights[5];
 
-        return uint16(numerator / MAX_BPS);
+        uint256 scoreBps = numerator / MAX_BPS;
+        require(scoreBps <= MAX_BPS, "SCORE_OUT_OF_RANGE");
+        return SafeCast.toUint16(scoreBps);
     }
 }
