@@ -13,25 +13,53 @@ contract FundTokenTest is Test {
     address alice = address(0xBEEF);
     bytes32 fundId = keccak256("OTC_FUND_1");
     bytes32 payloadHash = keccak256("payload");
+    bytes32 vcHash = keccak256("alice eligibility");
+    event InvestorWhitelisted(address indexed investor, bool eligible, bytes32 indexed vcHash, address indexed by);
+    event ShareBalanceUpdated(address indexed investor, uint256 balance, uint256 totalSupply, bytes32 indexed reason);
 
     function setUp() public {
         risk = new RiskRegistry(admin, _validWeights(), uint64(30 days), 7_000);
         token = new FundToken(admin, "OTC Fund", "OTCF");   // pass admin = this
-        token.setWhitelisted(alice, true);                  // no prank needed
+        token.setWhitelisted(alice, true, vcHash);          // no prank needed
+        token.setWhitelisted(admin, true, keccak256("admin eligibility"));
         token.setRiskGate(address(risk), fundId);
         token.grantRole(token.SUBSCRIPTION_ROLE(), admin);
         token.grantRole(token.REDEMPTION_ROLE(), admin);
     }
 
+    function testSetWhitelistedEmitsInvestorEligibilityEvent() public {
+        address bob = address(0xCAFE);
+        bytes32 bobVcHash = keccak256("bob eligibility");
+
+        vm.expectEmit(true, true, true, true, address(token));
+        emit InvestorWhitelisted(bob, true, bobVcHash, admin);
+        token.setWhitelisted(bob, true, bobVcHash);
+
+        assertTrue(token.whitelist(bob));
+    }
+
+    function testMintRejectsUnwhitelistedInvestor() public {
+        address bob = address(0xCAFE);
+
+        vm.expectRevert(bytes("NOT_WHITELISTED"));
+        token.mint(bob, 1e18);
+    }
+
     function testMintBurn() public {
+        vm.expectEmit(true, true, false, true, address(token));
+        emit ShareBalanceUpdated(alice, 1e18, 1e18, keccak256("SHARE_MINTED"));
         token.mint(alice, 1e18);
         assertEq(token.balanceOf(alice), 1e18);
+
+        vm.expectEmit(true, true, false, true, address(token));
+        emit ShareBalanceUpdated(alice, 5e17, 5e17, keccak256("SHARE_BURNED"));
         token.burnFrom(alice, 5e17);
         assertEq(token.balanceOf(alice), 5e17);
     }
 
     function testBurnWithoutRiskGateStillWorks() public {
         FundToken ungatedToken = new FundToken(admin, "OTC Fund", "OTCF");
+        ungatedToken.setWhitelisted(alice, true, vcHash);
         ungatedToken.grantRole(ungatedToken.SUBSCRIPTION_ROLE(), admin);
         ungatedToken.grantRole(ungatedToken.REDEMPTION_ROLE(), admin);
 
@@ -43,16 +71,29 @@ contract FundTokenTest is Test {
 
     function testPauseBlocksTransfer() public {
         token.mint(admin, 1e18);
-        token.setWhitelisted(address(0xCAFE), true);
+        token.setWhitelisted(address(0xCAFE), true, keccak256("receiver eligibility"));
         token.pause();
         vm.expectRevert();
         token.transfer(address(0xCAFE), 1);
     }
 
+    function testTransferEmitsShareBalanceUpdatedForBothHolders() public {
+        address bob = address(0xCAFE);
+        token.setWhitelisted(bob, true, keccak256("bob eligibility"));
+        token.mint(alice, 1e18);
+
+        vm.prank(alice);
+        vm.expectEmit(true, true, false, true, address(token));
+        emit ShareBalanceUpdated(alice, 1e18 - 10, 1e18, keccak256("SHARE_TRANSFERRED"));
+        vm.expectEmit(true, true, false, true, address(token));
+        emit ShareBalanceUpdated(bob, 10, 1e18, keccak256("SHARE_TRANSFERRED"));
+        token.transfer(bob, 10);
+    }
+
     function testGateBlocksAndReleaseRestoresRedemption() public {
         token.mint(alice, 1e18);
 
-        risk.submitMetrics(fundId, _highRiskMetrics(), _score(_highRiskMetrics()), 1, uint64(block.timestamp), payloadHash);
+        risk.submitMetrics(fundId, _highRiskMetrics(), 1, uint64(block.timestamp), payloadHash);
         assertTrue(risk.isGated(fundId));
 
         vm.expectRevert(bytes("REDEMPTION_GATED"));
@@ -79,15 +120,4 @@ contract FundTokenTest is Test {
         });
     }
 
-    function _score(RiskRegistry.RiskMetrics memory metrics) private pure returns (uint16) {
-        return uint16(
-            (
-                uint256(metrics.valuationHaircutBps) * 2_000 + uint256(metrics.redemptionPressureBps) * 2_000
-                    + uint256(metrics.redemptionQueueRatioBps) * 2_000
-                    + uint256(metrics.liquidityShortfallBps) * 2_000
-                    + uint256(metrics.stalePricingRiskBps) * 1_000
-                    + uint256(metrics.investorConcentrationBps) * 1_000
-            ) / 10_000
-        );
-    }
 }

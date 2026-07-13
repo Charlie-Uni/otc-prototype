@@ -19,6 +19,13 @@ contract FundToken is ERC20, Pausable, AccessControl {
     bytes32 public fundId;
 
     event RiskGateConfigured(address indexed riskGate, bytes32 indexed fundId);
+    event ShareBalanceUpdated(
+        address indexed investor,
+        uint256 balance,
+        uint256 totalSupply,
+        bytes32 indexed reason
+    );
+    event InvestorWhitelisted(address indexed investor, bool eligible, bytes32 indexed vcHash, address indexed by);
 
     constructor(address admin, string memory name_, string memory symbol_) ERC20(name_, symbol_) {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
@@ -28,8 +35,10 @@ contract FundToken is ERC20, Pausable, AccessControl {
     function pause() external onlyRole(PAUSER_ROLE) { _pause(); }
     function unpause() external onlyRole(PAUSER_ROLE) { _unpause(); }
 
-    function setWhitelisted(address a, bool ok) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        whitelist[a] = ok;
+    function setWhitelisted(address investor, bool eligible, bytes32 vcHash) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(investor != address(0), "INVALID_INVESTOR");
+        whitelist[investor] = eligible;
+        emit InvestorWhitelisted(investor, eligible, vcHash, msg.sender);
     }
 
     function setRiskGate(address riskGate_, bytes32 fundId_) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -39,6 +48,7 @@ contract FundToken is ERC20, Pausable, AccessControl {
     }
 
     function mint(address to, uint256 amount) external onlyRole(SUBSCRIPTION_ROLE) {
+        require(whitelist[to], "NOT_WHITELISTED");
         _mint(to, amount);
     }
 
@@ -56,5 +66,18 @@ contract FundToken is ERC20, Pausable, AccessControl {
             require(whitelist[to], "RECEIVER_NOT_WHITELISTED");
         }
         super._update(from, to, value);
+        bytes32 reason = _shareUpdateReason(from, to);
+        if (from != address(0)) {
+            emit ShareBalanceUpdated(from, balanceOf(from), totalSupply(), reason);
+        }
+        if (to != address(0) && to != from) {
+            emit ShareBalanceUpdated(to, balanceOf(to), totalSupply(), reason);
+        }
+    }
+
+    function _shareUpdateReason(address from, address to) private pure returns (bytes32) {
+        if (from == address(0)) return keccak256("SHARE_MINTED");
+        if (to == address(0)) return keccak256("SHARE_BURNED");
+        return keccak256("SHARE_TRANSFERRED");
     }
 }
