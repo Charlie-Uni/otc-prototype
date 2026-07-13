@@ -40,6 +40,17 @@ export function computeLiquidityShortfallBps(liquidityBufferRatioBps: number): n
   return Math.max(0, MAX_BPS - liquidityBufferRatioBps);
 }
 
+export function computeRedemptionPressureBps(requestedAmount: bigint, totalSupply: bigint): number {
+  if (requestedAmount < 0n || totalSupply < 0n) {
+    throw new Error('INVALID_REDEMPTION_PRESSURE_INPUT');
+  }
+  if (totalSupply === 0n) {
+    return 0;
+  }
+  const pressureBps = Number((requestedAmount * BigInt(MAX_BPS)) / totalSupply);
+  return Math.min(MAX_BPS, pressureBps);
+}
+
 export function riskLevelFor(scoreBps: number, gated: boolean): RiskLevel {
   if (gated) return 'red';
   if (scoreBps >= RED_SCORE_BPS) return 'red';

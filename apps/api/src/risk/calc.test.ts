@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   computeLiquidityShortfallBps,
   computeInvestorConcentrationBps,
+  computeRedemptionPressureBps,
   normalizeStalePricingRiskBps,
   riskLevelFor,
 } from './calc';
@@ -20,6 +21,12 @@ test('computes investor concentration as HHI from full holder shares', () => {
 test('computes liquidity shortfall and clamps surplus buffers to zero', () => {
   assert.equal(computeLiquidityShortfallBps(6_500), 3_500);
   assert.equal(computeLiquidityShortfallBps(12_000), 0);
+});
+
+test('computes redemption pressure from requested flow over total supply', () => {
+  assert.equal(computeRedemptionPressureBps(1_800n, 10_000n), 1_800);
+  assert.equal(computeRedemptionPressureBps(15_000n, 10_000n), 10_000);
+  assert.equal(computeRedemptionPressureBps(0n, 0n), 0);
 });
 
 test('forces public risk level to red while gate is active', () => {

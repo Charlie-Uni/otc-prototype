@@ -22,6 +22,7 @@ const EnvSchema = z.object({
   RISK_REGISTRY_ADDRESS: z.string().refine(isAddress, "Invalid address"),
   FUND_ID_LABEL: z.string().min(1).default("OTC_FUND_1"),
   PUBLIC_DISCLOSURE_DELAY_SEC: z.coerce.number().int().min(0).default(0),
+  REDEMPTION_PRESSURE_WINDOW_SEC: z.coerce.number().int().positive().default(24 * 60 * 60),
   PORT: z.coerce.number().default(3001),
   DATABASE_URL: z.string().optional(),
 });
@@ -53,5 +54,6 @@ console.log("ENV LOADED:", {
   RISK_REGISTRY_ADDRESS: ENV.RISK_REGISTRY_ADDRESS,
   FUND_ID_LABEL: ENV.FUND_ID_LABEL,
   PUBLIC_DISCLOSURE_DELAY_SEC: ENV.PUBLIC_DISCLOSURE_DELAY_SEC,
+  REDEMPTION_PRESSURE_WINDOW_SEC: ENV.REDEMPTION_PRESSURE_WINDOW_SEC,
   PORT: ENV.PORT,
 });
