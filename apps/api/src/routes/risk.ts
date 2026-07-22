@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { encodeAbiParameters, keccak256 } from 'viem';
 import { z } from 'zod';
+import { ACCESS_POLICY, requireAnyRole } from '../auth';
 import { getAuditEntries, recordAudit } from '../audit/log';
 import { fundId, nav, riskRegistry, rpc, token } from '../chain';
 import { ENV } from '../env';
@@ -510,7 +511,7 @@ async function sendRegulatorRiskView(req: FastifyRequest, reply: FastifyReply) {
 }
 
 export default async function (app: FastifyInstance) {
-  app.post('/risk/submit', async (req, reply) => {
+  app.post('/risk/submit', { preHandler: requireAnyRole(...ACCESS_POLICY.riskSubmit) }, async (req, reply) => {
     const body = SubmitRiskSchema.parse(req.body);
     const result = await submitWithOneConfigRetry(body);
 
@@ -550,11 +551,17 @@ export default async function (app: FastifyInstance) {
     });
   });
 
-  app.get('/risk/regulator', sendRegulatorRiskView);
+  app.get(
+    '/risk/regulator',
+    { preHandler: requireAnyRole(...ACCESS_POLICY.regulatorRiskRead) },
+    sendRegulatorRiskView,
+  );
 
   app.get('/risk/public', sendPublicRiskView);
 
   app.get('/risk', sendPublicRiskView);
 
-  app.get('/risk/audit', async () => ({ entries: getAuditEntries() }));
+  app.get('/risk/audit', { preHandler: requireAnyRole(...ACCESS_POLICY.auditRead) }, async () => ({
+    entries: getAuditEntries(),
+  }));
 }

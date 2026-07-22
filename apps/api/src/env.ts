@@ -3,6 +3,8 @@ import * as dotenv from "dotenv";
 import { z } from "zod";
 import { isAddress, getAddress } from "viem";
 
+const ApiKeySchema = z.string().min(16, "API key must contain at least 16 characters");
+
 /**
  * Explicitly load apps/api/.env
  * This avoids cwd / monorepo / tsx issues entirely.
@@ -23,6 +25,14 @@ const EnvSchema = z.object({
   FUND_ID_LABEL: z.string().min(1).default("OTC_FUND_1"),
   DEFAULT_TRANSPARENCY_REGIME: z.enum(["R0", "R1", "R2", "R3", "R4"]).default("R4"),
   ALLOW_REGIME_QUERY_OVERRIDE: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  API_KEY_INVESTOR: ApiKeySchema,
+  API_KEY_MANAGER: ApiKeySchema,
+  API_KEY_REGISTRAR: ApiKeySchema,
+  API_KEY_NAV_ORACLE: ApiKeySchema,
+  API_KEY_LIQUIDITY_ORACLE: ApiKeySchema,
+  API_KEY_RISK_ORACLE: ApiKeySchema,
+  API_KEY_REGULATOR: ApiKeySchema,
+  API_KEY_AUDITOR: ApiKeySchema,
   REDEMPTION_PRESSURE_WINDOW_SEC: z.coerce.number().int().positive().default(24 * 60 * 60),
   PORT: z.coerce.number().default(3001),
   DATABASE_URL: z.string().optional(),
@@ -48,8 +58,8 @@ export const ENV = {
  */
 console.log("ENV LOADED:", {
   RPC_URL: ENV.RPC_URL,
-  PRIVATE_KEY: ENV.PRIVATE_KEY.slice(0, 10) + "...",
-  ORACLE_PRIVATE_KEY: ENV.ORACLE_PRIVATE_KEY.slice(0, 10) + "...",
+  PRIVATE_KEY_CONFIGURED: true,
+  ORACLE_PRIVATE_KEY_CONFIGURED: true,
   FUND_TOKEN_ADDRESS: ENV.FUND_TOKEN_ADDRESS,
   NAV_REGISTRY_ADDRESS: ENV.NAV_REGISTRY_ADDRESS,
   RISK_REGISTRY_ADDRESS: ENV.RISK_REGISTRY_ADDRESS,
