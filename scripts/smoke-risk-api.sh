@@ -115,8 +115,50 @@ fi
 printf '\n--- regulator view ---\n'
 curl -sS "$API_URL/risk/regulator"
 
-printf '\n--- public real-time view ---\n'
-curl -sS "$API_URL/risk/public"
+printf '\n--- regulator R0 low-frequency view before reporting boundary ---\n'
+REGULATOR_R0="$(curl -sS "$API_URL/risk/regulator?regime=R0")"
+printf '%s\n' "$REGULATOR_R0"
+
+if [[ "$REGULATOR_R0" != *'"regime":"R0"'* || "$REGULATOR_R0" != *'"riskLevel":"unknown"'* || "$REGULATOR_R0" != *'"notYetDisclosed":true'* || "$REGULATOR_R0" == *'"snapshot"'* ]]; then
+  printf 'Expected R0 regulator view to stay low-frequency and hide the newly submitted snapshot before the reporting boundary.\n' >&2
+  exit 1
+fi
+
+printf '\n--- regulator R3 delayed view before disclosure time ---\n'
+REGULATOR_R3="$(curl -sS "$API_URL/risk/regulator?regime=R3")"
+printf '%s\n' "$REGULATOR_R3"
+
+if [[ "$REGULATOR_R3" != *'"regime":"R3"'* || "$REGULATOR_R3" != *'"riskLevel":"unknown"'* || "$REGULATOR_R3" != *'"notYetDisclosed":true'* || "$REGULATOR_R3" == *'"snapshot"'* ]]; then
+  printf 'Expected R3 regulator view to follow the public disclosure delay and hide the newly submitted snapshot before disclosure time.\n' >&2
+  exit 1
+fi
+
+printf '\n--- public R1 real-time detailed view ---\n'
+PUBLIC_R1="$(curl -sS "$API_URL/risk/public?regime=R1")"
+printf '%s\n' "$PUBLIC_R1"
+
+if [[ "$PUBLIC_R1" != *'"regime":"R1"'* || "$PUBLIC_R1" != *'"riskScoreBps":1960'* || "$PUBLIC_R1" != *'"metrics"'* ]]; then
+  printf 'Expected R1 to disclose detailed real-time risk data. Set ALLOW_REGIME_QUERY_OVERRIDE=true for local regime experiments.\n' >&2
+  exit 1
+fi
+
+printf '\n--- public R2 aggregate investor view ---\n'
+PUBLIC_R2="$(curl -sS "$API_URL/risk/public?regime=R2")"
+printf '%s\n' "$PUBLIC_R2"
+
+if [[ "$PUBLIC_R2" != *'"regime":"R2"'* || "$PUBLIC_R2" == *'"riskScoreBps"'* || "$PUBLIC_R2" == *'"metrics"'* || "$PUBLIC_R2" == *'"gated"'* ]]; then
+  printf 'Expected R2 to hide exact metrics, exact score, and private control status from investors.\n' >&2
+  exit 1
+fi
+
+printf '\n--- public R3 delayed view before disclosure time ---\n'
+PUBLIC_R3="$(curl -sS "$API_URL/risk/public?regime=R3")"
+printf '%s\n' "$PUBLIC_R3"
+
+if [[ "$PUBLIC_R3" != *'"regime":"R3"'* || "$PUBLIC_R3" != *'"notYetDisclosed":true'* ]]; then
+  printf 'Expected R3 to withhold newly submitted data until the disclosure delay elapses.\n' >&2
+  exit 1
+fi
 
 printf '\n--- trigger gate ---\n'
 GATE_NOW_SEC="$(date +%s)"
@@ -145,5 +187,11 @@ if [[ "$REDEEM_RESPONSE" != *"REDEMPTION_GATED"* ]]; then
 fi
 
 printf '\n--- public policy-delayed view ---\n'
-curl -sS "$API_URL/risk/public"
+PUBLIC_DEFAULT="$(curl -sS "$API_URL/risk/public")"
+printf '%s\n' "$PUBLIC_DEFAULT"
+
+if [[ "$PUBLIC_DEFAULT" != *'"regime":"R4"'* || "$PUBLIC_DEFAULT" != *'"riskLevel":"red"'* || "$PUBLIC_DEFAULT" != *'"gated":true'* ]]; then
+  printf 'Expected default R4 view to disclose tiered red status and active control after gate.\n' >&2
+  exit 1
+fi
 printf '\n'
