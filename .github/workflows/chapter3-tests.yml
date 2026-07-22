@@ -1,0 +1,63 @@
+name: Chapter 3 Artifact Tests
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  chapter3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: chapter3
+          POSTGRES_PASSWORD: chapter3
+          POSTGRES_DB: otc_prototype
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U chapter3 -d otc_prototype"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.6.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Install JavaScript dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Foundry dependencies
+        working-directory: contracts
+        run: |
+          forge install foundry-rs/forge-std@v1.10.0 --no-git
+          forge install OpenZeppelin/openzeppelin-contracts@v5.4.0 --no-git
+
+      - name: Run Chapter 3 test suite
+        env:
+          CHAPTER3_DATABASE_URL: postgres://chapter3:chapter3@127.0.0.1:5432/otc_prototype
+        run: pnpm test:chapter3
+
+      - name: Upload test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chapter3-test-evidence
+          path: test-results/chapter3
+          if-no-files-found: error
