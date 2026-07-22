@@ -33,6 +33,7 @@ export type PublicRiskViewArgs = {
   disclosedAt: number;
   currentGated: boolean;
   latestControlIsDisclosed: boolean;
+  latestControlEventName: 'GateTriggered' | 'GateReleased' | null;
 };
 
 export type PublicRiskUnavailableArgs = {
@@ -162,7 +163,9 @@ function controlVisibleFor(args: PublicRiskViewArgs, riskLevelWithoutControl: Ri
     case 'delayed':
       return args.latestControlIsDisclosed;
     case 'tiered':
-      return args.currentGated || riskLevelWithoutControl === 'red';
+      return args.currentGated
+        || riskLevelWithoutControl === 'red'
+        || args.latestControlEventName === 'GateReleased';
   }
 }
 

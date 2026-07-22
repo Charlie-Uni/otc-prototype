@@ -5,7 +5,7 @@
         "dev": "tsx src/index.ts",
         "test:risk": "tsx --test src/risk/*.test.ts",
         "test:auth": "tsx --test src/auth/*.test.ts",
-        "test": "tsx --test src/risk/*.test.ts src/auth/*.test.ts"
+        "test": "tsx --test src/risk/*.test.ts src/auth/*.test.ts src/audit/*.test.ts"
     },
     "dependencies": {
         "dotenv": "^16.6.1",

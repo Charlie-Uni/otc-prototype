@@ -44,6 +44,7 @@ test('R1 exposes detailed real-time public risk data and control status', () => 
     disclosedAt: 1_000,
     currentGated: true,
     latestControlIsDisclosed: true,
+    latestControlEventName: 'GateTriggered',
   });
 
   assert.equal(view.regime, 'R1');
@@ -61,6 +62,7 @@ test('R0 keeps the public payload aggregate after the low-frequency boundary', (
     disclosedAt: 7 * 24 * 60 * 60,
     currentGated: true,
     latestControlIsDisclosed: true,
+    latestControlEventName: 'GateTriggered',
   }) as Record<string, unknown>;
 
   assert.equal(view.regime, 'R0');
@@ -80,6 +82,7 @@ test('R2 keeps investor view aggregate and hides private control status', () => 
     disclosedAt: 1_000,
     currentGated: true,
     latestControlIsDisclosed: true,
+    latestControlEventName: 'GateTriggered',
   }) as Record<string, unknown>;
 
   assert.equal(view.regime, 'R2');
@@ -98,6 +101,7 @@ test('R3 delays control disclosure until the policy delay has elapsed', () => {
     disclosedAt: 1_000,
     currentGated: true,
     latestControlIsDisclosed: false,
+    latestControlEventName: 'GateTriggered',
   }) as Record<string, unknown>;
   const visible = buildPublicRiskPayload({
     regime: TRANSPARENCY_REGIMES.R3,
@@ -106,6 +110,7 @@ test('R3 delays control disclosure until the policy delay has elapsed', () => {
     disclosedAt: 1_000 + 24 * 60 * 60,
     currentGated: true,
     latestControlIsDisclosed: true,
+    latestControlEventName: 'GateTriggered',
   }) as Record<string, unknown>;
 
   assert.equal(hidden.controlDisclosed, false);
@@ -122,6 +127,7 @@ test('R4 provides tiered disclosure without exact metrics but reveals active con
     disclosedAt: 1_000,
     currentGated: true,
     latestControlIsDisclosed: true,
+    latestControlEventName: 'GateTriggered',
   }) as Record<string, unknown>;
 
   assert.equal(view.regime, 'R4');
@@ -140,6 +146,7 @@ test('R4 hides control status for a green non-gated snapshot', () => {
     disclosedAt: 1_000,
     currentGated: false,
     latestControlIsDisclosed: true,
+    latestControlEventName: null,
   }) as Record<string, unknown>;
 
   assert.equal(view.regime, 'R4');
@@ -147,6 +154,22 @@ test('R4 hides control status for a green non-gated snapshot', () => {
   assert.equal(view.riskLevel, 'green');
   assert.equal(view.riskScoreBand, 'green');
   assert.equal('gated' in view, false);
+});
+
+test('R4 discloses GateReleased even when the current snapshot is green', () => {
+  const view = buildPublicRiskPayload({
+    regime: TRANSPARENCY_REGIMES.R4,
+    snapshot,
+    observedAt: 2_000,
+    disclosedAt: 2_000,
+    currentGated: false,
+    latestControlIsDisclosed: true,
+    latestControlEventName: 'GateReleased',
+  }) as Record<string, unknown>;
+
+  assert.equal(view.controlDisclosed, true);
+  assert.equal(view.gated, false);
+  assert.equal(view.riskLevel, 'green');
 });
 
 test('delay and frequency compose by applying delay before the frequency boundary', () => {

@@ -13,6 +13,7 @@ export const ACCESS_POLICY = {
   riskSubmit: ['risk_oracle'],
   regulatorRiskRead: ['regulator'],
   auditRead: ['regulator', 'auditor'],
+  auditSync: ['regulator', 'auditor'],
 } as const;
 
 const roleKeys: ApiRoleKeys = {
@@ -27,3 +28,5 @@ const roleKeys: ApiRoleKeys = {
 };
 
 export const requireAnyRole = createRoleGuard(roleKeys);
+
+export { auditActorFor } from './role-auth';

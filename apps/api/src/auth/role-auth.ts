@@ -15,6 +15,12 @@ export const API_ROLES = [
 export type ApiRole = typeof API_ROLES[number];
 export type ApiRoleKeys = Record<ApiRole, string>;
 
+declare module 'fastify' {
+  interface FastifyRequest {
+    apiRole?: ApiRole;
+  }
+}
+
 function secureEqual(left: string, right: string): boolean {
   const leftDigest = createHash('sha256').update(left).digest();
   const rightDigest = createHash('sha256').update(right).digest();
@@ -69,6 +75,12 @@ export function createRoleGuard(roleKeys: ApiRoleKeys) {
           requiredRoles: allowedRoles,
         });
       }
+
+      request.apiRole = role;
     };
   };
+}
+
+export function auditActorFor(request: FastifyRequest): string {
+  return `api:${request.apiRole ?? 'public'}`;
 }

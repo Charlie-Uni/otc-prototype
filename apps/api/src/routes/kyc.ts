@@ -1,8 +1,10 @@
 import { FastifyInstance } from 'fastify';
 import { getAddress, isAddress, zeroHash } from 'viem';
 import { z } from 'zod';
-import { ACCESS_POLICY, requireAnyRole } from '../auth';
-import { rpc, token } from '../chain';
+import { recordAudit } from '../audit/log';
+import { waitForTransactionTimestamp } from '../audit/chain-time';
+import { ACCESS_POLICY, auditActorFor, requireAnyRole } from '../auth';
+import { token } from '../chain';
 import { db } from '../db/client';
 import { ENV } from '../env';
 
@@ -17,6 +19,10 @@ export default async function (app: FastifyInstance) {
     const investor = getAddress(body.address) as `0x${string}`;
     const vcHash = (body.vcHash ?? zeroHash) as `0x${string}`;
 
+    const c = token as any;
+    const tx = await c.write.setWhitelisted([investor, true, vcHash]);
+    const submittedAt = await waitForTransactionTimestamp(tx);
+
     if (ENV.DATABASE_URL) {
       await db.query(
         'insert into investors(address, eligible, vc_hash) values($1, true, $2) on conflict (address) do update set eligible=true, vc_hash=excluded.vc_hash',
@@ -24,9 +30,14 @@ export default async function (app: FastifyInstance) {
       );
     }
 
-    const c = token as any;
-    const tx = await c.write.setWhitelisted([investor, true, vcHash]);
-    await rpc.waitForTransactionReceipt({ hash: tx });
+    await recordAudit({
+      actor: auditActorFor(req),
+      action: 'eligibility.mark',
+      occurredAt: submittedAt,
+      submittedAt,
+      transactionHash: tx,
+      details: { investor, eligible: true, vcHash },
+    });
     return { ok: true, address: investor, vcHash, tx };
   });
 
@@ -34,10 +45,22 @@ export default async function (app: FastifyInstance) {
     const { address } = z.object({ address: z.string().refine(isAddress, 'Invalid address') }).parse(req.params);
     const investor = getAddress(address);
     if (!ENV.DATABASE_URL) {
-      return { address: investor, eligible: false, vc_hash: null };
+      const result = { address: investor, eligible: false, vc_hash: null };
+      await recordAudit({
+        actor: auditActorFor(req),
+        action: 'eligibility.read',
+        details: { investor, found: false },
+      });
+      return result;
     }
 
     const { rows } = await db.query('select eligible, vc_hash from investors where address=$1', [investor]);
-    return rows[0] ?? { address: investor, eligible: false, vc_hash: null };
+    const result = rows[0] ?? { address: investor, eligible: false, vc_hash: null };
+    await recordAudit({
+      actor: auditActorFor(req),
+      action: 'eligibility.read',
+      details: { investor, found: rows.length > 0 },
+    });
+    return result;
   });
 }

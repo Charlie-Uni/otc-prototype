@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import Fastify from 'fastify';
-import { API_ROLES, ApiRoleKeys, createRoleGuard, resolveApiRole } from './role-auth';
+import { API_ROLES, ApiRoleKeys, auditActorFor, createRoleGuard, resolveApiRole } from './role-auth';
 
 const roleKeys = Object.fromEntries(
   API_ROLES.map((role) => [role, `test-${role}-api-key`]),
@@ -27,7 +27,7 @@ test('role guard enforces authentication and authorization boundaries', async ()
   app.get(
     '/regulator-only',
     { preHandler: requireAnyRole('regulator') },
-    async () => ({ ok: true }),
+    async (request) => ({ ok: true, actor: auditActorFor(request) }),
   );
 
   const missing = await app.inject({ method: 'GET', url: '/regulator-only' });
@@ -56,7 +56,7 @@ test('role guard enforces authentication and authorization boundaries', async ()
     headers: { 'x-api-key': roleKeys.regulator },
   });
   assert.equal(allowed.statusCode, 200);
-  assert.deepEqual(allowed.json(), { ok: true });
+  assert.deepEqual(allowed.json(), { ok: true, actor: 'api:regulator' });
 
   await app.close();
 });

@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { encodeAbiParameters, keccak256 } from 'viem';
 import { z } from 'zod';
-import { ACCESS_POLICY, requireAnyRole } from '../auth';
+import { ACCESS_POLICY, auditActorFor, requireAnyRole } from '../auth';
 import { getAuditEntries, recordAudit } from '../audit/log';
 import { fundId, nav, riskRegistry, rpc, token } from '../chain';
 import { ENV } from '../env';
@@ -14,6 +14,12 @@ import {
 } from '../risk/calc';
 import { HolderShareSnapshot, readHolderShareSnapshot } from '../risk/holdings';
 import { RedemptionPressureSnapshot, readRedemptionPressureSnapshot } from '../risk/redemptions';
+import {
+  disclosedControlState,
+  latestControlTransition,
+  latestControlTransitionIsDisclosed,
+} from '../risk/control-state';
+import { readControlTransitions } from '../risk/controls';
 import {
   TRANSPARENCY_REGIME_IDS,
   TransparencyRegime,
@@ -356,10 +362,6 @@ function resolveRegimeId(rawRegime: string | undefined): TransparencyRegimeId {
   );
 }
 
-function snapshotTriggersGate(snapshot: RiskSnapshot): boolean {
-  return snapshot.riskScoreBps > snapshot.kappaBps;
-}
-
 async function findLatestDisclosedSnapshot(regime: TransparencyRegime, observedAt: number) {
   const c = riskRegistry as any;
   const length = Number(await c.read.historyLength([fundId]));
@@ -382,22 +384,25 @@ async function findLatestDisclosedSnapshot(regime: TransparencyRegime, observedA
   return { snapshot: null, disclosedAt: null, nextDisclosedAt };
 }
 
-async function buildPublicRiskView(regimeId: TransparencyRegimeId) {
+async function buildPublicRiskView(regimeId: TransparencyRegimeId, actor: string) {
   const regime = getTransparencyRegime(regimeId);
   const observedAt = nowSec();
   const c = riskRegistry as any;
   const { snapshot, disclosedAt, nextDisclosedAt } = await findLatestDisclosedSnapshot(regime, observedAt);
 
-  recordAudit('risk.public.observe', {
-    fundId,
-    regime: regime.id,
-    observedAt,
-    transparency: regime,
-    available: snapshot !== null,
-    notYetDisclosed: snapshot === null && nextDisclosedAt !== null,
-  });
-
   if (!snapshot) {
+    await recordAudit({
+      actor,
+      action: 'risk.public.observe',
+      observedAt,
+      details: {
+        fundId,
+        regime: regime.id,
+        transparency: regime,
+        available: false,
+        notYetDisclosed: nextDisclosedAt !== null,
+      },
+    });
     return buildUnavailablePublicRiskPayload({
       regime,
       notYetDisclosed: nextDisclosedAt !== null,
@@ -405,11 +410,28 @@ async function buildPublicRiskView(regimeId: TransparencyRegimeId) {
     });
   }
 
-  const latestSnapshot = await readLatestSnapshot();
-  const latestControlIsDisclosed = latestSnapshot
-    ? observedAt >= disclosureTimeFor(latestSnapshot.submittedAt, regime)
-    : true;
-  const currentGated = Boolean(await c.read.isGated([fundId]));
+  const [transitions, currentGated] = await Promise.all([
+    readControlTransitions(),
+    c.read.isGated([fundId]).then(Boolean),
+  ]);
+  const latestControlIsDisclosed = latestControlTransitionIsDisclosed(transitions, regime, observedAt);
+  const latestControlEventName = latestControlTransition(transitions)?.eventName ?? null;
+
+  await recordAudit({
+    actor,
+    action: 'risk.public.observe',
+    occurredAt: snapshot.occurredAt,
+    submittedAt: snapshot.submittedAt,
+    disclosedAt: disclosedAt as number,
+    observedAt,
+    details: {
+      fundId,
+      regime: regime.id,
+      transparency: regime,
+      payloadHash: snapshot.payloadHash,
+      available: true,
+    },
+  });
 
   return buildPublicRiskPayload({
     regime,
@@ -418,26 +440,30 @@ async function buildPublicRiskView(regimeId: TransparencyRegimeId) {
     disclosedAt: disclosedAt as number,
     currentGated,
     latestControlIsDisclosed,
+    latestControlEventName,
   });
 }
 
-async function buildRegulatorRiskView(regimeId: TransparencyRegimeId) {
+async function buildRegulatorRiskView(regimeId: TransparencyRegimeId, actor: string) {
   const regime = getTransparencyRegime(regimeId);
   const observedAt = nowSec();
   const c = riskRegistry as any;
 
   if (regulatorUsesDisclosureBoundary(regime)) {
     const { snapshot, disclosedAt, nextDisclosedAt } = await findLatestDisclosedSnapshot(regime, observedAt);
-    recordAudit('risk.regulator.observe', {
-      fundId,
-      regime: regime.id,
-      observedAt,
-      transparency: regime,
-      available: snapshot !== null,
-      notYetDisclosed: snapshot === null && nextDisclosedAt !== null,
-    });
-
     if (!snapshot) {
+      await recordAudit({
+        actor,
+        action: 'risk.regulator.observe',
+        observedAt,
+        details: {
+          fundId,
+          regime: regime.id,
+          transparency: regime,
+          available: false,
+          notYetDisclosed: nextDisclosedAt !== null,
+        },
+      });
       return buildUnavailableRegulatorRiskPayload({
         fundId,
         regime,
@@ -446,28 +472,49 @@ async function buildRegulatorRiskView(regimeId: TransparencyRegimeId) {
       });
     }
 
+    const transitions = await readControlTransitions();
+    const visibleGated = disclosedControlState(transitions, regime, observedAt);
+    await recordAudit({
+      actor,
+      action: 'risk.regulator.observe',
+      occurredAt: snapshot.occurredAt,
+      submittedAt: snapshot.submittedAt,
+      disclosedAt: disclosedAt as number,
+      observedAt,
+      details: {
+        fundId,
+        regime: regime.id,
+        transparency: regime,
+        payloadHash: snapshot.payloadHash,
+        available: true,
+      },
+    });
+
     return buildRegulatorRiskPayload({
       fundId,
       regime,
       snapshot,
       observedAt,
       disclosedAt: disclosedAt as number,
-      visibleGated: snapshotTriggersGate(snapshot),
+      visibleGated,
     });
   }
 
   const snapshot = await readLatestSnapshot();
   const gated = Boolean(await c.read.isGated([fundId]));
 
-  recordAudit('risk.regulator.observe', {
-    fundId,
-    regime: regime.id,
-    observedAt,
-    transparency: regime,
-    available: snapshot !== null,
-  });
-
   if (!snapshot) {
+    await recordAudit({
+      actor,
+      action: 'risk.regulator.observe',
+      observedAt,
+      details: {
+        fundId,
+        regime: regime.id,
+        transparency: regime,
+        available: false,
+      },
+    });
     return buildUnavailableRegulatorRiskPayload({
       fundId,
       regime,
@@ -475,6 +522,22 @@ async function buildRegulatorRiskView(regimeId: TransparencyRegimeId) {
       notYetDisclosed: false,
     });
   }
+
+  await recordAudit({
+    actor,
+    action: 'risk.regulator.observe',
+    occurredAt: snapshot.occurredAt,
+    submittedAt: snapshot.submittedAt,
+    disclosedAt: snapshot.submittedAt,
+    observedAt,
+    details: {
+      fundId,
+      regime: regime.id,
+      transparency: regime,
+      payloadHash: snapshot.payloadHash,
+      available: true,
+    },
+  });
 
   return buildRegulatorRiskPayload({
     fundId,
@@ -495,7 +558,10 @@ async function sendPublicRiskView(req: FastifyRequest, reply: FastifyReply) {
     });
   }
 
-  return reply.send(await buildPublicRiskView(resolveRegimeId(parsedQuery.data.regime)));
+  return reply.send(await buildPublicRiskView(
+    resolveRegimeId(parsedQuery.data.regime),
+    auditActorFor(req),
+  ));
 }
 
 async function sendRegulatorRiskView(req: FastifyRequest, reply: FastifyReply) {
@@ -507,7 +573,10 @@ async function sendRegulatorRiskView(req: FastifyRequest, reply: FastifyReply) {
     });
   }
 
-  return reply.send(await buildRegulatorRiskView(resolveRegimeId(parsedQuery.data.regime)));
+  return reply.send(await buildRegulatorRiskView(
+    resolveRegimeId(parsedQuery.data.regime),
+    auditActorFor(req),
+  ));
 }
 
 export default async function (app: FastifyInstance) {
@@ -515,19 +584,28 @@ export default async function (app: FastifyInstance) {
     const body = SubmitRiskSchema.parse(req.body);
     const result = await submitWithOneConfigRetry(body);
 
-    recordAudit('risk.submit', {
-      fundId,
-      riskScoreBps: result.snapshot.riskScoreBps,
-      weightsConfigId: result.config.id,
-      holderSource: result.holderSource,
-      holderSnapshot: result.holderSnapshot,
-      redemptionPressureSource: result.redemptionPressureSource,
-      redemptionPressureSnapshot: result.redemptionPressureSnapshot,
-      redemptionQueueSource: result.redemptionQueueSource,
-      stalePricingSource: result.stalePricingSource,
-      lastValuationUpdateAt: result.lastValuationUpdateAt,
-      retried: result.retried,
-      tx: result.tx,
+    const defaultRegime = getTransparencyRegime(ENV.DEFAULT_TRANSPARENCY_REGIME);
+    await recordAudit({
+      actor: auditActorFor(req),
+      action: 'risk.submit',
+      occurredAt: result.snapshot.occurredAt,
+      submittedAt: result.snapshot.submittedAt,
+      disclosedAt: disclosureTimeFor(result.snapshot.submittedAt, defaultRegime),
+      transactionHash: result.tx,
+      details: {
+        fundId,
+        payloadHash: result.snapshot.payloadHash,
+        riskScoreBps: result.snapshot.riskScoreBps,
+        weightsConfigId: result.config.id,
+        holderSource: result.holderSource,
+        holderSnapshot: result.holderSnapshot,
+        redemptionPressureSource: result.redemptionPressureSource,
+        redemptionPressureSnapshot: result.redemptionPressureSnapshot,
+        redemptionQueueSource: result.redemptionQueueSource,
+        stalePricingSource: result.stalePricingSource,
+        lastValuationUpdateAt: result.lastValuationUpdateAt,
+        retried: result.retried,
+      },
     });
 
     return reply.send({
@@ -561,7 +639,13 @@ export default async function (app: FastifyInstance) {
 
   app.get('/risk', sendPublicRiskView);
 
-  app.get('/risk/audit', { preHandler: requireAnyRole(...ACCESS_POLICY.auditRead) }, async () => ({
-    entries: getAuditEntries(),
-  }));
+  app.get('/risk/audit', { preHandler: requireAnyRole(...ACCESS_POLICY.auditRead) }, async (req) => {
+    const entries = getAuditEntries();
+    await recordAudit({
+      actor: auditActorFor(req),
+      action: 'audit.api.read',
+      details: { count: entries.length },
+    });
+    return { entries };
+  });
 }

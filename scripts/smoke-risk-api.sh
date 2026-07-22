@@ -16,6 +16,7 @@ API_KEY_REGISTRAR="${API_KEY_REGISTRAR:-dev-registrar-api-key-change-me}"
 API_KEY_NAV_ORACLE="${API_KEY_NAV_ORACLE:-dev-nav-oracle-api-key-change-me}"
 API_KEY_RISK_ORACLE="${API_KEY_RISK_ORACLE:-dev-risk-oracle-api-key-change-me}"
 API_KEY_REGULATOR="${API_KEY_REGULATOR:-dev-regulator-api-key-change-me}"
+API_KEY_AUDITOR="${API_KEY_AUDITOR:-dev-auditor-api-key-change-me}"
 REDEEM_AMOUNT="${REDEEM_AMOUNT:-1}"
 QUEUE_AMOUNT="${QUEUE_AMOUNT:-1800}"
 
@@ -35,6 +36,12 @@ fi
 UNAUTHENTICATED_QUEUE="$(curl -sS -w '|%{http_code}' "$API_URL/token/redemption-queue")"
 if [[ "$UNAUTHENTICATED_QUEUE" != *'"error":"AUTHENTICATION_REQUIRED"'* || "$UNAUTHENTICATED_QUEUE" != *'|401' ]]; then
   printf 'Expected direct redemption queue access without an API key to return 401.\n' >&2
+  exit 1
+fi
+
+UNAUTHENTICATED_AUDIT="$(curl -sS -w '|%{http_code}' -X POST "$API_URL/audit/sync")"
+if [[ "$UNAUTHENTICATED_AUDIT" != *'"error":"AUTHENTICATION_REQUIRED"'* || "$UNAUTHENTICATED_AUDIT" != *'|401' ]]; then
+  printf 'Expected lifecycle audit sync without an API key to return 401.\n' >&2
   exit 1
 fi
 
@@ -229,6 +236,54 @@ printf '%s\n' "$PUBLIC_DEFAULT"
 
 if [[ "$PUBLIC_DEFAULT" != *'"regime":"R4"'* || "$PUBLIC_DEFAULT" != *'"riskLevel":"red"'* || "$PUBLIC_DEFAULT" != *'"gated":true'* ]]; then
   printf 'Expected default R4 view to disclose tiered red status and active control after gate.\n' >&2
+  exit 1
+fi
+
+printf '\n--- synchronize lifecycle audit events ---\n'
+AUDIT_SYNC="$(curl -sS -X POST "$API_URL/audit/sync" -H "x-api-key: $API_KEY_AUDITOR")"
+printf '%s\n' "$AUDIT_SYNC"
+
+if [[ "$AUDIT_SYNC" != *'"scanned":'* || "$AUDIT_SYNC" != *'"skipped":'* || "$AUDIT_SYNC" != *'"inserted":'* ]]; then
+  printf 'Expected audit sync to scan and index lifecycle events.\n' >&2
+  exit 1
+fi
+
+printf '\n--- repeated audit sync must be idempotent ---\n'
+AUDIT_RESYNC="$(curl -sS -X POST "$API_URL/audit/sync" -H "x-api-key: $API_KEY_AUDITOR")"
+printf '%s\n' "$AUDIT_RESYNC"
+
+if [[ "$AUDIT_RESYNC" != *'"inserted":0'* ]]; then
+  printf 'Expected repeated lifecycle event sync to insert zero duplicate records.\n' >&2
+  exit 1
+fi
+
+INVALID_AUDIT_QUERY="$(curl -sS -w '|%{http_code}' "$API_URL/audit/events?regime=INVALID" -H "x-api-key: $API_KEY_AUDITOR")"
+if [[ "$INVALID_AUDIT_QUERY" != *'INVALID_AUDIT_QUERY'* || "$INVALID_AUDIT_QUERY" != *'|400' ]]; then
+  printf 'Expected invalid audit timeline query to return 400.\n' >&2
+  exit 1
+fi
+
+printf '\n--- simulation-ready four-timestamp export ---\n'
+AUDIT_SIMULATION="$(curl -sS "$API_URL/audit/simulation?regime=R4&audience=regulator" -H "x-api-key: $API_KEY_AUDITOR")"
+printf '%s\n' "$AUDIT_SIMULATION"
+
+if [[ "$AUDIT_SIMULATION" != *'"eventName":"GateTriggered"'* || "$AUDIT_SIMULATION" != *'"disclosedAt":'* || "$AUDIT_SIMULATION" != *'"observedAt":'* || "$AUDIT_SIMULATION" != *'"detectionLagDefinition":"not_assigned"'* ]]; then
+  printf 'Expected simulation export to contain GateTriggered and all timestamp dimensions without assigning DetectionLag.\n' >&2
+  exit 1
+fi
+
+printf '\n--- lifecycle CSV export ---\n'
+AUDIT_CSV="$(curl -sS "$API_URL/audit/lifecycle.csv?regime=R4&audience=regulator" -H "x-api-key: $API_KEY_AUDITOR")"
+if [[ "$AUDIT_CSV" != eventId,contractName,eventName,category,* || "$AUDIT_CSV" != *'GateTriggered'* ]]; then
+  printf 'Expected lifecycle CSV to contain the timestamp schema and GateTriggered event.\n' >&2
+  exit 1
+fi
+
+
+printf '\n--- API access audit export ---\n'
+API_AUDIT_CSV="$(curl -sS "$API_URL/audit/export" -H "x-api-key: $API_KEY_AUDITOR")"
+if [[ "$API_AUDIT_CSV" != actor,action,occurredAt,submittedAt,disclosedAt,observedAt,* || "$API_AUDIT_CSV" != *'eligibility.mark'* || "$API_AUDIT_CSV" != *'risk.public.observe'* ]]; then
+  printf 'Expected API audit CSV to contain the four-timestamp schema and lifecycle access actions.\n' >&2
   exit 1
 fi
 printf '\n'
