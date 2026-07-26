@@ -1,6 +1,7 @@
 # env / secrets
 .env
 **/.env
+.pnpm-store/
 
 # node
 node_modules/
@@ -25,3 +26,4 @@ contracts/.gitmodules
 /next/
 next
 next/
+test-results/

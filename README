@@ -234,3 +234,19 @@ Restart Anvil
 Redeploy contracts
 
 Restart API + Web
+
+10. Chapter 3 Test Evidence
+
+Run the complete Chapter 3 artifact test suite from the repository root:
+
+pnpm test:chapter3
+
+The command runs Foundry contract tests, TypeScript checking, API unit tests, a fresh Anvil deployment, and the end-to-end risk and audit scenario. Evidence is written to:
+
+test-results/chapter3/<UTC timestamp>/
+
+The default local run uses the in-memory audit index. To verify PostgreSQL persistence and API restart recovery, provide a test database:
+
+CHAPTER3_DATABASE_URL=postgres://user:password@127.0.0.1:5432/otc_prototype pnpm test:chapter3
+
+The GitHub Actions workflow runs this PostgreSQL mode automatically and uploads the evidence directory as a build artifact. The mapping from tests to the Chapter 3 evaluation dimensions is documented in docs/chapter3-test-matrix.md.
