@@ -19,6 +19,12 @@ const EnvSchema = z.object({
   ORACLE_PRIVATE_KEY: z
     .string()
     .regex(/^0x[0-9a-fA-F]{64}$/, "Invalid oracle private key"),
+  REGULATOR_PRIVATE_KEY: z
+    .string()
+    .regex(/^0x[0-9a-fA-F]{64}$/, "Invalid regulator private key"),
+  LIQUIDITY_ORACLE_PRIVATE_KEY: z
+    .string()
+    .regex(/^0x[0-9a-fA-F]{64}$/, "Invalid liquidity oracle private key"),
   FUND_TOKEN_ADDRESS: z.string().refine(isAddress, "Invalid address"),
   NAV_REGISTRY_ADDRESS: z.string().refine(isAddress, "Invalid address"),
   RISK_REGISTRY_ADDRESS: z.string().refine(isAddress, "Invalid address"),
@@ -60,6 +66,8 @@ console.log("ENV LOADED:", {
   RPC_URL: ENV.RPC_URL,
   PRIVATE_KEY_CONFIGURED: true,
   ORACLE_PRIVATE_KEY_CONFIGURED: true,
+  REGULATOR_PRIVATE_KEY_CONFIGURED: true,
+  LIQUIDITY_ORACLE_PRIVATE_KEY_CONFIGURED: true,
   FUND_TOKEN_ADDRESS: ENV.FUND_TOKEN_ADDRESS,
   NAV_REGISTRY_ADDRESS: ENV.NAV_REGISTRY_ADDRESS,
   RISK_REGISTRY_ADDRESS: ENV.RISK_REGISTRY_ADDRESS,

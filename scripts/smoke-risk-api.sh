@@ -14,11 +14,58 @@ VC_HASH_D="${VC_HASH_D:-0x000000000000000000000000000000000000000000000000000000
 API_KEY_MANAGER="${API_KEY_MANAGER:-dev-manager-api-key-change-me}"
 API_KEY_REGISTRAR="${API_KEY_REGISTRAR:-dev-registrar-api-key-change-me}"
 API_KEY_NAV_ORACLE="${API_KEY_NAV_ORACLE:-dev-nav-oracle-api-key-change-me}"
+API_KEY_LIQUIDITY_ORACLE="${API_KEY_LIQUIDITY_ORACLE:-dev-liquidity-oracle-api-key-change-me}"
 API_KEY_RISK_ORACLE="${API_KEY_RISK_ORACLE:-dev-risk-oracle-api-key-change-me}"
 API_KEY_REGULATOR="${API_KEY_REGULATOR:-dev-regulator-api-key-change-me}"
 API_KEY_AUDITOR="${API_KEY_AUDITOR:-dev-auditor-api-key-change-me}"
 REDEEM_AMOUNT="${REDEEM_AMOUNT:-1}"
 QUEUE_AMOUNT="${QUEUE_AMOUNT:-1800}"
+GATE_RELEASE_REASON_HASH="${GATE_RELEASE_REASON_HASH:-0x0000000000000000000000000000000000000000000000000000000000000a11}"
+SETTLEMENT_DELAY_REASON_HASH="${SETTLEMENT_DELAY_REASON_HASH:-0x0000000000000000000000000000000000000000000000000000000000000d11}"
+ZERO_HASH="0x0000000000000000000000000000000000000000000000000000000000000000"
+SWING_RULE_ID="${SWING_RULE_ID:-0x0000000000000000000000000000000000000000000000000000000000000051}"
+SIDE_POCKET_RULE_ID="${SIDE_POCKET_RULE_ID:-0x0000000000000000000000000000000000000000000000000000000000000052}"
+SIDE_POCKET_ASSET_COMMITMENT="${SIDE_POCKET_ASSET_COMMITMENT:-0x0000000000000000000000000000000000000000000000000000000000000a55}"
+
+request_and_accept_subscription() {
+  local investor="$1"
+  local amount="$2"
+  local request_response request_id accept_response read_response
+
+  request_response="$(
+    curl -sS -X POST "$API_URL/token/request-subscription" \
+      -H "x-api-key: $API_KEY_MANAGER" \
+      -H 'content-type: application/json' \
+      -d "{\"to\":\"$investor\",\"amount\":\"$amount\"}"
+  )"
+  printf '%s\n' "$request_response"
+  request_id="$(printf '%s' "$request_response" | sed -n 's/.*"requestId":"\([0-9][0-9]*\)".*/\1/p')"
+  if [[ -z "$request_id" || "$request_response" != *'"status":"pending"'* ]]; then
+    printf 'Expected subscription request to enter pending state.\n' >&2
+    exit 1
+  fi
+
+  accept_response="$(
+    curl -sS -X POST "$API_URL/token/accept-subscription" \
+      -H "x-api-key: $API_KEY_MANAGER" \
+      -H 'content-type: application/json' \
+      -d "{\"requestId\":\"$request_id\"}"
+  )"
+  printf '%s\n' "$accept_response"
+  if [[ "$accept_response" != *"\"requestId\":\"$request_id\""* || "$accept_response" != *'"status":"accepted"'* ]]; then
+    printf 'Expected pending subscription to be accepted before shares are registered.\n' >&2
+    exit 1
+  fi
+
+  read_response="$(
+    curl -sS "$API_URL/token/subscription-request/$request_id" \
+      -H "x-api-key: $API_KEY_REGULATOR"
+  )"
+  if [[ "$read_response" != *"\"investor\":\"$investor\""* || "$read_response" != *'"status":"accepted"'* ]]; then
+    printf 'Expected regulator read access to the accepted subscription state.\n' >&2
+    exit 1
+  fi
+}
 
 printf '%s\n' '--- privileged views reject missing and wrong-role credentials ---'
 UNAUTHENTICATED_REGULATOR="$(curl -sS -w '|%{http_code}' "$API_URL/risk/regulator")"
@@ -67,27 +114,17 @@ curl -sS -X POST "$API_URL/kyc/mark-eligible" \
   -d "{\"address\":\"$HOLDER_D\",\"vcHash\":\"$VC_HASH_D\"}"
 printf '\n'
 
-printf '%s\n' '--- seed share registry from ShareBalanceUpdated events ---'
-curl -sS -X POST "$API_URL/token/subscribe" \
-  -H "x-api-key: $API_KEY_MANAGER" \
-  -H 'content-type: application/json' \
-  -d "{\"to\":\"$HOLDER_A\",\"amount\":\"4000\"}"
-printf '\n'
-curl -sS -X POST "$API_URL/token/subscribe" \
-  -H "x-api-key: $API_KEY_MANAGER" \
-  -H 'content-type: application/json' \
-  -d "{\"to\":\"$HOLDER_B\",\"amount\":\"3000\"}"
-printf '\n'
-curl -sS -X POST "$API_URL/token/subscribe" \
-  -H "x-api-key: $API_KEY_MANAGER" \
-  -H 'content-type: application/json' \
-  -d "{\"to\":\"$HOLDER_C\",\"amount\":\"2000\"}"
-printf '\n'
-curl -sS -X POST "$API_URL/token/subscribe" \
-  -H "x-api-key: $API_KEY_MANAGER" \
-  -H 'content-type: application/json' \
-  -d "{\"to\":\"$HOLDER_D\",\"amount\":\"1000\"}"
-printf '\n'
+ELIGIBILITY_RESPONSE="$(curl -sS "$API_URL/kyc/$HOLDER_A" -H "x-api-key: $API_KEY_REGULATOR")"
+if [[ "$ELIGIBILITY_RESPONSE" != *'"eligible":true'* || "$ELIGIBILITY_RESPONSE" != *'"source":"chain'* ]]; then
+  printf 'Expected eligibility reads to use the on-chain whitelist as the source of truth.\n' >&2
+  exit 1
+fi
+
+printf '%s\n' '--- request, accept, and register subscriptions ---'
+request_and_accept_subscription "$HOLDER_A" 4000
+request_and_accept_subscription "$HOLDER_B" 3000
+request_and_accept_subscription "$HOLDER_C" 2000
+request_and_accept_subscription "$HOLDER_D" 1000
 
 printf '%s\n' '--- request redemption into queue ---'
 curl -sS -X POST "$API_URL/token/redeem" \
@@ -100,27 +137,76 @@ printf '\n'
 
 printf '%s\n' '--- post NAV for chain-derived stale pricing timestamp ---'
 NAV_AS_OF="$(date +%s)"
-curl -sS -X POST "$API_URL/nav/post" \
+INITIAL_NAV_RESPONSE="$(curl -sS -X POST "$API_URL/nav/post" \
   -H "x-api-key: $API_KEY_NAV_ORACLE" \
   -H 'content-type: application/json' \
-  -d "{\"nav\":\"1000000\",\"asOf\":$NAV_AS_OF}"
-printf '\n'
+  -d "{\"nav\":\"1000000\",\"asOf\":$NAV_AS_OF}")"
+printf '%s\n' "$INITIAL_NAV_RESPONSE"
+if [[ "$INITIAL_NAV_RESPONSE" != *'"navAdjustmentBps":"0"'* || "$INITIAL_NAV_RESPONSE" != *'"payloadHash":'* ]]; then
+  printf 'Expected the first fund-scoped NAV to have zero adjustment and a commitment hash.\n' >&2
+  exit 1
+fi
+
+ADJUSTED_NAV_RESPONSE="$(curl -sS -X POST "$API_URL/nav/post" \
+  -H "x-api-key: $API_KEY_NAV_ORACLE" \
+  -H 'content-type: application/json' \
+  -d "{\"nav\":\"1100000\",\"asOf\":$NAV_AS_OF}")"
+printf '%s\n' "$ADJUSTED_NAV_RESPONSE"
+if [[ "$ADJUSTED_NAV_RESPONSE" != *'"navAdjustmentBps":"1000"'* || "$ADJUSTED_NAV_RESPONSE" != *'"payloadHash":'* ]]; then
+  printf 'Expected the second NAV to derive a positive 1000 bps NAVAdjustment on chain.\n' >&2
+  exit 1
+fi
 
 NOW_SEC="$(date +%s)"
+VALUATION_HAIRCUT_RESPONSE="$(curl -sS -X POST "$API_URL/nav/valuation-haircut" \
+  -H "x-api-key: $API_KEY_NAV_ORACLE" \
+  -H 'content-type: application/json' \
+  -d "{\"valuationHaircutBps\":1200,\"occurredAt\":$NOW_SEC}")"
+printf '%s\n' "$VALUATION_HAIRCUT_RESPONSE"
+if [[ "$VALUATION_HAIRCUT_RESPONSE" != *'"valuationHaircutBps":1200'* || "$VALUATION_HAIRCUT_RESPONSE" != *'"payloadHash":'* ]]; then
+  printf 'Expected valuation Oracle to record haircut state and commitment before risk scoring.\n' >&2
+  exit 1
+fi
+
+printf '%s\n' '--- liquidity oracle records the scoring input on chain ---'
+FORBIDDEN_LIQUIDITY_UPDATE="$(
+  curl -sS -w '|%{http_code}' -X POST "$API_URL/liquidity/update" \
+    -H "x-api-key: $API_KEY_MANAGER" \
+    -H 'content-type: application/json' \
+    -d "{\"liquidityBufferRatioBps\":6500,\"occurredAt\":$NOW_SEC}"
+)"
+if [[ "$FORBIDDEN_LIQUIDITY_UPDATE" != *'"error":"FORBIDDEN"'* || "$FORBIDDEN_LIQUIDITY_UPDATE" != *'|403' ]]; then
+  printf 'Expected non-liquidity role to be forbidden from updating the buffer.\n' >&2
+  exit 1
+fi
+
+LIQUIDITY_RESPONSE="$(curl -sS -X POST "$API_URL/liquidity/update" \
+  -H "x-api-key: $API_KEY_LIQUIDITY_ORACLE" \
+  -H 'content-type: application/json' \
+  -d "{\"liquidityBufferRatioBps\":6500,\"occurredAt\":$NOW_SEC}")"
+printf '%s\n' "$LIQUIDITY_RESPONSE"
+if [[ "$LIQUIDITY_RESPONSE" != *'"liquidityBufferRatioBps":6500'* || "$LIQUIDITY_RESPONSE" != *'"payloadHash":'* ]]; then
+  printf 'Expected liquidity Oracle update with a state commitment.\n' >&2
+  exit 1
+fi
+
 RISK_RESPONSE="$(
   curl -sS -X POST "$API_URL/risk/submit" \
     -H "x-api-key: $API_KEY_RISK_ORACLE" \
     -H 'content-type: application/json' \
     -d "{
-    \"occurredAt\": $NOW_SEC,
-    \"valuationHaircutBps\": 1200,
-    \"liquidityBufferRatioBps\": 6500
+    \"occurredAt\": $NOW_SEC
   }"
 )"
 printf '%s\n' "$RISK_RESPONSE"
 
 if [[ "$RISK_RESPONSE" != *'"holderSource":"chain"'* ]]; then
   printf 'Expected risk submission to derive holder concentration from chain events.\n' >&2
+  exit 1
+fi
+
+if [[ "$RISK_RESPONSE" != *'"valuationHaircutSource":"chain"'* || "$RISK_RESPONSE" != *'"valuationHaircutBps":1200'* ]]; then
+  printf 'Expected risk submission to derive valuation haircut from the authorized chain update.\n' >&2
   exit 1
 fi
 
@@ -154,6 +240,11 @@ if [[ "$RISK_RESPONSE" != *'"stalePricingSource":"chain"'* ]]; then
   exit 1
 fi
 
+if [[ "$RISK_RESPONSE" != *'"liquidityBufferSource":"chain"'* || "$RISK_RESPONSE" != *'"liquidityBufferRatioBps":6500'* ]]; then
+  printf 'Expected risk submission to derive liquidity buffer state from the authorized chain update.\n' >&2
+  exit 1
+fi
+
 printf '\n--- regulator view ---\n'
 curl -sS "$API_URL/risk/regulator" -H "x-api-key: $API_KEY_REGULATOR"
 
@@ -179,7 +270,7 @@ printf '\n--- public R1 real-time detailed view ---\n'
 PUBLIC_R1="$(curl -sS "$API_URL/risk/public?regime=R1")"
 printf '%s\n' "$PUBLIC_R1"
 
-if [[ "$PUBLIC_R1" != *'"regime":"R1"'* || "$PUBLIC_R1" != *'"riskScoreBps":1960'* || "$PUBLIC_R1" != *'"metrics"'* ]]; then
+if [[ "$PUBLIC_R1" != *'"regime":"R1"'* || "$PUBLIC_R1" != *'"riskScoreBps":1883'* || "$PUBLIC_R1" != *'"metrics"'* ]]; then
   printf 'Expected R1 to disclose detailed real-time risk data. Set ALLOW_REGIME_QUERY_OVERRIDE=true for local regime experiments.\n' >&2
   exit 1
 fi
@@ -203,18 +294,88 @@ if [[ "$PUBLIC_R3" != *'"regime":"R3"'* || "$PUBLIC_R3" != *'"notYetDisclosed":t
 fi
 
 printf '\n--- trigger gate ---\n'
+printf '%s\n' '--- increase concentration, redemption pressure, and queue state through lifecycle actions ---'
+request_and_accept_subscription "$HOLDER_A" 90000
+curl -sS -X POST "$API_URL/token/redeem" \
+  -H "x-api-key: $API_KEY_MANAGER" \
+  -H 'content-type: application/json' \
+  -d "{\"from\":\"$HOLDER_A\",\"amount\":\"90000\"}"
+printf '\n'
+
 GATE_NOW_SEC="$(date +%s)"
-GATE_LAST_VALUATION_SEC="$((GATE_NOW_SEC - 5184000))"
-curl -sS -X POST "$API_URL/risk/submit" \
+curl -sS -X POST "$API_URL/nav/valuation-haircut" \
+  -H "x-api-key: $API_KEY_NAV_ORACLE" \
+  -H 'content-type: application/json' \
+  -d "{\"valuationHaircutBps\":9000,\"occurredAt\":$GATE_NOW_SEC}"
+printf '\n'
+curl -sS -X POST "$API_URL/liquidity/update" \
+  -H "x-api-key: $API_KEY_LIQUIDITY_ORACLE" \
+  -H 'content-type: application/json' \
+  -d "{\"liquidityBufferRatioBps\":0,\"occurredAt\":$GATE_NOW_SEC}"
+printf '\n'
+
+FORBIDDEN_RISK_OVERRIDE="$(
+  curl -sS -w '|%{http_code}' -X POST "$API_URL/risk/submit" \
+    -H "x-api-key: $API_KEY_RISK_ORACLE" \
+    -H 'content-type: application/json' \
+    -d "{\"occurredAt\":$GATE_NOW_SEC,\"redemptionPressureBps\":9000}"
+)"
+if [[ "$FORBIDDEN_RISK_OVERRIDE" != *'"error":"INVALID_REQUEST"'* || "$FORBIDDEN_RISK_OVERRIDE" != *'|400' ]]; then
+  printf 'Expected risk submission to reject request-level overrides of chain-derived metrics.\n' >&2
+  exit 1
+fi
+
+HIGH_RISK_RESPONSE="$(curl -sS -X POST "$API_URL/risk/submit" \
   -H "x-api-key: $API_KEY_RISK_ORACLE" \
   -H 'content-type: application/json' \
-  -d "{
-    \"occurredAt\": $GATE_NOW_SEC,
-    \"valuationHaircutBps\": 9000,
-    \"redemptionPressureBps\": 9000,
-    \"liquidityBufferRatioBps\": 0,
-    \"lastValuationUpdateAt\": $GATE_LAST_VALUATION_SEC
-  }"
+  -d "{\"occurredAt\":$GATE_NOW_SEC}")"
+printf '%s\n' "$HIGH_RISK_RESPONSE"
+if [[ "$HIGH_RISK_RESPONSE" != *'"holderSource":"chain"'* || "$HIGH_RISK_RESPONSE" != *'"redemptionPressureSource":"chain"'* || "$HIGH_RISK_RESPONSE" != *'"redemptionQueueSource":"chain"'* || "$HIGH_RISK_RESPONSE" != *'"stalePricingSource":"chain"'* ]]; then
+  printf 'Expected every lifecycle-derived metric to remain bound to chain state during the gate scenario.\n' >&2
+  exit 1
+fi
+if [[ "$HIGH_RISK_RESPONSE" != *'"riskScoreBps":7702'* ]]; then
+  printf 'Expected equal-weight chain-derived high-risk score to be 7702 bps.\n' >&2
+  exit 1
+fi
+
+printf '\n--- record extended control evidence without simulating full fund accounting ---\n'
+INVALID_SWING_RULE="$(
+  curl -sS -w '|%{http_code}' -X POST "$API_URL/controls/swing-pricing" \
+    -H "x-api-key: $API_KEY_MANAGER" \
+    -H 'content-type: application/json' \
+    -d "{\"adjustmentBps\":350,\"ruleId\":\"$ZERO_HASH\",\"occurredAt\":$GATE_NOW_SEC}"
+)"
+if [[ "$INVALID_SWING_RULE" != *'"error":"INVALID_REQUEST"'* || "$INVALID_SWING_RULE" != *'|400' ]]; then
+  printf 'Expected the API to reject a zero control rule commitment before contract submission.\n' >&2
+  exit 1
+fi
+
+SWING_RESPONSE="$(curl -sS -X POST "$API_URL/controls/swing-pricing" \
+  -H "x-api-key: $API_KEY_MANAGER" \
+  -H 'content-type: application/json' \
+  -d "{\"adjustmentBps\":350,\"ruleId\":\"$SWING_RULE_ID\",\"occurredAt\":$GATE_NOW_SEC}")"
+printf '%s\n' "$SWING_RESPONSE"
+if [[ "$SWING_RESPONSE" != *'"adjustmentBps":350'* || "$SWING_RESPONSE" != *'"payloadHash":'* ]]; then
+  printf 'Expected swing pricing state, trigger rule, and commitment evidence.\n' >&2
+  exit 1
+fi
+
+SIDE_POCKET_RESPONSE="$(curl -sS -X POST "$API_URL/controls/side-pocket" \
+  -H "x-api-key: $API_KEY_MANAGER" \
+  -H 'content-type: application/json' \
+  -d "{\"assetCommitmentHash\":\"$SIDE_POCKET_ASSET_COMMITMENT\",\"ruleId\":\"$SIDE_POCKET_RULE_ID\",\"occurredAt\":$GATE_NOW_SEC}")"
+printf '%s\n' "$SIDE_POCKET_RESPONSE"
+if [[ "$SIDE_POCKET_RESPONSE" != *"\"assetCommitmentHash\":\"$SIDE_POCKET_ASSET_COMMITMENT\""* || "$SIDE_POCKET_RESPONSE" != *'"payloadHash":'* ]]; then
+  printf 'Expected side-pocket state, trigger rule, and asset commitment evidence.\n' >&2
+  exit 1
+fi
+
+CONTROL_STATE="$(curl -sS "$API_URL/controls/state" -H "x-api-key: $API_KEY_REGULATOR")"
+if [[ "$CONTROL_STATE" != *'"swingPricingActive":true'* || "$CONTROL_STATE" != *'"sidePocketActive":true'* || "$CONTROL_STATE" != *'"swingPricingAdjustmentBps":350'* ]]; then
+  printf 'Expected regulator to observe active extended control state.\n' >&2
+  exit 1
+fi
 
 printf '\n--- redemption must be gated ---\n'
 REDEEM_RESPONSE="$(
@@ -236,6 +397,120 @@ printf '%s\n' "$PUBLIC_DEFAULT"
 
 if [[ "$PUBLIC_DEFAULT" != *'"regime":"R4"'* || "$PUBLIC_DEFAULT" != *'"riskLevel":"red"'* || "$PUBLIC_DEFAULT" != *'"gated":true'* ]]; then
   printf 'Expected default R4 view to disclose tiered red status and active control after gate.\n' >&2
+  exit 1
+fi
+
+printf '\n--- only regulator may release gate ---\n'
+FORBIDDEN_GATE_RELEASE="$(
+  curl -sS -w '|%{http_code}' -X POST "$API_URL/risk/release-gate" \
+    -H "x-api-key: $API_KEY_MANAGER" \
+    -H 'content-type: application/json' \
+    -d "{\"reasonHash\":\"$GATE_RELEASE_REASON_HASH\"}"
+)"
+if [[ "$FORBIDDEN_GATE_RELEASE" != *'"error":"FORBIDDEN"'* || "$FORBIDDEN_GATE_RELEASE" != *'|403' ]]; then
+  printf 'Expected manager credentials on gate release to return 403.\n' >&2
+  exit 1
+fi
+
+INVALID_GATE_RELEASE="$(
+  curl -sS -w '|%{http_code}' -X POST "$API_URL/risk/release-gate" \
+    -H "x-api-key: $API_KEY_REGULATOR" \
+    -H 'content-type: application/json' \
+    -d '{"reasonHash":"not-a-bytes32-hash"}'
+)"
+if [[ "$INVALID_GATE_RELEASE" != *'"error":"INVALID_REASON_HASH"'* || "$INVALID_GATE_RELEASE" != *'|400' ]]; then
+  printf 'Expected malformed gate release reason hash to return 400.\n' >&2
+  exit 1
+fi
+
+GATE_RELEASE="$(
+  curl -sS -X POST "$API_URL/risk/release-gate" \
+    -H "x-api-key: $API_KEY_REGULATOR" \
+    -H 'content-type: application/json' \
+    -d "{\"reasonHash\":\"$GATE_RELEASE_REASON_HASH\"}"
+)"
+printf '%s\n' "$GATE_RELEASE"
+if [[ "$GATE_RELEASE" != *'"gated":false'* || "$GATE_RELEASE" != *"\"reasonHash\":\"$GATE_RELEASE_REASON_HASH\""* ]]; then
+  printf 'Expected regulator to release gate with an auditable reason hash.\n' >&2
+  exit 1
+fi
+
+REPEATED_GATE_RELEASE="$(
+  curl -sS -w '|%{http_code}' -X POST "$API_URL/risk/release-gate" \
+    -H "x-api-key: $API_KEY_REGULATOR" \
+    -H 'content-type: application/json' \
+    -d "{\"reasonHash\":\"$GATE_RELEASE_REASON_HASH\"}"
+)"
+if [[ "$REPEATED_GATE_RELEASE" != *'"error":"FUND_NOT_GATED"'* || "$REPEATED_GATE_RELEASE" != *'|409' ]]; then
+  printf 'Expected repeated gate release to return 409.\n' >&2
+  exit 1
+fi
+
+printf '\n--- redemption resumes after gate release ---\n'
+POST_RELEASE_REDEMPTION="$(
+  curl -sS -X POST "$API_URL/token/redeem" \
+    -H "x-api-key: $API_KEY_MANAGER" \
+    -H 'content-type: application/json' \
+    -d "{\"from\":\"$INVESTOR_ADDRESS\",\"amount\":\"$REDEEM_AMOUNT\"}"
+)"
+printf '%s\n' "$POST_RELEASE_REDEMPTION"
+POST_RELEASE_REQUEST_ID="$(printf '%s' "$POST_RELEASE_REDEMPTION" | sed -n 's/.*"requestId":"\([0-9][0-9]*\)".*/\1/p')"
+if [[ -z "$POST_RELEASE_REQUEST_ID" || "$POST_RELEASE_REDEMPTION" != *'"status":"queued"'* ]]; then
+  printf 'Expected redemption requests to resume after regulator gate release.\n' >&2
+  exit 1
+fi
+
+printf '\n--- flag and settle the queued redemption lifecycle ---\n'
+INVALID_DELAY_REASON="$(
+  curl -sS -w '|%{http_code}' -X POST "$API_URL/token/flag-settlement-delayed" \
+    -H "x-api-key: $API_KEY_MANAGER" \
+    -H 'content-type: application/json' \
+    -d "{\"requestId\":\"$POST_RELEASE_REQUEST_ID\",\"reasonHash\":\"$ZERO_HASH\"}"
+)"
+if [[ "$INVALID_DELAY_REASON" != *'"error":"INVALID_REQUEST"'* || "$INVALID_DELAY_REASON" != *'|400' ]]; then
+  printf 'Expected the API to reject a zero settlement-delay reason commitment.\n' >&2
+  exit 1
+fi
+
+DELAY_RESPONSE="$(
+  curl -sS -X POST "$API_URL/token/flag-settlement-delayed" \
+    -H "x-api-key: $API_KEY_MANAGER" \
+    -H 'content-type: application/json' \
+    -d "{\"requestId\":\"$POST_RELEASE_REQUEST_ID\",\"reasonHash\":\"$SETTLEMENT_DELAY_REASON_HASH\"}"
+)"
+printf '%s\n' "$DELAY_RESPONSE"
+if [[ "$DELAY_RESPONSE" != *"\"requestId\":\"$POST_RELEASE_REQUEST_ID\""* || "$DELAY_RESPONSE" != *'"status":"delayed"'* ]]; then
+  printf 'Expected a pending redemption to record an auditable settlement delay.\n' >&2
+  exit 1
+fi
+
+DELAYED_REQUEST="$(
+  curl -sS "$API_URL/token/redemption-request/$POST_RELEASE_REQUEST_ID" \
+    -H "x-api-key: $API_KEY_REGULATOR"
+)"
+if [[ "$DELAYED_REQUEST" != *'"delayed":true'* || "$DELAYED_REQUEST" != *"\"delayReasonHash\":\"$SETTLEMENT_DELAY_REASON_HASH\""* ]]; then
+  printf 'Expected redemption state to retain the delay flag and reason commitment.\n' >&2
+  exit 1
+fi
+
+SETTLEMENT_RESPONSE="$(
+  curl -sS -X POST "$API_URL/token/settle-redemption" \
+    -H "x-api-key: $API_KEY_MANAGER" \
+    -H 'content-type: application/json' \
+    -d "{\"requestId\":\"$POST_RELEASE_REQUEST_ID\"}"
+)"
+printf '%s\n' "$SETTLEMENT_RESPONSE"
+if [[ "$SETTLEMENT_RESPONSE" != *"\"requestId\":\"$POST_RELEASE_REQUEST_ID\""* || "$SETTLEMENT_RESPONSE" != *'"status":"settled"'* ]]; then
+  printf 'Expected the delayed redemption to remain eligible for final settlement after gate release.\n' >&2
+  exit 1
+fi
+
+SETTLED_REQUEST="$(
+  curl -sS "$API_URL/token/redemption-request/$POST_RELEASE_REQUEST_ID" \
+    -H "x-api-key: $API_KEY_REGULATOR"
+)"
+if [[ "$SETTLED_REQUEST" != *'"settled":true'* || "$SETTLED_REQUEST" != *'"delayed":true'* ]]; then
+  printf 'Expected final redemption state to preserve both settlement and prior delay evidence.\n' >&2
   exit 1
 fi
 
@@ -267,8 +542,65 @@ printf '\n--- simulation-ready four-timestamp export ---\n'
 AUDIT_SIMULATION="$(curl -sS "$API_URL/audit/simulation?regime=R4&audience=regulator" -H "x-api-key: $API_KEY_AUDITOR")"
 printf '%s\n' "$AUDIT_SIMULATION"
 
-if [[ "$AUDIT_SIMULATION" != *'"eventName":"GateTriggered"'* || "$AUDIT_SIMULATION" != *'"disclosedAt":'* || "$AUDIT_SIMULATION" != *'"observedAt":'* || "$AUDIT_SIMULATION" != *'"detectionLagDefinition":"not_assigned"'* ]]; then
-  printf 'Expected simulation export to contain GateTriggered and all timestamp dimensions without assigning DetectionLag.\n' >&2
+if [[ "$AUDIT_SIMULATION" != *'"eventName":"SubscriptionRequested"'* || "$AUDIT_SIMULATION" != *'"eventName":"SubscriptionAccepted"'* || "$AUDIT_SIMULATION" != *'"eventName":"RedemptionRequested"'* || "$AUDIT_SIMULATION" != *'"eventName":"SettlementDelayed"'* || "$AUDIT_SIMULATION" != *'"eventName":"RedemptionSettled"'* || "$AUDIT_SIMULATION" != *'"eventName":"NAVUpdatedEvent"'* || "$AUDIT_SIMULATION" != *'"eventName":"LiquidityBufferUpdated"'* || "$AUDIT_SIMULATION" != *'"eventName":"ValuationHaircutEvent"'* || "$AUDIT_SIMULATION" != *'"eventName":"SwingPricingApplied"'* || "$AUDIT_SIMULATION" != *'"eventName":"SidePocketCreated"'* || "$AUDIT_SIMULATION" != *'"eventName":"GateTriggered"'* || "$AUDIT_SIMULATION" != *'"disclosedAt":'* || "$AUDIT_SIMULATION" != *'"observedAt":'* || "$AUDIT_SIMULATION" != *'"detectionLagDefinition":"three_measure_model"'* ]]; then
+  printf 'Expected simulation export to contain all implemented lifecycle signals, controls, and timestamps.\n' >&2
+  exit 1
+fi
+
+printf '\n--- three-measure DetectionLag analysis from chain-offline shockAt ---\n'
+DETECTION_ANALYSIS="$(curl -sS -X POST "$API_URL/audit/detection-lags" \
+  -H "x-api-key: $API_KEY_AUDITOR" \
+  -H 'content-type: application/json' \
+  -d "{
+    \"scenarioId\":\"smoke-valuation-shock\",
+    \"shockAt\":$GATE_NOW_SEC,
+    \"detectionThresholdBps\":6000,
+    \"observationStartAt\":$GATE_NOW_SEC,
+    \"pollingIntervalSec\":60
+  }")"
+printf '%s\n' "$DETECTION_ANALYSIS"
+if ! node -e '
+  const analysis = JSON.parse(process.argv[1]);
+  const row = (regime, audience) => analysis.rows.find(
+    (candidate) => candidate.regime === regime && candidate.audience === audience,
+  );
+  const r1 = row("R1", "public");
+  const r3 = row("R3", "public");
+  const r0 = row("R0", "public");
+  const systemLag = analysis.systemDetectionLagSec;
+  const pollingInterval = analysis.scenario.pollingIntervalSec;
+  const valid =
+    analysis.anchor.eventName === "RiskMetricsSubmitted" &&
+    analysis.anchor.riskScoreBps === 7702 &&
+    systemLag === analysis.anchor.submittedAt - analysis.scenario.shockAt &&
+    r1.disclosureDetectionLagSec === systemLag &&
+    r3.disclosureDetectionLagSec === systemLag + 86400 &&
+    r3.observationDetectionLagSec >= r3.disclosureDetectionLagSec &&
+    r3.observationDetectionLagSec < r3.disclosureDetectionLagSec + pollingInterval &&
+    r0.disclosureDetectionLagSec > r3.disclosureDetectionLagSec;
+  process.exit(valid ? 0 : 1);
+' "$DETECTION_ANALYSIS"; then
+  printf 'Expected independent system, R0-R4 disclosure, and scheduled observation DetectionLag outputs.\n' >&2
+  exit 1
+fi
+
+printf '\n--- 7/14/30/45-day, two-weight-scheme, and four-kappa sensitivity matrix ---\n'
+SENSITIVITY_ANALYSIS="$(curl -sS -X POST "$API_URL/audit/sensitivity" \
+  -H "x-api-key: $API_KEY_AUDITOR" \
+  -H 'content-type: application/json' \
+  -d '{
+    "valuationHaircutBps":9000,
+    "redemptionPressureBps":9000,
+    "redemptionQueueRatioBps":1800,
+    "liquidityShortfallBps":10000,
+    "investorConcentrationBps":3000,
+    "staleAgeDaysRaw":14,
+    "detectionThresholdBps":6000,
+    "kappaBpsValues":[5000,6000,7000,8000]
+  }')"
+printf '%s\n' "$SENSITIVITY_ANALYSIS"
+if [[ "$SENSITIVITY_ANALYSIS" != *'"maxStaleAgeDays":[7,14,30,45]'* || "$SENSITIVITY_ANALYSIS" != *'"kappaBpsValues":[5000,6000,7000,8000]'* || "$SENSITIVITY_ANALYSIS" != *'"weightSchemeId":"equal_weight_baseline"'* || "$SENSITIVITY_ANALYSIS" != *'"weightSchemeId":"legacy_weighted_robustness"'* || "$SENSITIVITY_ANALYSIS" != *'"maxStaleAgeDays":45'* || "$SENSITIVITY_ANALYSIS" != *'"kappaBps":8000'* ]]; then
+  printf 'Expected all 32 stale-age, weight, and kappa sensitivity configurations.\n' >&2
   exit 1
 fi
 

@@ -1,5 +1,5 @@
 export const MAX_BPS = 10_000;
-export const RED_SCORE_BPS = 7_000;
+export const RED_SCORE_BPS = 6_000;
 export const YELLOW_SCORE_BPS = 4_000;
 
 export type RiskLevel = 'green' | 'yellow' | 'red';

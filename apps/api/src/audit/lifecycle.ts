@@ -1,18 +1,26 @@
 import { parseAbi } from 'viem';
-import { TransparencyRegime, disclosureTimeFor } from '../risk/regimes';
+import {
+  DisclosureAudience,
+  TransparencyRegime,
+  controlDisclosureAllowedFor,
+  disclosureTimeFor,
+} from '../risk/regimes';
 
 export const FUND_TOKEN_EVENT_ABI = parseAbi([
   'event RiskGateConfigured(address indexed riskGate, bytes32 indexed fundId)',
   'event InvestorWhitelisted(address indexed investor, bool eligible, bytes32 indexed vcHash, address indexed by)',
+  'event SubscriptionRequested(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt, bytes32 requestHash)',
+  'event SubscriptionAccepted(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt, uint64 acceptedAt, bytes32 requestHash)',
   'event ShareBalanceUpdated(address indexed investor, uint256 balance, uint256 totalSupply, bytes32 indexed reason)',
   'event RedemptionRequested(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt)',
   'event RedemptionQueueUpdated(bytes32 indexed fundId, uint256 totalQueuedRedemption, uint256 totalSupply, uint16 redemptionQueueRatioBps, uint64 updatedAt)',
   'event RedemptionSettled(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt, uint64 settledAt)',
-  'event SettlementDelayed(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt, uint64 observedAt, bytes32 reasonHash)',
+  'event SettlementDelayed(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt, uint64 delayedAt, bytes32 reasonHash)',
 ]);
 
 export const NAV_REGISTRY_EVENT_ABI = parseAbi([
-  'event NavPosted(uint256 nav, uint256 asOf, uint256 storedAt, address indexed by)',
+  'event NAVUpdatedEvent(bytes32 indexed fundId, uint256 nav, uint64 asOf, uint64 storedAt, int256 navAdjustmentBps, bytes32 payloadHash, address indexed by)',
+  'event ValuationHaircutEvent(bytes32 indexed fundId, uint16 valuationHaircutBps, uint64 occurredAt, uint64 submittedAt, bytes32 payloadHash, address indexed submittedBy)',
 ]);
 
 export const RISK_REGISTRY_EVENT_ABI = parseAbi([
@@ -20,22 +28,26 @@ export const RISK_REGISTRY_EVENT_ABI = parseAbi([
   'event DefaultKappaUpdated(uint16 kappaBps, address indexed by)',
   'event FundKappaUpdated(bytes32 indexed fundId, uint16 kappaBps, address indexed by)',
   'event RiskMetricsSubmitted(bytes32 indexed fundId, uint256 indexed snapshotId, uint16 riskScoreBps, uint64 weightsConfigId, uint64 occurredAt, uint64 submittedAt, bytes32 metricsHash, bytes32 payloadHash, address indexed submittedBy)',
+  'event StalePricingWarning(bytes32 indexed fundId, uint256 indexed snapshotId, uint16 stalePricingRiskBps, uint64 maxStaleAgeSec, bytes32 ruleId, uint64 occurredAt, uint64 submittedAt, bytes32 metricsHash)',
+  'event LiquidityBufferUpdated(bytes32 indexed fundId, uint256 liquidityBufferRatioBps, uint64 occurredAt, uint64 submittedAt, bytes32 payloadHash, address indexed submittedBy)',
   'event RiskWarningEvent(bytes32 indexed fundId, uint256 indexed snapshotId, uint16 riskScoreBps, uint16 kappaBps, bytes32 ruleId, uint64 occurredAt, uint64 submittedAt, bytes32 metricsHash)',
   'event GateTriggered(bytes32 indexed fundId, uint256 indexed snapshotId, uint16 riskScoreBps, uint16 kappaBps, bytes32 ruleId, uint64 occurredAt, uint64 submittedAt, bytes32 metricsHash)',
   'event GateReleased(bytes32 indexed fundId, bytes32 reasonHash, uint64 submittedAt, address indexed by)',
+  'event SwingPricingApplied(bytes32 indexed fundId, uint16 adjustmentBps, uint16 riskScoreBps, bytes32 ruleId, uint64 occurredAt, uint64 submittedAt, bytes32 payloadHash, address indexed by)',
+  'event SidePocketCreated(bytes32 indexed fundId, bytes32 assetCommitmentHash, uint16 riskScoreBps, bytes32 ruleId, uint64 occurredAt, uint64 submittedAt, bytes32 payloadHash, address indexed by)',
 ]);
 
 export type LifecycleContractName = 'FundToken' | 'NAVRegistry' | 'RiskRegistry';
 export type LifecycleCategory =
   | 'eligibility'
+  | 'subscription'
   | 'share_registry'
   | 'valuation'
+  | 'liquidity'
   | 'redemption'
   | 'risk'
   | 'control'
   | 'governance';
-export type DisclosureAudience = 'public' | 'regulator';
-
 export type LifecycleEvent = {
   eventId: string;
   chainId: number;
@@ -79,8 +91,13 @@ export type LifecycleTimelineEntry = LifecycleEvent & {
 
 const EVENT_CATEGORIES: Record<string, LifecycleCategory> = {
   InvestorWhitelisted: 'eligibility',
+  SubscriptionRequested: 'subscription',
+  SubscriptionAccepted: 'subscription',
   ShareBalanceUpdated: 'share_registry',
-  NavPosted: 'valuation',
+  NAVUpdatedEvent: 'valuation',
+  ValuationHaircutEvent: 'valuation',
+  StalePricingWarning: 'valuation',
+  LiquidityBufferUpdated: 'liquidity',
   RedemptionRequested: 'redemption',
   RedemptionQueueUpdated: 'redemption',
   RedemptionSettled: 'redemption',
@@ -89,6 +106,8 @@ const EVENT_CATEGORIES: Record<string, LifecycleCategory> = {
   RiskWarningEvent: 'risk',
   GateTriggered: 'control',
   GateReleased: 'control',
+  SwingPricingApplied: 'control',
+  SidePocketCreated: 'control',
   RiskGateConfigured: 'governance',
   WeightsConfigSet: 'governance',
   DefaultKappaUpdated: 'governance',
@@ -118,21 +137,28 @@ function jsonValue(value: unknown): unknown {
 
 function occurredAtFor(eventName: string, args: Record<string, unknown>, blockTimestamp: number): number {
   const field = {
-    NavPosted: 'asOf',
+    SubscriptionRequested: 'requestedAt',
+    SubscriptionAccepted: 'acceptedAt',
+    NAVUpdatedEvent: 'asOf',
+    ValuationHaircutEvent: 'occurredAt',
+    StalePricingWarning: 'occurredAt',
+    LiquidityBufferUpdated: 'occurredAt',
     RedemptionRequested: 'requestedAt',
     RedemptionQueueUpdated: 'updatedAt',
     RedemptionSettled: 'settledAt',
-    SettlementDelayed: 'observedAt',
+    SettlementDelayed: 'delayedAt',
     RiskMetricsSubmitted: 'occurredAt',
     RiskWarningEvent: 'occurredAt',
     GateTriggered: 'occurredAt',
     GateReleased: 'submittedAt',
+    SwingPricingApplied: 'occurredAt',
+    SidePocketCreated: 'occurredAt',
   }[eventName];
   return field ? integerArg(args, field) ?? blockTimestamp : blockTimestamp;
 }
 
 function submittedAtFor(eventName: string, args: Record<string, unknown>, blockTimestamp: number): number {
-  if (eventName === 'NavPosted') return integerArg(args, 'storedAt') ?? blockTimestamp;
+  if (eventName === 'NAVUpdatedEvent') return integerArg(args, 'storedAt') ?? blockTimestamp;
   return integerArg(args, 'submittedAt') ?? blockTimestamp;
 }
 
@@ -177,11 +203,21 @@ export function eventDisclosureTimeFor(
   regime: TransparencyRegime,
   audience: DisclosureAudience,
 ): number | null {
+  if (event.category === 'control') {
+    const riskScoreRaw = event.payload.riskScoreBps;
+    const riskScoreBps = typeof riskScoreRaw === 'number'
+      ? riskScoreRaw
+      : Number(riskScoreRaw ?? 0);
+    const allowed = controlDisclosureAllowedFor(regime, {
+      audience,
+      currentGated: event.eventName === 'GateTriggered',
+      riskScoreBps: Number.isFinite(riskScoreBps) ? riskScoreBps : 0,
+      eventName: event.eventName,
+    });
+    if (!allowed) return null;
+  }
   if (audience === 'regulator' && regime.visibility !== 'public') {
     return event.submittedAt;
-  }
-  if (audience === 'public' && event.category === 'control' && regime.controlDisclosure === 'private') {
-    return null;
   }
   return disclosureTimeFor(event.submittedAt, regime);
 }

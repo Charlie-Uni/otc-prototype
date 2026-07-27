@@ -3,22 +3,31 @@ import { z } from 'zod';
 import { exportLifecycleCsv } from '../audit/export';
 import { listLifecycleEvents, syncLifecycleEvents } from '../audit/indexer';
 import {
-    DisclosureAudience,
     LifecycleCategory,
     lifecycleTimelineEntry,
 } from '../audit/lifecycle';
 import { exportAuditCsv, recordAudit } from '../audit/log';
 import { ACCESS_POLICY, auditActorFor, requireAnyRole } from '../auth';
 import { ENV } from '../env';
-import { TRANSPARENCY_REGIME_IDS, getTransparencyRegime } from '../risk/regimes';
+import { DisclosureAudience, TRANSPARENCY_REGIME_IDS, getTransparencyRegime } from '../risk/regimes';
+import { MAX_BPS } from '../risk/calc';
+import { analyzeDetectionLags } from '../simulation/detection';
+import {
+    CHAPTER3_KAPPA_BPS_VALUES,
+    CHAPTER3_MAX_STALE_AGE_DAYS,
+    CHAPTER3_WEIGHT_SCHEMES,
+    runRiskSensitivity,
+} from '../simulation/sensitivity';
 
 const TimelineQuerySchema = z.object({
     regime: z.enum(TRANSPARENCY_REGIME_IDS).default(ENV.DEFAULT_TRANSPARENCY_REGIME),
     audience: z.enum(['public', 'regulator']).default('regulator'),
     category: z.enum([
         'eligibility',
+        'subscription',
         'share_registry',
         'valuation',
+        'liquidity',
         'redemption',
         'risk',
         'control',
@@ -26,6 +35,24 @@ const TimelineQuerySchema = z.object({
     ]).optional(),
     eventName: z.string().min(1).optional(),
     limit: z.coerce.number().int().positive().max(10_000).default(1_000),
+});
+const bpsSchema = z.coerce.number().int().min(0).max(MAX_BPS);
+const DetectionScenarioSchema = z.object({
+    scenarioId: z.string().min(1),
+    shockAt: z.coerce.number().int().positive(),
+    detectionThresholdBps: bpsSchema,
+    observationStartAt: z.coerce.number().int().positive().optional(),
+    pollingIntervalSec: z.coerce.number().int().positive(),
+});
+const SensitivitySchema = z.object({
+    valuationHaircutBps: bpsSchema,
+    redemptionPressureBps: bpsSchema,
+    redemptionQueueRatioBps: bpsSchema,
+    liquidityShortfallBps: bpsSchema,
+    investorConcentrationBps: bpsSchema,
+    staleAgeDaysRaw: z.coerce.number().int().min(0),
+    detectionThresholdBps: bpsSchema.default(6_000),
+    kappaBpsValues: z.array(bpsSchema).min(1).default([...CHAPTER3_KAPPA_BPS_VALUES]),
 });
 
 function nowSec(): number {
@@ -100,11 +127,73 @@ export default async function (app: FastifyInstance) {
             regime: query.regime,
             audience: query.audience,
             methodology: {
-                detectionLagDefinition: 'not_assigned',
-                reason: 'The artifact exports raw timestamp dimensions; the thesis must select T_Detected explicitly.',
-                availableCandidates: ['recordingLagSec', 'disclosureLagSec', 'observationLagSec'],
+                detectionLagDefinition: 'three_measure_model',
+                system: 'first qualifying RiskMetricsSubmitted.submittedAt - shockAt',
+                disclosure: 'qualifying event disclosedAt(regime,audience) - shockAt',
+                observation: 'first scheduled observedAt at or after disclosedAt - shockAt',
+                dedicatedEndpoint: '/audit/detection-lags',
             },
             events: entries,
+        };
+    });
+
+    app.post('/audit/detection-lags', { preHandler: requireAnyRole(...ACCESS_POLICY.auditRead) }, async (req) => {
+        const body = DetectionScenarioSchema.parse(req.body);
+        const scenario = {
+            ...body,
+            observationStartAt: body.observationStartAt ?? body.shockAt,
+        };
+        const analysis = analyzeDetectionLags(await listLifecycleEvents(10_000), scenario);
+        await recordAudit({
+            actor: auditActorFor(req),
+            action: 'audit.detection_lags.analyze',
+            occurredAt: scenario.shockAt,
+            observedAt: nowSec(),
+            details: {
+                scenarioId: scenario.scenarioId,
+                detectionThresholdBps: scenario.detectionThresholdBps,
+                pollingIntervalSec: scenario.pollingIntervalSec,
+                anchorEventId: analysis.anchor.eventId,
+            },
+        });
+        return analysis;
+    });
+
+    app.post('/audit/sensitivity', { preHandler: requireAnyRole(...ACCESS_POLICY.auditRead) }, async (req) => {
+        const body = SensitivitySchema.parse(req.body);
+        const rows = runRiskSensitivity({
+            metricsWithoutStale: {
+                valuationHaircutBps: body.valuationHaircutBps,
+                redemptionPressureBps: body.redemptionPressureBps,
+                redemptionQueueRatioBps: body.redemptionQueueRatioBps,
+                liquidityShortfallBps: body.liquidityShortfallBps,
+                investorConcentrationBps: body.investorConcentrationBps,
+            },
+            staleAgeSecRaw: body.staleAgeDaysRaw * 24 * 60 * 60,
+            maxStaleAgeDays: CHAPTER3_MAX_STALE_AGE_DAYS,
+            weightSchemes: CHAPTER3_WEIGHT_SCHEMES,
+            detectionThresholdBps: body.detectionThresholdBps,
+            kappaBpsValues: body.kappaBpsValues,
+        });
+        await recordAudit({
+            actor: auditActorFor(req),
+            action: 'audit.risk_sensitivity.analyze',
+            details: {
+                staleAgeDaysRaw: body.staleAgeDaysRaw,
+                detectionThresholdBps: body.detectionThresholdBps,
+                kappaBpsValues: body.kappaBpsValues,
+                rowCount: rows.length,
+            },
+        });
+        return {
+            parameters: {
+                maxStaleAgeDays: CHAPTER3_MAX_STALE_AGE_DAYS,
+                weightSchemes: CHAPTER3_WEIGHT_SCHEMES,
+                staleAgeDaysRaw: body.staleAgeDaysRaw,
+                detectionThresholdBps: body.detectionThresholdBps,
+                kappaBpsValues: body.kappaBpsValues,
+            },
+            rows,
         };
     });
 

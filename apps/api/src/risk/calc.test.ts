@@ -32,5 +32,6 @@ test('computes redemption pressure from requested flow over total supply', () =>
 test('forces public risk level to red while gate is active', () => {
   assert.equal(riskLevelFor(1_000, true), 'red');
   assert.equal(riskLevelFor(4_000, false), 'yellow');
-  assert.equal(riskLevelFor(7_000, false), 'red');
+  assert.equal(riskLevelFor(5_999, false), 'yellow');
+  assert.equal(riskLevelFor(6_000, false), 'red');
 });

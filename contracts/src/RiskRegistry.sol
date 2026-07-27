@@ -7,8 +7,11 @@ import {SafeCast} from "openzeppelin/utils/math/SafeCast.sol";
 contract RiskRegistry is AccessControl {
     uint16 public constant MAX_BPS = 10_000;
     bytes32 public constant RISK_ORACLE_ROLE = keccak256("RISK_ORACLE_ROLE");
+    bytes32 public constant LIQUIDITY_ORACLE_ROLE = keccak256("LIQUIDITY_ORACLE_ROLE");
+    bytes32 public constant CONTROL_OPERATOR_ROLE = keccak256("CONTROL_OPERATOR_ROLE");
     bytes32 public constant REGULATOR_ROLE = keccak256("REGULATOR_ROLE");
     bytes32 public constant GATE_RULE_ID = keccak256("RISK_SCORE_GT_KAPPA");
+    bytes32 public constant STALE_PRICING_RULE_ID = keccak256("STALE_PRICING_REACHED_MAX_AGE");
 
     struct RiskMetrics {
         uint16 valuationHaircutBps;
@@ -39,11 +42,26 @@ contract RiskRegistry is AccessControl {
         address submittedBy;
     }
 
+    struct LiquidityBufferSnapshot {
+        uint256 liquidityBufferRatioBps;
+        uint64 occurredAt;
+        uint64 submittedAt;
+        bytes32 payloadHash;
+        address submittedBy;
+        bool exists;
+    }
+
+    struct ExtendedControlState {
+        bool swingPricingActive;
+        bool sidePocketActive;
+        uint16 swingPricingAdjustmentBps;
+        uint16 lastRiskScoreBps;
+        bytes32 lastRuleId;
+        bytes32 sidePocketAssetCommitmentHash;
+    }
+
     event WeightsConfigSet(
-        uint64 indexed weightsConfigId,
-        uint64 maxStaleAgeSec,
-        bytes32 weightsHash,
-        address indexed by
+        uint64 indexed weightsConfigId, uint64 maxStaleAgeSec, bytes32 weightsHash, address indexed by
     );
     event DefaultKappaUpdated(uint16 kappaBps, address indexed by);
     event FundKappaUpdated(bytes32 indexed fundId, uint16 kappaBps, address indexed by);
@@ -55,6 +73,24 @@ contract RiskRegistry is AccessControl {
         uint64 occurredAt,
         uint64 submittedAt,
         bytes32 metricsHash,
+        bytes32 payloadHash,
+        address indexed submittedBy
+    );
+    event StalePricingWarning(
+        bytes32 indexed fundId,
+        uint256 indexed snapshotId,
+        uint16 stalePricingRiskBps,
+        uint64 maxStaleAgeSec,
+        bytes32 ruleId,
+        uint64 occurredAt,
+        uint64 submittedAt,
+        bytes32 metricsHash
+    );
+    event LiquidityBufferUpdated(
+        bytes32 indexed fundId,
+        uint256 liquidityBufferRatioBps,
+        uint64 occurredAt,
+        uint64 submittedAt,
         bytes32 payloadHash,
         address indexed submittedBy
     );
@@ -79,6 +115,26 @@ contract RiskRegistry is AccessControl {
         bytes32 metricsHash
     );
     event GateReleased(bytes32 indexed fundId, bytes32 reasonHash, uint64 submittedAt, address indexed by);
+    event SwingPricingApplied(
+        bytes32 indexed fundId,
+        uint16 adjustmentBps,
+        uint16 riskScoreBps,
+        bytes32 ruleId,
+        uint64 occurredAt,
+        uint64 submittedAt,
+        bytes32 payloadHash,
+        address indexed by
+    );
+    event SidePocketCreated(
+        bytes32 indexed fundId,
+        bytes32 assetCommitmentHash,
+        uint16 riskScoreBps,
+        bytes32 ruleId,
+        uint64 occurredAt,
+        uint64 submittedAt,
+        bytes32 payloadHash,
+        address indexed by
+    );
 
     uint64 public activeWeightsConfigId;
     uint16 public defaultKappaBps;
@@ -87,10 +143,14 @@ contract RiskRegistry is AccessControl {
     mapping(bytes32 => uint16) private fundKappaBps;
     mapping(bytes32 => bool) private gated;
     mapping(bytes32 => RiskSnapshot[]) private riskHistory;
+    mapping(bytes32 => LiquidityBufferSnapshot) private liquidityBuffers;
+    mapping(bytes32 => ExtendedControlState) public extendedControlState;
 
     constructor(address admin, uint16[6] memory initialWeightBps, uint64 maxStaleAgeSec, uint16 initialKappaBps) {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(RISK_ORACLE_ROLE, admin);
+        _grantRole(LIQUIDITY_ORACLE_ROLE, admin);
+        _grantRole(CONTROL_OPERATOR_ROLE, admin);
         _grantRole(REGULATOR_ROLE, admin);
         _setWeights(initialWeightBps, maxStaleAgeSec);
         _setDefaultKappa(initialKappaBps);
@@ -120,27 +180,107 @@ contract RiskRegistry is AccessControl {
         require(fundId != bytes32(0), "INVALID_FUND");
         require(weightsConfigId == activeWeightsConfigId, "INACTIVE_WEIGHTS");
         require(occurredAt > 0, "INVALID_OCCURRED_AT");
+        require(occurredAt <= block.timestamp, "FUTURE_OCCURRED_AT");
+        require(payloadHash != bytes32(0), "INVALID_PAYLOAD_HASH");
         uint16 riskScoreBps = computeRiskScoreBps(metrics, weightsConfigId);
 
         uint64 submittedAt = uint64(block.timestamp);
         bytes32 metricsHash = keccak256(abi.encode(fundId, metrics, riskScoreBps, weightsConfigId, occurredAt));
-        riskHistory[fundId].push(RiskSnapshot({
-            fundId: fundId,
-            metrics: metrics,
-            riskScoreBps: riskScoreBps,
-            kappaBps: effectiveKappaBps(fundId),
-            weightsConfigId: weightsConfigId,
-            occurredAt: occurredAt,
-            submittedAt: submittedAt,
-            metricsHash: metricsHash,
-            payloadHash: payloadHash,
-            submittedBy: msg.sender
-        }));
+        riskHistory[fundId].push(
+            RiskSnapshot({
+                fundId: fundId,
+                metrics: metrics,
+                riskScoreBps: riskScoreBps,
+                kappaBps: effectiveKappaBps(fundId),
+                weightsConfigId: weightsConfigId,
+                occurredAt: occurredAt,
+                submittedAt: submittedAt,
+                metricsHash: metricsHash,
+                payloadHash: payloadHash,
+                submittedBy: msg.sender
+            })
+        );
         snapshotId = riskHistory[fundId].length - 1;
 
         RiskSnapshot storage snapshot = riskHistory[fundId][snapshotId];
         _emitRiskMetricsSubmitted(snapshotId, snapshot);
+        _emitStalePricingWarning(snapshotId, snapshot);
         _applyRiskControl(snapshotId, snapshot);
+    }
+
+    function submitLiquidityBuffer(
+        bytes32 fundId,
+        uint256 liquidityBufferRatioBps,
+        uint64 occurredAt,
+        bytes32 payloadHash
+    ) external onlyRole(LIQUIDITY_ORACLE_ROLE) {
+        _validateStateSubmission(fundId, occurredAt, payloadHash);
+        uint64 submittedAt = uint64(block.timestamp);
+        liquidityBuffers[fundId] = LiquidityBufferSnapshot({
+            liquidityBufferRatioBps: liquidityBufferRatioBps,
+            occurredAt: occurredAt,
+            submittedAt: submittedAt,
+            payloadHash: payloadHash,
+            submittedBy: msg.sender,
+            exists: true
+        });
+        emit LiquidityBufferUpdated(fundId, liquidityBufferRatioBps, occurredAt, submittedAt, payloadHash, msg.sender);
+    }
+
+    function applySwingPricing(
+        bytes32 fundId,
+        uint16 adjustmentBps,
+        bytes32 ruleId,
+        uint64 occurredAt,
+        bytes32 payloadHash
+    ) external onlyRole(CONTROL_OPERATOR_ROLE) {
+        require(adjustmentBps > 0, "INVALID_SWING_ADJUSTMENT");
+        _validateBps(adjustmentBps);
+        _validateControlSubmission(fundId, ruleId, occurredAt, payloadHash);
+        RiskSnapshot storage snapshot = _latestRiskSnapshot(fundId);
+        ExtendedControlState storage state = extendedControlState[fundId];
+        state.swingPricingActive = true;
+        state.swingPricingAdjustmentBps = adjustmentBps;
+        state.lastRiskScoreBps = snapshot.riskScoreBps;
+        state.lastRuleId = ruleId;
+        emit SwingPricingApplied(
+            fundId,
+            adjustmentBps,
+            snapshot.riskScoreBps,
+            ruleId,
+            occurredAt,
+            uint64(block.timestamp),
+            payloadHash,
+            msg.sender
+        );
+    }
+
+    function createSidePocket(
+        bytes32 fundId,
+        bytes32 assetCommitmentHash,
+        bytes32 ruleId,
+        uint64 occurredAt,
+        bytes32 payloadHash
+    ) external onlyRole(CONTROL_OPERATOR_ROLE) {
+        require(assetCommitmentHash != bytes32(0), "INVALID_ASSET_COMMITMENT");
+        _validateControlSubmission(fundId, ruleId, occurredAt, payloadHash);
+        RiskSnapshot storage snapshot = _latestRiskSnapshot(fundId);
+        ExtendedControlState storage state = extendedControlState[fundId];
+        require(!state.sidePocketActive, "SIDE_POCKET_ALREADY_ACTIVE");
+        state.sidePocketActive = true;
+        state.lastRiskScoreBps = snapshot.riskScoreBps;
+        state.lastRuleId = ruleId;
+        state.sidePocketAssetCommitmentHash = assetCommitmentHash;
+        emit SidePocketCreated(
+            fundId,
+            assetCommitmentHash,
+            snapshot.riskScoreBps,
+            ruleId,
+            occurredAt,
+            uint64(block.timestamp),
+            payloadHash,
+            msg.sender
+        );
     }
 
     function computeRiskScoreBps(RiskMetrics calldata metrics, uint64 weightsConfigId) public view returns (uint16) {
@@ -161,6 +301,21 @@ contract RiskRegistry is AccessControl {
             snapshot.payloadHash,
             snapshot.submittedBy
         );
+    }
+
+    function _emitStalePricingWarning(uint256 snapshotId, RiskSnapshot storage snapshot) private {
+        if (snapshot.metrics.stalePricingRiskBps == MAX_BPS) {
+            emit StalePricingWarning(
+                snapshot.fundId,
+                snapshotId,
+                snapshot.metrics.stalePricingRiskBps,
+                weightsConfigs[snapshot.weightsConfigId].maxStaleAgeSec,
+                STALE_PRICING_RULE_ID,
+                snapshot.occurredAt,
+                snapshot.submittedAt,
+                snapshot.metricsHash
+            );
+        }
     }
 
     function _applyRiskControl(uint256 snapshotId, RiskSnapshot storage snapshot) private {
@@ -193,12 +348,19 @@ contract RiskRegistry is AccessControl {
 
     function releaseGate(bytes32 fundId, bytes32 reasonHash) external onlyRole(REGULATOR_ROLE) {
         require(gated[fundId], "NOT_GATED");
+        require(reasonHash != bytes32(0), "INVALID_REASON_HASH");
         gated[fundId] = false;
         emit GateReleased(fundId, reasonHash, uint64(block.timestamp), msg.sender);
     }
 
     function isGated(bytes32 fundId) external view returns (bool) {
         return gated[fundId];
+    }
+
+    function latestLiquidityBuffer(bytes32 fundId) external view returns (LiquidityBufferSnapshot memory) {
+        LiquidityBufferSnapshot memory snapshot = liquidityBuffers[fundId];
+        require(snapshot.exists, "NO_LIQUIDITY_BUFFER");
+        return snapshot;
     }
 
     function effectiveKappaBps(bytes32 fundId) public view returns (uint16) {
@@ -230,6 +392,27 @@ contract RiskRegistry is AccessControl {
         return riskHistory[fundId].length;
     }
 
+    function _latestRiskSnapshot(bytes32 fundId) private view returns (RiskSnapshot storage snapshot) {
+        uint256 length = riskHistory[fundId].length;
+        require(length > 0, "NO_RISK_SNAPSHOT");
+        return riskHistory[fundId][length - 1];
+    }
+
+    function _validateStateSubmission(bytes32 fundId, uint64 occurredAt, bytes32 payloadHash) private view {
+        require(fundId != bytes32(0), "INVALID_FUND");
+        require(occurredAt > 0, "INVALID_OCCURRED_AT");
+        require(occurredAt <= block.timestamp, "FUTURE_OCCURRED_AT");
+        require(payloadHash != bytes32(0), "INVALID_PAYLOAD_HASH");
+    }
+
+    function _validateControlSubmission(bytes32 fundId, bytes32 ruleId, uint64 occurredAt, bytes32 payloadHash)
+        private
+        view
+    {
+        _validateStateSubmission(fundId, occurredAt, payloadHash);
+        require(ruleId != bytes32(0), "INVALID_RULE_ID");
+    }
+
     function _setWeights(uint16[6] memory weightBps, uint64 maxStaleAgeSec) private {
         require(maxStaleAgeSec > 0, "INVALID_MAX_STALE_AGE");
         uint256 totalWeightBps;
@@ -242,10 +425,7 @@ contract RiskRegistry is AccessControl {
         activeWeightsConfigId += 1;
         bytes32 weightsHash = keccak256(abi.encode(weightBps, maxStaleAgeSec));
         weightsConfigs[activeWeightsConfigId] = WeightsConfig({
-            weightBps: weightBps,
-            maxStaleAgeSec: maxStaleAgeSec,
-            weightsHash: weightsHash,
-            exists: true
+            weightBps: weightBps, maxStaleAgeSec: maxStaleAgeSec, weightsHash: weightsHash, exists: true
         });
 
         emit WeightsConfigSet(activeWeightsConfigId, maxStaleAgeSec, weightsHash, msg.sender);
@@ -272,11 +452,9 @@ contract RiskRegistry is AccessControl {
 
     function _computeRiskScoreBps(RiskMetrics calldata metrics, uint64 weightsConfigId) private view returns (uint16) {
         uint16[6] storage weights = weightsConfigs[weightsConfigId].weightBps;
-        uint256 numerator = uint256(metrics.valuationHaircutBps) * weights[0]
-            + uint256(metrics.redemptionPressureBps) * weights[1]
-            + uint256(metrics.redemptionQueueRatioBps) * weights[2]
-            + uint256(metrics.liquidityShortfallBps) * weights[3]
-            + uint256(metrics.stalePricingRiskBps) * weights[4]
+        uint256 numerator = uint256(metrics.valuationHaircutBps) * weights[0] + uint256(metrics.redemptionPressureBps)
+            * weights[1] + uint256(metrics.redemptionQueueRatioBps) * weights[2]
+            + uint256(metrics.liquidityShortfallBps) * weights[3] + uint256(metrics.stalePricingRiskBps) * weights[4]
             + uint256(metrics.investorConcentrationBps) * weights[5];
 
         uint256 scoreBps = numerator / MAX_BPS;

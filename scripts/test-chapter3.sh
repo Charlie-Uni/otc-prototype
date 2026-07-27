@@ -13,7 +13,17 @@ DATABASE_URL="${CHAPTER3_DATABASE_URL:-}"
 
 PRIVATE_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 ORACLE_PRIVATE_KEY="0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+REGULATOR_PRIVATE_KEY="0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba"
+LIQUIDITY_ORACLE_PRIVATE_KEY="0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e"
 FUND_ID_LABEL="OTC_FUND_1"
+KAPPA_BPS="7000"
+MAX_STALE_AGE_SEC="2592000"
+RISK_WEIGHT_1_BPS="1667"
+RISK_WEIGHT_2_BPS="1667"
+RISK_WEIGHT_3_BPS="1667"
+RISK_WEIGHT_4_BPS="1667"
+RISK_WEIGHT_5_BPS="1666"
+RISK_WEIGHT_6_BPS="1666"
 API_KEY_INVESTOR="chapter3-investor-api-key"
 API_KEY_MANAGER="chapter3-manager-api-key"
 API_KEY_REGISTRAR="chapter3-registrar-api-key"
@@ -24,6 +34,7 @@ API_KEY_REGULATOR="chapter3-regulator-api-key"
 API_KEY_AUDITOR="chapter3-auditor-api-key"
 
 CONTRACT_STATUS="pending"
+CONTRACT_COVERAGE_STATUS="pending"
 TYPECHECK_STATUS="pending"
 API_TEST_STATUS="pending"
 SMOKE_STATUS="pending"
@@ -60,6 +71,7 @@ write_summary() {
   },
   "checks": {
     "contractTests": $(json_status "$CONTRACT_STATUS"),
+    "contractCoverage": $(json_status "$CONTRACT_COVERAGE_STATUS"),
     "typecheck": $(json_status "$TYPECHECK_STATUS"),
     "apiTests": $(json_status "$API_TEST_STATUS"),
     "endToEndSmoke": $(json_status "$SMOKE_STATUS"),
@@ -67,6 +79,7 @@ write_summary() {
   },
   "evidence": {
     "contractTests": "contracts.log",
+    "contractCoverage": "coverage.log",
     "typecheck": "typecheck.log",
     "apiTests": "api-tests.tap",
     "deployment": "deploy.log",
@@ -130,6 +143,8 @@ start_api() {
       RPC_URL="$RPC_URL" \
       PRIVATE_KEY="$PRIVATE_KEY" \
       ORACLE_PRIVATE_KEY="$ORACLE_PRIVATE_KEY" \
+      REGULATOR_PRIVATE_KEY="$REGULATOR_PRIVATE_KEY" \
+      LIQUIDITY_ORACLE_PRIVATE_KEY="$LIQUIDITY_ORACLE_PRIVATE_KEY" \
       FUND_TOKEN_ADDRESS="$FUND_TOKEN_ADDRESS" \
       NAV_REGISTRY_ADDRESS="$NAV_REGISTRY_ADDRESS" \
       RISK_REGISTRY_ADDRESS="$RISK_REGISTRY_ADDRESS" \
@@ -147,7 +162,7 @@ start_api() {
       REDEMPTION_PRESSURE_WINDOW_SEC="86400" \
       PORT="$API_PORT" \
       DATABASE_URL="$DATABASE_URL" \
-      ./node_modules/.bin/tsx src/index.ts
+      node --import tsx src/index.ts
   ) > "$log_file" 2>&1 &
   API_PID="$!"
   wait_for_api
@@ -160,6 +175,13 @@ CURRENT_STEP="contract_tests"
 ) > "$RESULTS_DIR/contracts.log" 2>&1
 CONTRACT_STATUS="passed"
 
+CURRENT_STEP="contract_coverage"
+(
+  cd "$ROOT_DIR/contracts"
+  forge coverage --report summary --skip script
+) > "$RESULTS_DIR/coverage.log" 2>&1
+CONTRACT_COVERAGE_STATUS="passed"
+
 CURRENT_STEP="typescript_typecheck"
 (
   cd "$ROOT_DIR/apps/api"
@@ -170,7 +192,7 @@ TYPECHECK_STATUS="passed"
 CURRENT_STEP="api_unit_tests"
 (
   cd "$ROOT_DIR/apps/api"
-  ./node_modules/.bin/tsx --test src/risk/*.test.ts src/auth/*.test.ts src/audit/*.test.ts
+  node --import tsx --test src/risk/*.test.ts src/auth/*.test.ts src/audit/*.test.ts src/simulation/*.test.ts
 ) > "$RESULTS_DIR/api-tests.tap" 2>&1
 API_TEST_STATUS="passed"
 
@@ -185,7 +207,17 @@ CURRENT_STEP="contract_deployment"
   env \
     PRIVATE_KEY="$PRIVATE_KEY" \
     ORACLE_PRIVATE_KEY="$ORACLE_PRIVATE_KEY" \
+    REGULATOR_PRIVATE_KEY="$REGULATOR_PRIVATE_KEY" \
+    LIQUIDITY_ORACLE_PRIVATE_KEY="$LIQUIDITY_ORACLE_PRIVATE_KEY" \
     FUND_ID_LABEL="$FUND_ID_LABEL" \
+    KAPPA_BPS="$KAPPA_BPS" \
+    MAX_STALE_AGE_SEC="$MAX_STALE_AGE_SEC" \
+    RISK_WEIGHT_1_BPS="$RISK_WEIGHT_1_BPS" \
+    RISK_WEIGHT_2_BPS="$RISK_WEIGHT_2_BPS" \
+    RISK_WEIGHT_3_BPS="$RISK_WEIGHT_3_BPS" \
+    RISK_WEIGHT_4_BPS="$RISK_WEIGHT_4_BPS" \
+    RISK_WEIGHT_5_BPS="$RISK_WEIGHT_5_BPS" \
+    RISK_WEIGHT_6_BPS="$RISK_WEIGHT_6_BPS" \
     forge script script/Deploy.s.sol:Deploy --rpc-url "$RPC_URL" --broadcast
 ) > "$RESULTS_DIR/deploy.log" 2>&1
 
@@ -206,6 +238,7 @@ env \
   API_KEY_MANAGER="$API_KEY_MANAGER" \
   API_KEY_REGISTRAR="$API_KEY_REGISTRAR" \
   API_KEY_NAV_ORACLE="$API_KEY_NAV_ORACLE" \
+  API_KEY_LIQUIDITY_ORACLE="$API_KEY_LIQUIDITY_ORACLE" \
   API_KEY_RISK_ORACLE="$API_KEY_RISK_ORACLE" \
   API_KEY_REGULATOR="$API_KEY_REGULATOR" \
   API_KEY_AUDITOR="$API_KEY_AUDITOR" \

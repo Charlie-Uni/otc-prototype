@@ -7,23 +7,14 @@
 node_modules/
 **/node_modules/
 
-# next build
-apps/web/.next/
-apps/web/out/
-apps/web/.turbo/
-
 # foundry build + broadcast
 contracts/out/
 contracts/cache/
 contracts/broadcast/
 
-# foundry deps (don’t commit)
+# foundry dependencies
 contracts/lib/
 contracts/.gitmodules
 
 .DS_Store
-/next
-/next/
-next
-next/
 test-results/
