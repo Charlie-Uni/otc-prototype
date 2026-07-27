@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { getAddress, isAddress, zeroHash } from 'viem';
+import { getAddress, isAddress } from 'viem';
 import { z } from 'zod';
 import { recordAudit } from '../audit/log';
 import { waitForTransactionTimestamp } from '../audit/chain-time';
@@ -10,14 +10,16 @@ import { ENV } from '../env';
 
 const EligibilitySchema = z.object({
   address: z.string().refine(isAddress, 'Invalid address'),
-  vcHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/, 'Invalid vcHash').optional(),
+  vcHash: z.string()
+    .regex(/^0x[0-9a-fA-F]{64}$/, 'Invalid vcHash')
+    .refine((value) => !/^0x0{64}$/i.test(value), 'vcHash must be non-zero'),
 });
 
 export default async function (app: FastifyInstance) {
   app.post('/kyc/mark-eligible', { preHandler: requireAnyRole(...ACCESS_POLICY.kycWrite) }, async (req) => {
     const body = EligibilitySchema.parse(req.body);
     const investor = getAddress(body.address) as `0x${string}`;
-    const vcHash = (body.vcHash ?? zeroHash) as `0x${string}`;
+    const vcHash = body.vcHash as `0x${string}`;
 
     const c = token as any;
     const tx = await c.write.setWhitelisted([investor, true, vcHash]);
@@ -44,18 +46,22 @@ export default async function (app: FastifyInstance) {
   app.get('/kyc/:address', { preHandler: requireAnyRole(...ACCESS_POLICY.kycRead) }, async (req) => {
     const { address } = z.object({ address: z.string().refine(isAddress, 'Invalid address') }).parse(req.params);
     const investor = getAddress(address);
+    const c = token as any;
+    const chainEligible = Boolean(await c.read.whitelist([investor]));
     if (!ENV.DATABASE_URL) {
-      const result = { address: investor, eligible: false, vc_hash: null };
+      const result = { address: investor, eligible: chainEligible, vc_hash: null, source: 'chain' };
       await recordAudit({
         actor: auditActorFor(req),
         action: 'eligibility.read',
-        details: { investor, found: false },
+        details: { investor, eligible: chainEligible, source: 'chain' },
       });
       return result;
     }
 
     const { rows } = await db.query('select eligible, vc_hash from investors where address=$1', [investor]);
-    const result = rows[0] ?? { address: investor, eligible: false, vc_hash: null };
+    const result = rows[0]
+      ? { address: investor, eligible: chainEligible, vc_hash: rows[0].vc_hash, source: 'chain+database' }
+      : { address: investor, eligible: chainEligible, vc_hash: null, source: 'chain' };
     await recordAudit({
       actor: auditActorFor(req),
       action: 'eligibility.read',

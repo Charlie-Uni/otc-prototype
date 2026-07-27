@@ -16,36 +16,58 @@ contract FundToken is ERC20, Pausable, AccessControl {
     bytes32 public constant REDEMPTION_ROLE = keccak256("REDEMPTION_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
+    struct SubscriptionRequest {
+        address investor;
+        uint256 amount;
+        uint64 requestedAt;
+        uint64 acceptedAt;
+        bytes32 requestHash;
+        bool accepted;
+    }
+
     struct RedemptionRequest {
         address investor;
         uint256 amount;
         uint64 requestedAt;
         uint64 settledAt;
+        uint64 delayedAt;
+        bytes32 delayReasonHash;
         bool settled;
+        bool delayed;
     }
 
     mapping(address => bool) public whitelist;
+    uint256 public subscriptionRequestCount;
     mapping(address => uint256) public queuedRedemptionOf;
     uint256 public totalQueuedRedemption;
     uint256 public redemptionRequestCount;
     IRiskGate public riskGate;
-    bytes32 public fundId;
+    bytes32 public immutable fundId;
+    mapping(uint256 => SubscriptionRequest) private subscriptionRequests;
     mapping(uint256 => RedemptionRequest) private redemptionRequests;
 
     event RiskGateConfigured(address indexed riskGate, bytes32 indexed fundId);
-    event ShareBalanceUpdated(
-        address indexed investor,
-        uint256 balance,
-        uint256 totalSupply,
-        bytes32 indexed reason
-    );
+    event ShareBalanceUpdated(address indexed investor, uint256 balance, uint256 totalSupply, bytes32 indexed reason);
     event InvestorWhitelisted(address indexed investor, bool eligible, bytes32 indexed vcHash, address indexed by);
-    event RedemptionRequested(
+    event SubscriptionRequested(
         bytes32 indexed fundId,
         address indexed investor,
         uint256 indexed requestId,
         uint256 amount,
-        uint64 requestedAt
+        uint64 requestedAt,
+        bytes32 requestHash
+    );
+    event SubscriptionAccepted(
+        bytes32 indexed fundId,
+        address indexed investor,
+        uint256 indexed requestId,
+        uint256 amount,
+        uint64 requestedAt,
+        uint64 acceptedAt,
+        bytes32 requestHash
+    );
+    event RedemptionRequested(
+        bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt
     );
     event RedemptionQueueUpdated(
         bytes32 indexed fundId,
@@ -68,33 +90,74 @@ contract FundToken is ERC20, Pausable, AccessControl {
         uint256 indexed requestId,
         uint256 amount,
         uint64 requestedAt,
-        uint64 observedAt,
+        uint64 delayedAt,
         bytes32 reasonHash
     );
 
-    constructor(address admin, string memory name_, string memory symbol_) ERC20(name_, symbol_) {
+    constructor(address admin, string memory name_, string memory symbol_, bytes32 fundId_) ERC20(name_, symbol_) {
+        require(fundId_ != bytes32(0), "INVALID_FUND_ID");
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(PAUSER_ROLE, admin);
+        fundId = fundId_;
     }
 
-    function pause() external onlyRole(PAUSER_ROLE) { _pause(); }
-    function unpause() external onlyRole(PAUSER_ROLE) { _unpause(); }
+    function pause() external onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+
+    function unpause() external onlyRole(PAUSER_ROLE) {
+        _unpause();
+    }
 
     function setWhitelisted(address investor, bool eligible, bytes32 vcHash) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(investor != address(0), "INVALID_INVESTOR");
+        require(!eligible || vcHash != bytes32(0), "INVALID_VC_HASH");
         whitelist[investor] = eligible;
         emit InvestorWhitelisted(investor, eligible, vcHash, msg.sender);
     }
 
-    function setRiskGate(address riskGate_, bytes32 fundId_) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setRiskGate(address riskGate_) external onlyRole(DEFAULT_ADMIN_ROLE) {
         riskGate = IRiskGate(riskGate_);
-        fundId = fundId_;
-        emit RiskGateConfigured(riskGate_, fundId_);
+        emit RiskGateConfigured(riskGate_, fundId);
     }
 
-    function mint(address to, uint256 amount) external onlyRole(SUBSCRIPTION_ROLE) {
-        require(whitelist[to], "NOT_WHITELISTED");
-        _mint(to, amount);
+    function requestSubscription(uint256 amount) external returns (uint256 requestId) {
+        return _requestSubscription(msg.sender, amount);
+    }
+
+    function requestSubscriptionFor(address investor, uint256 amount)
+        external
+        onlyRole(SUBSCRIPTION_ROLE)
+        returns (uint256 requestId)
+    {
+        return _requestSubscription(investor, amount);
+    }
+
+    function acceptSubscription(uint256 requestId) external onlyRole(SUBSCRIPTION_ROLE) {
+        SubscriptionRequest storage request = subscriptionRequests[requestId];
+        require(request.investor != address(0), "UNKNOWN_SUBSCRIPTION_REQUEST");
+        require(!request.accepted, "SUBSCRIPTION_ALREADY_ACCEPTED");
+        require(whitelist[request.investor], "NOT_WHITELISTED");
+
+        request.accepted = true;
+        request.acceptedAt = uint64(block.timestamp);
+
+        emit SubscriptionAccepted(
+            fundId,
+            request.investor,
+            requestId,
+            request.amount,
+            request.requestedAt,
+            request.acceptedAt,
+            request.requestHash
+        );
+        _mint(request.investor, request.amount);
+    }
+
+    function subscriptionRequestAt(uint256 requestId) external view returns (SubscriptionRequest memory) {
+        SubscriptionRequest memory request = subscriptionRequests[requestId];
+        require(request.investor != address(0), "UNKNOWN_SUBSCRIPTION_REQUEST");
+        return request;
     }
 
     function requestRedemption(uint256 amount) external returns (uint256 requestId) {
@@ -123,12 +186,7 @@ contract FundToken is ERC20, Pausable, AccessControl {
         _burn(request.investor, request.amount);
 
         emit RedemptionSettled(
-            fundId,
-            request.investor,
-            requestId,
-            request.amount,
-            request.requestedAt,
-            request.settledAt
+            fundId, request.investor, requestId, request.amount, request.requestedAt, request.settledAt
         );
         _emitRedemptionQueueUpdated();
     }
@@ -137,15 +195,14 @@ contract FundToken is ERC20, Pausable, AccessControl {
         RedemptionRequest storage request = redemptionRequests[requestId];
         require(request.investor != address(0), "UNKNOWN_REDEMPTION_REQUEST");
         require(!request.settled, "REDEMPTION_ALREADY_SETTLED");
+        require(!request.delayed, "SETTLEMENT_ALREADY_DELAYED");
+        require(reasonHash != bytes32(0), "INVALID_REASON_HASH");
 
+        request.delayed = true;
+        request.delayedAt = uint64(block.timestamp);
+        request.delayReasonHash = reasonHash;
         emit SettlementDelayed(
-            fundId,
-            request.investor,
-            requestId,
-            request.amount,
-            request.requestedAt,
-            uint64(block.timestamp),
-            reasonHash
+            fundId, request.investor, requestId, request.amount, request.requestedAt, request.delayedAt, reasonHash
         );
     }
 
@@ -169,7 +226,7 @@ contract FundToken is ERC20, Pausable, AccessControl {
 
     function _update(address from, address to, uint256 value) internal override {
         if (paused()) revert("PAUSED");
-        // Optional: enforce receiver whitelist for p2p transfers (not during mint/burn)
+        // Preserve eligibility and queued-share availability on peer transfers.
         if (from != address(0) && to != address(0)) {
             require(whitelist[to], "RECEIVER_NOT_WHITELISTED");
             _requireAvailableShares(from, value);
@@ -190,6 +247,28 @@ contract FundToken is ERC20, Pausable, AccessControl {
         return keccak256("SHARE_TRANSFERRED");
     }
 
+    function _requestSubscription(address investor, uint256 amount) private returns (uint256 requestId) {
+        require(investor != address(0), "INVALID_INVESTOR");
+        require(whitelist[investor], "NOT_WHITELISTED");
+        require(amount > 0, "INVALID_SUBSCRIPTION_AMOUNT");
+
+        requestId = subscriptionRequestCount;
+        subscriptionRequestCount += 1;
+        uint64 requestedAt = uint64(block.timestamp);
+        bytes32 requestHash =
+            keccak256(abi.encode(block.chainid, address(this), fundId, requestId, investor, amount, requestedAt));
+        subscriptionRequests[requestId] = SubscriptionRequest({
+            investor: investor,
+            amount: amount,
+            requestedAt: requestedAt,
+            acceptedAt: 0,
+            requestHash: requestHash,
+            accepted: false
+        });
+
+        emit SubscriptionRequested(fundId, investor, requestId, amount, requestedAt, requestHash);
+    }
+
     function _requestRedemption(address investor, uint256 amount) private returns (uint256 requestId) {
         require(investor != address(0), "INVALID_INVESTOR");
         require(whitelist[investor], "NOT_WHITELISTED");
@@ -205,7 +284,10 @@ contract FundToken is ERC20, Pausable, AccessControl {
             amount: amount,
             requestedAt: requestedAt,
             settledAt: 0,
-            settled: false
+            delayedAt: 0,
+            delayReasonHash: bytes32(0),
+            settled: false,
+            delayed: false
         });
         queuedRedemptionOf[investor] += amount;
         totalQueuedRedemption += amount;
@@ -229,11 +311,7 @@ contract FundToken is ERC20, Pausable, AccessControl {
 
     function _emitRedemptionQueueUpdated() private {
         emit RedemptionQueueUpdated(
-            fundId,
-            totalQueuedRedemption,
-            totalSupply(),
-            redemptionQueueRatioBps(),
-            uint64(block.timestamp)
+            fundId, totalQueuedRedemption, totalSupply(), redemptionQueueRatioBps(), uint64(block.timestamp)
         );
     }
 }

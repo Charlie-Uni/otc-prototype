@@ -26,6 +26,24 @@ contract RiskRegistryTest is Test {
         uint64 submittedAt,
         bytes32 metricsHash
     );
+    event StalePricingWarning(
+        bytes32 indexed fundId,
+        uint256 indexed snapshotId,
+        uint16 stalePricingRiskBps,
+        uint64 maxStaleAgeSec,
+        bytes32 ruleId,
+        uint64 occurredAt,
+        uint64 submittedAt,
+        bytes32 metricsHash
+    );
+    event LiquidityBufferUpdated(
+        bytes32 indexed fundId,
+        uint256 liquidityBufferRatioBps,
+        uint64 occurredAt,
+        uint64 submittedAt,
+        bytes32 payloadHash,
+        address indexed submittedBy
+    );
     event GateTriggered(
         bytes32 indexed fundId,
         uint256 indexed snapshotId,
@@ -37,6 +55,26 @@ contract RiskRegistryTest is Test {
         bytes32 metricsHash
     );
     event GateReleased(bytes32 indexed fundId, bytes32 reasonHash, uint64 submittedAt, address indexed by);
+    event SwingPricingApplied(
+        bytes32 indexed fundId,
+        uint16 adjustmentBps,
+        uint16 riskScoreBps,
+        bytes32 ruleId,
+        uint64 occurredAt,
+        uint64 submittedAt,
+        bytes32 payloadHash,
+        address indexed by
+    );
+    event SidePocketCreated(
+        bytes32 indexed fundId,
+        bytes32 assetCommitmentHash,
+        uint16 riskScoreBps,
+        bytes32 ruleId,
+        uint64 occurredAt,
+        uint64 submittedAt,
+        bytes32 payloadHash,
+        address indexed by
+    );
 
     RiskRegistry registry;
     bytes32 fundId = keccak256("OTC_FUND_1");
@@ -88,6 +126,14 @@ contract RiskRegistryTest is Test {
         registry.submitMetrics(fundId, _lowRiskMetrics(), 1, 0, payloadHash);
     }
 
+    function testSubmitMetricsRejectsFutureTimeAndMissingCommitment() public {
+        vm.expectRevert(bytes("FUTURE_OCCURRED_AT"));
+        registry.submitMetrics(fundId, _lowRiskMetrics(), 1, uint64(block.timestamp + 1), payloadHash);
+
+        vm.expectRevert(bytes("INVALID_PAYLOAD_HASH"));
+        registry.submitMetrics(fundId, _lowRiskMetrics(), 1, uint64(block.timestamp), bytes32(0));
+    }
+
     function testComputeRiskScoreBpsUsesStoredWeights() public view {
         assertEq(registry.computeRiskScoreBps(_lowRiskMetrics(), 1), _score(_lowRiskMetrics()));
     }
@@ -102,7 +148,7 @@ contract RiskRegistryTest is Test {
             investorConcentrationBps: 6_000
         });
 
-        assertEq(registry.computeRiskScoreBps(metrics, 1), 3_100);
+        assertEq(registry.computeRiskScoreBps(metrics, 1), 3_499);
     }
 
     function testComputeRiskScoreBpsRejectsUnknownWeights() public {
@@ -110,14 +156,9 @@ contract RiskRegistryTest is Test {
         registry.computeRiskScoreBps(_lowRiskMetrics(), 2);
     }
 
-    function testFuzz_SubmitAnyValidMetricsFollowsKappaRule(
-        uint16 a,
-        uint16 b,
-        uint16 c,
-        uint16 d,
-        uint16 e,
-        uint16 f
-    ) public {
+    function testFuzz_SubmitAnyValidMetricsFollowsKappaRule(uint16 a, uint16 b, uint16 c, uint16 d, uint16 e, uint16 f)
+        public
+    {
         a = uint16(bound(a, 0, 10_000));
         b = uint16(bound(b, 0, 10_000));
         c = uint16(bound(c, 0, 10_000));
@@ -165,7 +206,9 @@ contract RiskRegistryTest is Test {
         assertEq(snapshot.submittedAt, uint64(block.timestamp));
         assertEq(snapshot.payloadHash, payloadHash);
         assertEq(snapshot.submittedBy, address(this));
-        assertEq(snapshot.metricsHash, keccak256(abi.encode(fundId, _lowRiskMetrics(), riskScoreBps, uint64(1), occurredAt)));
+        assertEq(
+            snapshot.metricsHash, keccak256(abi.encode(fundId, _lowRiskMetrics(), riskScoreBps, uint64(1), occurredAt))
+        );
     }
 
     function testRiskScoreEqualToKappaDoesNotGateFund() public {
@@ -200,30 +243,135 @@ contract RiskRegistryTest is Test {
         );
         vm.expectEmit(true, true, false, true, address(registry));
         emit RiskWarningEvent(
-            fundId,
-            snapshotId,
-            riskScoreBps,
-            7_000,
-            registry.GATE_RULE_ID(),
-            occurredAt,
-            submittedAt,
-            metricsHash
+            fundId, snapshotId, riskScoreBps, 7_000, registry.GATE_RULE_ID(), occurredAt, submittedAt, metricsHash
         );
         vm.expectEmit(true, true, false, true, address(registry));
         emit GateTriggered(
-            fundId,
-            snapshotId,
-            riskScoreBps,
-            7_000,
-            registry.GATE_RULE_ID(),
-            occurredAt,
-            submittedAt,
-            metricsHash
+            fundId, snapshotId, riskScoreBps, 7_000, registry.GATE_RULE_ID(), occurredAt, submittedAt, metricsHash
         );
 
         registry.submitMetrics(fundId, metrics, weightsConfigId, occurredAt, payloadHash);
 
         assertTrue(registry.isGated(fundId));
+    }
+
+    function testStalePricingWarningOnlyEmitsAtConfiguredMaximumAge() public {
+        RiskRegistry.RiskMetrics memory belowThreshold = _lowRiskMetrics();
+        belowThreshold.stalePricingRiskBps = 9_999;
+        registry.submitMetrics(fundId, belowThreshold, 1, uint64(block.timestamp), payloadHash);
+
+        vm.recordLogs();
+        RiskRegistry.RiskMetrics memory atThreshold = _lowRiskMetrics();
+        atThreshold.stalePricingRiskBps = 10_000;
+        registry.submitMetrics(fundId, atThreshold, 1, uint64(block.timestamp), payloadHash);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        bytes32 staleSignature =
+            keccak256("StalePricingWarning(bytes32,uint256,uint16,uint64,bytes32,uint64,uint64,bytes32)");
+        uint256 staleWarningCount;
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (logs[i].topics[0] == staleSignature) staleWarningCount++;
+        }
+        assertEq(staleWarningCount, 1);
+    }
+
+    function testLiquidityOracleStoresFundStateAndEmitsCommitment() public {
+        uint64 occurredAt = uint64(block.timestamp);
+
+        vm.expectEmit(true, true, false, true, address(registry));
+        emit LiquidityBufferUpdated(fundId, 12_500, occurredAt, occurredAt, payloadHash, address(this));
+        registry.submitLiquidityBuffer(fundId, 12_500, occurredAt, payloadHash);
+
+        RiskRegistry.LiquidityBufferSnapshot memory snapshot = registry.latestLiquidityBuffer(fundId);
+        assertEq(snapshot.liquidityBufferRatioBps, 12_500);
+        assertEq(snapshot.occurredAt, occurredAt);
+        assertEq(snapshot.submittedAt, occurredAt);
+        assertEq(snapshot.payloadHash, payloadHash);
+        assertEq(snapshot.submittedBy, address(this));
+        assertTrue(snapshot.exists);
+    }
+
+    function testOnlyLiquidityOracleCanUpdateBuffer() public {
+        vm.prank(stranger);
+        vm.expectRevert();
+        registry.submitLiquidityBuffer(fundId, 8_000, uint64(block.timestamp), payloadHash);
+
+        vm.expectRevert(bytes("NO_LIQUIDITY_BUFFER"));
+        registry.latestLiquidityBuffer(fundId);
+    }
+
+    function testExtendedControlsStoreStateTriggerBasisAndCommitments() public {
+        RiskRegistry.RiskMetrics memory metrics = _highRiskMetrics();
+        registry.submitMetrics(fundId, metrics, 1, uint64(block.timestamp), payloadHash);
+        uint16 riskScoreBps = _score(metrics);
+        bytes32 swingRuleId = keccak256("SWING_ON_LIQUIDITY_STRESS");
+        bytes32 sidePocketRuleId = keccak256("SEGREGATE_ILLIQUID_ASSETS");
+        bytes32 swingPayloadHash = keccak256("swing payload");
+        bytes32 sidePocketPayloadHash = keccak256("side pocket payload");
+        bytes32 assetCommitmentHash = keccak256("illiquid asset set");
+
+        vm.expectEmit(true, true, false, true, address(registry));
+        emit SwingPricingApplied(
+            fundId,
+            350,
+            riskScoreBps,
+            swingRuleId,
+            uint64(block.timestamp),
+            uint64(block.timestamp),
+            swingPayloadHash,
+            address(this)
+        );
+        registry.applySwingPricing(fundId, 350, swingRuleId, uint64(block.timestamp), swingPayloadHash);
+
+        vm.expectEmit(true, true, false, true, address(registry));
+        emit SidePocketCreated(
+            fundId,
+            assetCommitmentHash,
+            riskScoreBps,
+            sidePocketRuleId,
+            uint64(block.timestamp),
+            uint64(block.timestamp),
+            sidePocketPayloadHash,
+            address(this)
+        );
+        registry.createSidePocket(
+            fundId, assetCommitmentHash, sidePocketRuleId, uint64(block.timestamp), sidePocketPayloadHash
+        );
+
+        (
+            bool swingPricingActive,
+            bool sidePocketActive,
+            uint16 adjustmentBps,
+            uint16 storedRiskScoreBps,
+            bytes32 lastRuleId,
+            bytes32 storedAssetCommitmentHash
+        ) = registry.extendedControlState(fundId);
+        assertTrue(swingPricingActive);
+        assertTrue(sidePocketActive);
+        assertEq(adjustmentBps, 350);
+        assertEq(storedRiskScoreBps, riskScoreBps);
+        assertEq(lastRuleId, sidePocketRuleId);
+        assertEq(storedAssetCommitmentHash, assetCommitmentHash);
+
+        vm.expectRevert(bytes("SIDE_POCKET_ALREADY_ACTIVE"));
+        registry.createSidePocket(
+            fundId, assetCommitmentHash, sidePocketRuleId, uint64(block.timestamp), sidePocketPayloadHash
+        );
+    }
+
+    function testExtendedControlsRequireOperatorAndRiskTriggerBasis() public {
+        bytes32 ruleId = keccak256("CONTROL_RULE");
+
+        vm.expectRevert(bytes("NO_RISK_SNAPSHOT"));
+        registry.applySwingPricing(fundId, 100, ruleId, uint64(block.timestamp), payloadHash);
+
+        registry.submitMetrics(fundId, _lowRiskMetrics(), 1, uint64(block.timestamp), payloadHash);
+        vm.startPrank(stranger);
+        vm.expectRevert();
+        registry.applySwingPricing(fundId, 100, ruleId, uint64(block.timestamp), payloadHash);
+        vm.expectRevert();
+        registry.createSidePocket(fundId, keccak256("assets"), ruleId, uint64(block.timestamp), payloadHash);
+        vm.stopPrank();
     }
 
     function testRepeatedHighRiskWarningDoesNotRetriggerGate() public {
@@ -325,6 +473,9 @@ contract RiskRegistryTest is Test {
     function testGateReleaseEmitsAuditableReasonHash() public {
         registry.submitMetrics(fundId, _highRiskMetrics(), 1, uint64(block.timestamp), payloadHash);
 
+        vm.expectRevert(bytes("INVALID_REASON_HASH"));
+        registry.releaseGate(fundId, bytes32(0));
+
         bytes32 reasonHash = keccak256("risk normalized");
         vm.warp(1_710_000_200);
 
@@ -335,7 +486,7 @@ contract RiskRegistryTest is Test {
     }
 
     function _validWeights() private pure returns (uint16[6] memory weights) {
-        weights = [uint16(2_000), 2_000, 2_000, 2_000, 1_000, 1_000];
+        weights = [uint16(1_667), 1_667, 1_667, 1_667, 1_666, 1_666];
     }
 
     function _lowRiskMetrics() private pure returns (RiskRegistry.RiskMetrics memory) {
@@ -373,13 +524,18 @@ contract RiskRegistryTest is Test {
 
     function _score(RiskRegistry.RiskMetrics memory metrics) private pure returns (uint16) {
         return uint16(
-            (
-                uint256(metrics.valuationHaircutBps) * 2_000 + uint256(metrics.redemptionPressureBps) * 2_000
-                    + uint256(metrics.redemptionQueueRatioBps) * 2_000
-                    + uint256(metrics.liquidityShortfallBps) * 2_000
-                    + uint256(metrics.stalePricingRiskBps) * 1_000
-                    + uint256(metrics.investorConcentrationBps) * 1_000
-            ) / 10_000
+            (uint256(metrics.valuationHaircutBps)
+                    * 1_667
+                    + uint256(metrics.redemptionPressureBps)
+                    * 1_667
+                    + uint256(metrics.redemptionQueueRatioBps)
+                    * 1_667
+                    + uint256(metrics.liquidityShortfallBps)
+                    * 1_667
+                    + uint256(metrics.stalePricingRiskBps)
+                    * 1_666
+                    + uint256(metrics.investorConcentrationBps)
+                    * 1_666) / 10_000
         );
     }
 }

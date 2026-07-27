@@ -1,17 +1,11 @@
 {
-    "name": "ots-proto",
-    "private": true,
-    "packageManager": "pnpm@9.6.0",
-    "scripts": {
-      "dev:anvil": "anvil -p 8545",
-      "dev:contracts": "cd contracts && forge build && forge test",
-      "dev:api": "pnpm --filter @ots/api dev",
-      "dev:web": "pnpm --filter @ots/web dev",
-      "deploy": "tsx tools/deploy.ts",
-      "test:chapter3": "bash scripts/test-chapter3.sh"
-    },
-    "devDependencies": {
-      "tsx": "^4.19.0"
-    },
-    "workspaces": ["contracts", "apps/*", "tools"]
+  "name": "otc-prototype",
+  "private": true,
+  "packageManager": "pnpm@9.6.0",
+  "scripts": {
+    "dev:anvil": "anvil -p 8545",
+    "dev:contracts": "cd contracts && forge build && forge test",
+    "dev:api": "pnpm --filter @ots/api dev",
+    "test:chapter3": "bash scripts/test-chapter3.sh"
   }
+}

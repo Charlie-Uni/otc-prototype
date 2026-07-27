@@ -1,0 +1,14 @@
+{
+  "scenarioId": "chapter3-valuation-shock",
+  "shockAt": 1710000000,
+  "detectionThresholdBps": 6000,
+  "observationStartAt": 1710000000,
+  "pollingIntervalSec": 60,
+  "actions": [
+    "post valuation haircut",
+    "post liquidity buffer deterioration",
+    "submit risk metrics",
+    "evaluate disclosure under R0-R4"
+  ],
+  "note": "shockAt is chain-offline ground truth and is not emitted as a lifecycle event."
+}

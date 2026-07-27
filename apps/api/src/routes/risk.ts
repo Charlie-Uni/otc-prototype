@@ -2,11 +2,11 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { encodeAbiParameters, keccak256 } from 'viem';
 import { z } from 'zod';
 import { ACCESS_POLICY, auditActorFor, requireAnyRole } from '../auth';
+import { waitForTransactionTimestamp } from '../audit/chain-time';
 import { getAuditEntries, recordAudit } from '../audit/log';
-import { fundId, nav, riskRegistry, rpc, token } from '../chain';
+import { fundId, liquidityRiskRegistry, nav, regulatorRiskRegistry, riskRegistry, rpc, token } from '../chain';
 import { ENV } from '../env';
 import {
-  MAX_BPS,
   RiskMetrics,
   computeInvestorConcentrationBps,
   computeLiquidityShortfallBps,
@@ -34,38 +34,18 @@ import {
   resolvePublicRegimeId,
 } from '../risk/regimes';
 
-const bpsSchema = z.coerce.number().int().min(0).max(MAX_BPS);
-const nonNegativeIntegerSchema = z.coerce.number().int().min(0);
 const PublicRiskQuerySchema = z.object({
   regime: z.enum(TRANSPARENCY_REGIME_IDS).optional(),
+});
+const ReleaseGateSchema = z.object({
+  reasonHash: z.string()
+    .regex(/^0x[0-9a-fA-F]{64}$/, 'reasonHash must be bytes32')
+    .refine((value) => !/^0x0{64}$/i.test(value), 'reasonHash must be non-zero'),
 });
 
 const SubmitRiskSchema = z.object({
   occurredAt: z.coerce.number().int().positive(),
-  valuationHaircutBps: bpsSchema,
-  redemptionPressureBps: bpsSchema.optional(),
-  redemptionQueueRatioBps: bpsSchema.optional(),
-  liquidityBufferRatioBps: nonNegativeIntegerSchema,
-  lastValuationUpdateAt: z.coerce.number().int().positive().optional(),
-  holderSharesBps: z.array(bpsSchema).min(1).optional(),
-}).superRefine((body, ctx) => {
-  if (body.lastValuationUpdateAt !== undefined && body.lastValuationUpdateAt > body.occurredAt) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['lastValuationUpdateAt'],
-      message: 'lastValuationUpdateAt must be <= occurredAt',
-    });
-  }
-
-  const holderShareSum = body.holderSharesBps?.reduce((sum, share) => sum + share, 0);
-  if (holderShareSum !== undefined && holderShareSum !== MAX_BPS) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['holderSharesBps'],
-      message: 'holderSharesBps must sum to 10000',
-    });
-  }
-});
+}).strict();
 
 type WeightsConfig = {
   id: number;
@@ -73,13 +53,12 @@ type WeightsConfig = {
   weightsHash: `0x${string}`;
 };
 
-type ResolvedRiskInput = Omit<
-  z.infer<typeof SubmitRiskSchema>,
-  'holderSharesBps' | 'redemptionPressureBps' | 'redemptionQueueRatioBps' | 'lastValuationUpdateAt'
-> & {
+type ResolvedRiskInput = z.infer<typeof SubmitRiskSchema> & {
+  valuationHaircutBps: number;
   holderSharesBps: number[];
   redemptionPressureBps: number;
   redemptionQueueRatioBps: number;
+  liquidityBufferRatioBps: number;
   lastValuationUpdateAt: number;
 };
 
@@ -87,13 +66,29 @@ type ComputedRisk = {
   config: WeightsConfig;
   metrics: RiskMetrics;
   payloadHash: `0x${string}`;
+  valuationHaircutSource: 'chain';
   lastValuationUpdateAt: number;
-  holderSource: 'request' | 'chain';
-  redemptionPressureSource: 'request' | 'chain';
-  redemptionQueueSource: 'request' | 'chain';
-  stalePricingSource: 'request' | 'chain';
-  holderSnapshot?: HolderShareSnapshot;
-  redemptionPressureSnapshot?: RedemptionPressureSnapshot;
+  holderSource: 'chain';
+  redemptionPressureSource: 'chain';
+  redemptionQueueSource: 'chain';
+  liquidityBufferSource: 'chain';
+  stalePricingSource: 'chain';
+  holderSnapshot: HolderShareSnapshot;
+  redemptionPressureSnapshot: RedemptionPressureSnapshot;
+  valuationHaircutSnapshot: {
+    valuationHaircutBps: number;
+    occurredAt: number;
+    submittedAt: number;
+    payloadHash: `0x${string}`;
+    submittedBy: `0x${string}`;
+  };
+  liquidityBufferSnapshot: {
+    liquidityBufferRatioBps: number;
+    occurredAt: number;
+    submittedAt: number;
+    payloadHash: `0x${string}`;
+    submittedBy: `0x${string}`;
+  };
 };
 
 type RiskSnapshot = {
@@ -159,15 +154,7 @@ async function readActiveWeightsConfig(): Promise<WeightsConfig> {
   };
 }
 
-async function resolveHolderShares(body: z.infer<typeof SubmitRiskSchema>) {
-  if (body.holderSharesBps) {
-    return {
-      holderSharesBps: body.holderSharesBps,
-      holderSource: 'request' as const,
-      holderSnapshot: undefined,
-    };
-  }
-
+async function resolveHolderShares() {
   const holderSnapshot = await readHolderShareSnapshot();
   return {
     holderSharesBps: holderSnapshot.holderSharesBps,
@@ -176,14 +163,7 @@ async function resolveHolderShares(body: z.infer<typeof SubmitRiskSchema>) {
   };
 }
 
-async function resolveRedemptionQueueRatio(body: z.infer<typeof SubmitRiskSchema>) {
-  if (body.redemptionQueueRatioBps !== undefined) {
-    return {
-      redemptionQueueRatioBps: body.redemptionQueueRatioBps,
-      redemptionQueueSource: 'request' as const,
-    };
-  }
-
+async function resolveRedemptionQueueRatio() {
   const c = token as any;
   const redemptionQueueRatioBps = Number(await c.read.redemptionQueueRatioBps());
   return {
@@ -193,14 +173,6 @@ async function resolveRedemptionQueueRatio(body: z.infer<typeof SubmitRiskSchema
 }
 
 async function resolveRedemptionPressure(body: z.infer<typeof SubmitRiskSchema>) {
-  if (body.redemptionPressureBps !== undefined) {
-    return {
-      redemptionPressureBps: body.redemptionPressureBps,
-      redemptionPressureSource: 'request' as const,
-      redemptionPressureSnapshot: undefined,
-    };
-  }
-
   const redemptionPressureSnapshot = await readRedemptionPressureSnapshot(
     body.occurredAt,
     ENV.REDEMPTION_PRESSURE_WINDOW_SEC,
@@ -213,15 +185,8 @@ async function resolveRedemptionPressure(body: z.infer<typeof SubmitRiskSchema>)
 }
 
 async function resolveLastValuationUpdateAt(body: z.infer<typeof SubmitRiskSchema>) {
-  if (body.lastValuationUpdateAt !== undefined) {
-    return {
-      lastValuationUpdateAt: body.lastValuationUpdateAt,
-      stalePricingSource: 'request' as const,
-    };
-  }
-
   const c = nav as any;
-  const raw = await c.read.latestNAV();
+  const raw = await c.read.latestNAV([fundId]);
   const storedAt = Number(raw.storedAt ?? raw[2]);
   if (storedAt > body.occurredAt) {
     throw new Error('NAV_STORED_AFTER_OCCURRED_AT');
@@ -230,6 +195,46 @@ async function resolveLastValuationUpdateAt(body: z.infer<typeof SubmitRiskSchem
   return {
     lastValuationUpdateAt: storedAt,
     stalePricingSource: 'chain' as const,
+  };
+}
+
+async function resolveValuationHaircut(body: z.infer<typeof SubmitRiskSchema>) {
+  const c = nav as any;
+  const raw = await c.read.latestValuationHaircut([fundId]);
+  const valuationHaircutSnapshot = {
+    valuationHaircutBps: Number(raw.valuationHaircutBps ?? raw[0]),
+    occurredAt: Number(raw.occurredAt ?? raw[1]),
+    submittedAt: Number(raw.submittedAt ?? raw[2]),
+    payloadHash: (raw.payloadHash ?? raw[3]) as `0x${string}`,
+    submittedBy: (raw.submittedBy ?? raw[4]) as `0x${string}`,
+  };
+  if (valuationHaircutSnapshot.occurredAt > body.occurredAt) {
+    throw new Error('VALUATION_HAIRCUT_OCCURRED_AFTER_RISK');
+  }
+  return {
+    valuationHaircutBps: valuationHaircutSnapshot.valuationHaircutBps,
+    valuationHaircutSource: 'chain' as const,
+    valuationHaircutSnapshot,
+  };
+}
+
+async function resolveLiquidityBuffer(body: z.infer<typeof SubmitRiskSchema>) {
+  const c = liquidityRiskRegistry as any;
+  const raw = await c.read.latestLiquidityBuffer([fundId]);
+  const liquidityBufferSnapshot = {
+    liquidityBufferRatioBps: Number(raw.liquidityBufferRatioBps ?? raw[0]),
+    occurredAt: Number(raw.occurredAt ?? raw[1]),
+    submittedAt: Number(raw.submittedAt ?? raw[2]),
+    payloadHash: (raw.payloadHash ?? raw[3]) as `0x${string}`,
+    submittedBy: (raw.submittedBy ?? raw[4]) as `0x${string}`,
+  };
+  if (liquidityBufferSnapshot.occurredAt > body.occurredAt) {
+    throw new Error('LIQUIDITY_BUFFER_OCCURRED_AFTER_RISK');
+  }
+  return {
+    liquidityBufferRatioBps: liquidityBufferSnapshot.liquidityBufferRatioBps,
+    liquidityBufferSource: 'chain' as const,
+    liquidityBufferSnapshot,
   };
 }
 
@@ -288,22 +293,36 @@ function payloadHashFor(body: ResolvedRiskInput, metrics: RiskMetrics, config: W
 
 async function computeFromChainConfig(body: z.infer<typeof SubmitRiskSchema>): Promise<ComputedRisk> {
   const config = await readActiveWeightsConfig();
-  const [holderState, pressureState, queueState, staleState] = await Promise.all([
-    resolveHolderShares(body),
+  const [valuationState, holderState, pressureState, queueState, liquidityState, staleState] = await Promise.all([
+    resolveValuationHaircut(body),
+    resolveHolderShares(),
     resolveRedemptionPressure(body),
-    resolveRedemptionQueueRatio(body),
+    resolveRedemptionQueueRatio(),
+    resolveLiquidityBuffer(body),
     resolveLastValuationUpdateAt(body),
   ]);
   const resolvedBody = {
     ...body,
+    valuationHaircutBps: valuationState.valuationHaircutBps,
     holderSharesBps: holderState.holderSharesBps,
     redemptionPressureBps: pressureState.redemptionPressureBps,
     redemptionQueueRatioBps: queueState.redemptionQueueRatioBps,
+    liquidityBufferRatioBps: liquidityState.liquidityBufferRatioBps,
     lastValuationUpdateAt: staleState.lastValuationUpdateAt,
   };
   const metrics = buildMetrics(resolvedBody, config);
   const payloadHash = payloadHashFor(resolvedBody, metrics, config);
-  return { config, metrics, payloadHash, ...holderState, ...pressureState, ...queueState, ...staleState };
+  return {
+    config,
+    metrics,
+    payloadHash,
+    ...valuationState,
+    ...holderState,
+    ...pressureState,
+    ...queueState,
+    ...liquidityState,
+    ...staleState,
+  };
 }
 
 async function submitWithOneConfigRetry(body: z.infer<typeof SubmitRiskSchema>) {
@@ -597,11 +616,15 @@ export default async function (app: FastifyInstance) {
         payloadHash: result.snapshot.payloadHash,
         riskScoreBps: result.snapshot.riskScoreBps,
         weightsConfigId: result.config.id,
+        valuationHaircutSource: result.valuationHaircutSource,
+        valuationHaircutSnapshot: result.valuationHaircutSnapshot,
         holderSource: result.holderSource,
         holderSnapshot: result.holderSnapshot,
         redemptionPressureSource: result.redemptionPressureSource,
         redemptionPressureSnapshot: result.redemptionPressureSnapshot,
         redemptionQueueSource: result.redemptionQueueSource,
+        liquidityBufferSource: result.liquidityBufferSource,
+        liquidityBufferSnapshot: result.liquidityBufferSnapshot,
         stalePricingSource: result.stalePricingSource,
         lastValuationUpdateAt: result.lastValuationUpdateAt,
         retried: result.retried,
@@ -616,18 +639,59 @@ export default async function (app: FastifyInstance) {
       weightsConfigId: result.config.id,
       weightsHash: result.config.weightsHash,
       maxStaleAgeSec: result.config.maxStaleAgeSec,
+      valuationHaircutSource: result.valuationHaircutSource,
+      valuationHaircutSnapshot: result.valuationHaircutSnapshot,
       holderSource: result.holderSource,
       redemptionPressureSource: result.redemptionPressureSource,
       redemptionPressureSnapshot: result.redemptionPressureSnapshot,
       redemptionQueueSource: result.redemptionQueueSource,
+      liquidityBufferSource: result.liquidityBufferSource,
+      liquidityBufferSnapshot: result.liquidityBufferSnapshot,
       stalePricingSource: result.stalePricingSource,
       lastValuationUpdateAt: result.lastValuationUpdateAt,
-      holderSharesBps: result.holderSnapshot?.holderSharesBps ?? body.holderSharesBps,
+      holderSharesBps: result.holderSnapshot.holderSharesBps,
       holderSnapshot: result.holderSnapshot,
       payloadHash: result.payloadHash,
       retried: result.retried,
     });
   });
+
+  app.post(
+    '/risk/release-gate',
+    { preHandler: requireAnyRole(...ACCESS_POLICY.gateRelease) },
+    async (req, reply) => {
+      const parsedBody = ReleaseGateSchema.safeParse(req.body);
+      if (!parsedBody.success) {
+        return reply.code(400).send({ error: 'INVALID_REASON_HASH' });
+      }
+
+      const c = regulatorRiskRegistry as any;
+      if (!await c.read.isGated([fundId])) {
+        return reply.code(409).send({ error: 'FUND_NOT_GATED', fundId });
+      }
+
+      const reasonHash = parsedBody.data.reasonHash as `0x${string}`;
+      const tx = await c.write.releaseGate([fundId, reasonHash]);
+      const submittedAt = await waitForTransactionTimestamp(tx);
+      await recordAudit({
+        actor: auditActorFor(req),
+        action: 'risk.gate.release',
+        occurredAt: submittedAt,
+        submittedAt,
+        disclosedAt: submittedAt,
+        transactionHash: tx,
+        details: { fundId, reasonHash },
+      });
+
+      return reply.send({
+        tx,
+        fundId,
+        reasonHash,
+        submittedAt,
+        gated: false,
+      });
+    },
+  );
 
   app.get(
     '/risk/regulator',

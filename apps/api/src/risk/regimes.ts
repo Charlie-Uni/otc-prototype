@@ -1,4 +1,4 @@
-import { RED_SCORE_BPS, RiskLevel, RiskMetrics, YELLOW_SCORE_BPS, riskLevelFor } from './calc';
+import { RED_SCORE_BPS, RiskMetrics, YELLOW_SCORE_BPS, riskLevelFor } from './calc';
 
 export const TRANSPARENCY_REGIME_IDS = ['R0', 'R1', 'R2', 'R3', 'R4'] as const;
 
@@ -6,6 +6,7 @@ export type TransparencyRegimeId = typeof TRANSPARENCY_REGIME_IDS[number];
 export type VisibilityMode = 'public' | 'role_based' | 'tiered';
 export type GranularityMode = 'aggregate' | 'detailed' | 'tiered';
 export type ControlDisclosureMode = 'public' | 'private' | 'delayed' | 'tiered';
+export type DisclosureAudience = 'public' | 'regulator';
 
 export type TransparencyRegime = {
   id: TransparencyRegimeId;
@@ -154,24 +155,43 @@ export function scoreBandFor(scoreBps: number): 'green' | 'yellow' | 'red' {
   return 'green';
 }
 
-function controlVisibleFor(args: PublicRiskViewArgs, riskLevelWithoutControl: RiskLevel): boolean {
-  switch (args.regime.controlDisclosure) {
+export type ControlDisclosureContext = {
+  audience: DisclosureAudience;
+  currentGated: boolean;
+  riskScoreBps: number;
+  eventName: string | null;
+};
+
+export function controlDisclosureAllowedFor(
+  regime: TransparencyRegime,
+  context: ControlDisclosureContext,
+): boolean {
+  if (context.audience === 'regulator' && regime.visibility !== 'public') {
+    return true;
+  }
+
+  switch (regime.controlDisclosure) {
     case 'public':
       return true;
     case 'private':
       return false;
     case 'delayed':
-      return args.latestControlIsDisclosed;
+      return true;
     case 'tiered':
-      return args.currentGated
-        || riskLevelWithoutControl === 'red'
-        || args.latestControlEventName === 'GateReleased';
+      return context.currentGated
+        || scoreBandFor(context.riskScoreBps) === 'red'
+        || context.eventName === 'GateReleased';
   }
 }
 
 export function buildPublicRiskPayload(args: PublicRiskViewArgs) {
   const riskLevelWithoutControl = riskLevelFor(args.snapshot.riskScoreBps, false);
-  const controlDisclosed = controlVisibleFor(args, riskLevelWithoutControl);
+  const controlDisclosed = args.latestControlIsDisclosed && controlDisclosureAllowedFor(args.regime, {
+    audience: 'public',
+    currentGated: args.currentGated,
+    riskScoreBps: args.snapshot.riskScoreBps,
+    eventName: args.latestControlEventName,
+  });
   const visibleGated = controlDisclosed ? args.currentGated : false;
   const riskLevel = riskLevelFor(args.snapshot.riskScoreBps, visibleGated);
   const base = {
