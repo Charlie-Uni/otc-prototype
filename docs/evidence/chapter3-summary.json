@@ -1,6 +1,19 @@
 {
-  "runId": "20260727T133158Z",
+  "source": {
+    "kind": "github_actions_artifact",
+    "repository": "Charlie-Uni/otc-prototype",
+    "branch": "master",
+    "commitSha": "6c08f9fde12ad5d614cdf12411b3f00ab9396d0a",
+    "workflow": "Chapter 3 Artifact Tests",
+    "workflowRunId": 30277745022,
+    "workflowRunUrl": "https://github.com/Charlie-Uni/otc-prototype/actions/runs/30277745022",
+    "artifactName": "chapter3-test-evidence",
+    "artifactRunId": "20260727T145949Z"
+  },
   "status": "passed",
+  "environment": {
+    "postgresqlEnabled": true
+  },
   "checks": {
     "contractTests": "passed",
     "contractTestCount": 58,
@@ -9,13 +22,14 @@
     "apiTestCount": 59,
     "typecheck": "passed",
     "endToEndSmoke": "passed",
-    "postgresRestartPersistence": "not_run",
+    "postgresRestartPersistence": "passed",
     "contractCoverage": "passed"
   },
   "contractLineCoveragePercent": {
     "FundToken": 96.75,
     "NAVRegistry": 100,
-    "RiskRegistry": 97.22
+    "RiskRegistry": 97.22,
+    "total": 97.4
   },
   "runtimeCodeSizeBytes": {
     "FundToken": 19065,
@@ -23,10 +37,70 @@
     "RiskRegistry": 19095,
     "eip170Limit": 24576
   },
+  "endToEndAssertions": {
+    "riskScoreBps": 7702,
+    "gateError": "REDEMPTION_GATED",
+    "gateHttpStatus": 409,
+    "postgresEventCountAfterRestart": 1,
+    "postgresGateTriggeredCount": 1,
+    "postgresAuditEntryCountAfterRestart": 57,
+    "postgresRiskSubmitCountAfterRestart": 2
+  },
+  "detectionScenario": {
+    "scenarioId": "smoke-valuation-shock",
+    "detectionThresholdBps": 6000,
+    "pollingIntervalSec": 60,
+    "systemDetectionLagSec": 0,
+    "disclosureDetectionLagSec": {
+      "public": {
+        "R0": 205200,
+        "R1": 0,
+        "R2": 0,
+        "R3": 86400,
+        "R4": 0
+      },
+      "regulator": {
+        "R0": 205200,
+        "R1": 0,
+        "R2": 0,
+        "R3": 86400,
+        "R4": 0
+      }
+    },
+    "observationDetectionLagSec": {
+      "public": {
+        "R0": 205200,
+        "R1": 0,
+        "R2": 0,
+        "R3": 86400,
+        "R4": 0
+      },
+      "regulator": {
+        "R0": 205200,
+        "R1": 0,
+        "R2": 0,
+        "R3": 86400,
+        "R4": 0
+      }
+    }
+  },
+  "evidenceFiles": {
+    "summary.json": {
+      "sha256": "9931092fa87a8fa478864d17d27891d832d67bade398be7d4085bbaefa4928fe"
+    },
+    "postgres-persistence.json": {
+      "sizeBytes": 1129,
+      "sha256": "59410e44e253ed5983bfc00eced93dd2d286341c43cd20d3c7f01e5e227fe055"
+    },
+    "postgres-audit-persistence.json": {
+      "sizeBytes": 24981,
+      "sha256": "af607d7c58a41eb1556148a583123ee9fcf86b27a6d2d0a84cb6f2a7b24ce51d"
+    }
+  },
   "notes": [
-    "The local run used the bounded in-memory audit index.",
     "Risk inputs were read at one fixed block and committed with payload schema version 2.",
-    "Raw Foundry coverage output is generated as coverage.log by scripts/test-chapter3.sh.",
-    "The GitHub Actions job executes the same suite with PostgreSQL 16 and uploads complete logs."
+    "PostgreSQL event and API audit records were read after an API process restart.",
+    "Smoke is a compressed functional test; the dedicated scenario output is the evidence source for all three DetectionLag measures.",
+    "Complete raw logs are retained in the GitHub Actions artifact referenced above."
   ]
 }
