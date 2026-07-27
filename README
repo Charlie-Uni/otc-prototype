@@ -88,7 +88,7 @@ cp apps/api/.env.example apps/api/.env
 pnpm dev:api
 ```
 
-把部署输出的三个合约地址写入 `apps/api/.env`。该文件已被 `.gitignore` 排除，不得提交私钥或 API Key。
+把部署输出的三个合约地址写入 `apps/api/.env`，并用 `API_KEY_INVESTOR_ADDRESS` 将投资者 API Key 绑定到演示持有人地址。该文件已被 `.gitignore` 排除，不得提交私钥或 API Key。
 
 4. 健康检查：
 
@@ -125,8 +125,9 @@ GitHub Actions 使用 PostgreSQL 16 执行同一入口，并始终上传测试�
 ## 原型边界
 
 - Swing Pricing 和 Side Pocket 实现事件、状态标志、触发依据与承诺哈希，不实现完整资产会计。
-- Gate 采用全额冻结语义，拦截新增赎回和存量队列结算；触发自动，解除由监管角色提交原因哈希。
-- API Key 是研究原型级角色认证，不等同生产身份系统；投资者角色内横向身份隔离不在本章实现范围。
+- Gate 采用 fail-closed 的全额冻结语义：未配置 RiskRegistry 时拒绝赎回；配置后拦截新增赎回和存量队列结算；触发自动，解除由监管角色提交原因哈希。
+- API Key 是研究原型级认证，不等同生产身份系统；投资者 Key 绑定单一地址并强制“只查本人”，但不实现用户生命周期、密钥轮换或多地址身份管理。
 - 许可链原始日志仍可能包含地址；VC 哈希和 payload commitment 不等同零知识证明。
-- R0 周频边界按 Unix epoch 对齐；生产制度可替换为自然周或业务日历。
-- 赎回压力当前按窗口期申请量计算，论文最终文字需明确该代理变量口径。
+- R0 每 604800 秒周期披露一次，边界按 Unix epoch 对齐，单条记录等待时间在 0–7 天之间；生产制度可替换为自然周或业务日历。
+- 风险提交在一个固定区块读取权重、NAV、流动性、份额和赎回状态；实时端点默认只接受距该区块不超过 300 秒的 `occurredAt`。
+- 链上 `redemptionPressureBps` 按窗口期申请量计算，是前瞻性 RedemptionRequestPressure；申请量与结算量分别导出。

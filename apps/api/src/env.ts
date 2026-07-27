@@ -32,6 +32,7 @@ const EnvSchema = z.object({
   DEFAULT_TRANSPARENCY_REGIME: z.enum(["R0", "R1", "R2", "R3", "R4"]).default("R4"),
   ALLOW_REGIME_QUERY_OVERRIDE: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
   API_KEY_INVESTOR: ApiKeySchema,
+  API_KEY_INVESTOR_ADDRESS: z.string().refine(isAddress, "Invalid investor address"),
   API_KEY_MANAGER: ApiKeySchema,
   API_KEY_REGISTRAR: ApiKeySchema,
   API_KEY_NAV_ORACLE: ApiKeySchema,
@@ -40,6 +41,7 @@ const EnvSchema = z.object({
   API_KEY_REGULATOR: ApiKeySchema,
   API_KEY_AUDITOR: ApiKeySchema,
   REDEMPTION_PRESSURE_WINDOW_SEC: z.coerce.number().int().positive().default(24 * 60 * 60),
+  RISK_INPUT_MAX_AGE_SEC: z.coerce.number().int().positive().default(300),
   PORT: z.coerce.number().default(3001),
   DATABASE_URL: z.string().optional(),
 });
@@ -57,23 +59,5 @@ export const ENV = {
   FUND_TOKEN_ADDRESS: getAddress(raw.FUND_TOKEN_ADDRESS),
   NAV_REGISTRY_ADDRESS: getAddress(raw.NAV_REGISTRY_ADDRESS),
   RISK_REGISTRY_ADDRESS: getAddress(raw.RISK_REGISTRY_ADDRESS),
+  API_KEY_INVESTOR_ADDRESS: getAddress(raw.API_KEY_INVESTOR_ADDRESS),
 };
-
-/**
- * Debug log (safe)
- */
-console.log("ENV LOADED:", {
-  RPC_URL: ENV.RPC_URL,
-  PRIVATE_KEY_CONFIGURED: true,
-  ORACLE_PRIVATE_KEY_CONFIGURED: true,
-  REGULATOR_PRIVATE_KEY_CONFIGURED: true,
-  LIQUIDITY_ORACLE_PRIVATE_KEY_CONFIGURED: true,
-  FUND_TOKEN_ADDRESS: ENV.FUND_TOKEN_ADDRESS,
-  NAV_REGISTRY_ADDRESS: ENV.NAV_REGISTRY_ADDRESS,
-  RISK_REGISTRY_ADDRESS: ENV.RISK_REGISTRY_ADDRESS,
-  FUND_ID_LABEL: ENV.FUND_ID_LABEL,
-  DEFAULT_TRANSPARENCY_REGIME: ENV.DEFAULT_TRANSPARENCY_REGIME,
-  ALLOW_REGIME_QUERY_OVERRIDE: ENV.ALLOW_REGIME_QUERY_OVERRIDE,
-  REDEMPTION_PRESSURE_WINDOW_SEC: ENV.REDEMPTION_PRESSURE_WINDOW_SEC,
-  PORT: ENV.PORT,
-});

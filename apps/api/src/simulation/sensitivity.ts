@@ -73,6 +73,10 @@ export function runRiskSensitivity(input: SensitivityInput): SensitivityRow[] {
   if (input.maxStaleAgeDays.length === 0) throw new Error('MAX_STALE_AGE_DAYS_REQUIRED');
   if (input.weightSchemes.length === 0) throw new Error('WEIGHT_SCHEMES_REQUIRED');
   if (input.kappaBpsValues.length === 0) throw new Error('KAPPA_VALUES_REQUIRED');
+  if (input.kappaBpsValues.length > 16) throw new Error('TOO_MANY_KAPPA_VALUES');
+  if (new Set(input.kappaBpsValues).size !== input.kappaBpsValues.length) {
+    throw new Error('DUPLICATE_KAPPA_VALUES');
+  }
   input.kappaBpsValues.forEach((kappaBps) => validateBps(kappaBps, 'KAPPA'));
 
   return input.weightSchemes.flatMap((scheme) =>

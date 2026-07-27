@@ -44,13 +44,15 @@
 ### 3.1 指标来源
 
 - ValuationHaircut：读取 NAVRegistry 最新估值折价快照。
-- RedemptionPressure：聚合窗口期 RedemptionRequested 事件，除以当前 totalSupply。
+- RedemptionPressure：实现口径为前瞻性 RedemptionRequestPressure，聚合同一快照区块之前窗口期内的 RedemptionRequested 事件，除以该区块的 totalSupply；申请量与结算量分别导出。
 - RedemptionQueueRatio：直接读取 FundToken 队列状态。
 - LiquidityShortfall：读取链上流动性缓冲率并计算 `max(10000 - LBR, 0)`。
-- StalePricingRisk：读取最新 NAV `storedAt`，同时保留原始陈旧秒数。
+- StalePricingRisk：评分固定读取最新 NAV `storedAt`；同时保留从 `asOf` 和 `storedAt` 起算的两组原始陈旧秒数及 `staleReferenceUsed=storedAt`。
 - InvestorConcentration：聚合 ShareBalanceUpdated 终态余额，校验余额合计等于事件 totalSupply，再以最大余数法换算份额 bps 并计算 HHI。
 
 `/risk/submit` 只接受 `occurredAt`，不接受上述链上派生指标的请求级覆盖。这样风险 Oracle 只能触发一次可复算的链上快照生成，不能绕过认购、登记、NAV 或赎回状态直接填指标。
+
+每次提交先固定 `snapshotBlockNumber` 和 `snapshotBlockTimestamp`。活动权重、NAV、估值折价、流动性、份额事件、totalSupply、赎回事件和队列比例均读取该区块；发生 `INACTIVE_WEIGHTS` 时废弃整组结果，在新区块完整重算一次。实时提交端点默认要求 `occurredAt` 不晚于快照区块且与其相差不超过 300 秒，该窗口可由服务端配置。该窗口约束受信 Oracle 输入相对快照区块的新鲜度，不定义也不限制链下 `shockAt` 到检测锚事件的 DetectionLag。
 
 ### 3.2 归一化与定点数
 
@@ -67,7 +69,7 @@ stalePricingRiskBps =
   min(floor(staleAgeSec * 10000 / maxStaleAgeSec), 10000)
 ```
 
-审计与敏感性导出同时保留 `staleAgeSecRaw`，避免归一化丢失原始信息。`maxStaleAgeSec` 与权重共同版本化上链，任何复算者都能得到同一分数。
+审计与风险响应同时保留 `staleAgeFromAsOfSec`、`staleAgeFromStoredAtSec`，敏感性导出保留 `staleAgeSecRaw`，避免归一化丢失原始信息。`maxStaleAgeSec` 与权重共同版本化上链，任何复算者都能得到同一分数。
 
 ### 3.3 权重和评分
 
@@ -113,6 +115,8 @@ f(Frequency, Visibility, Granularity, Delay, ControlDisclosure)
 
 R4 控制事件在 gated、原始评分为 red，或事件为 GateReleased 时披露。实时视图和审计时间线复用同一判断函数，避免制度语义分叉。
 
+R0 的 `frequencySec=604800` 表示按 Unix epoch 对齐的周期披露，而非每条状态固定延迟七天；单条状态的实际等待时间随提交时点在 0–7 天之间变化。
+
 ## 6. 权限与签名
 
 合约使用 OpenZeppelin AccessControl，API 使用 API Key 摘要和 `timingSafeEqual` 实现角色矩阵。API 区分：
@@ -128,6 +132,8 @@ R4 控制事件在 gated、原始评分为 red，或事件为 GateReleased 时�
 
 Visibility 是双层实现：端点 RBAC 决定谁能调用；披露引擎决定调用后可见的时间、粒度和控制信息。
 
+投资者 API Key 额外绑定一个 EIP-55 地址，余额端点强制投资者只查询绑定地址；管理人、登记代理、监管者和审计者仍按角色矩阵访问。这提供原型范围内的横向隔离，但不替代生产身份系统。
+
 链上签名层已将 risk oracle、liquidity oracle 和 regulator 与 admin 分离；NAV、登记和扩展控制在当前原型中仍由 admin 签名账户执行。该合并是研究原型边界，不能表述为生产级职责分离。
 
 ## 7. 审计与四时间戳
@@ -137,7 +143,7 @@ Visibility 是双层实现：端点 RBAC 决定谁能调用；披露引擎决定
 - `disclosedAt`：制度和受众共同决定的首次可见时间。
 - `observedAt`：API 被实际查询的时间。
 
-事件索引幂等键为 `chainId:txHash:logIndex`。`commitmentHash = keccak(topics || data)`，用于验证索引记录对应的原始日志未被替换。数据库路径使用 `ON CONFLICT DO NOTHING`；无数据库时使用内存 Map。
+事件索引幂等键为 `chainId:txHash:logIndex`。`commitmentHash = keccak(topics || data)`，用于验证索引记录对应的原始日志未被替换。数据库路径使用 `ON CONFLICT DO NOTHING`；API 审计查询采用 PostgreSQL 优先和有界 limit，无数据库时使用最多 5000 条的内存缓冲。
 
 ## 8. DetectionLag 方法
 
@@ -162,13 +168,16 @@ ObservationDetectionLag = firstPollingObservationAt - shockAt
 - 端到端 smoke：独立 Anvil、重新部署、角色签名、完整生命周期、Gate 拦截/解除、披露差异、审计同步和导出。
 - PostgreSQL 集成：CI 中初始化数据库、API 重启、验证事件仍可查询。
 
+Smoke 在压缩时间内验证链路与时间戳字段，所得生命周期滞后通常接近零，不作为制度滞后的实证结果；非零制度滞后由带外生 `shockAt` 的 DetectionLag 情景输出提供。
+
 ## 10. 明确边界
 
 - Swing Pricing/Side Pocket 不执行完整基金资产会计。
 - Gate 是全额冻结，不代表所有现实 gate 产品形态。
-- 自动触发、监管人工解除属于混合控制设计。
+- Gate 未配置时拒绝赎回；自动触发、监管人工解除属于混合控制设计。
 - NAV 的 `asOf` 按基金单调不回退，允许同一基准时点提交估值修正。
-- API Key 只证明角色，不提供投资者身份级横向隔离。
+- 投资者 API Key 只绑定一个地址，不提供生产级用户生命周期、多地址身份或密钥轮换。
 - 原始许可链日志仍可能泄露地址，承诺哈希不等同 ZK。
-- 赎回压力按申请量而非结算量计算，论文应把它表述为前瞻压力代理变量。
-- 当前陈旧度从 storedAt 起算；asOf 仍作为 occurredAt 保留，最终论文需明确该选择。
+- 赎回压力按申请量而非结算量计算，应解释为前瞻性申请压力；实际结算量作为独立导出字段。
+- 当前陈旧度评分从 storedAt 起算；asOf 与两类原始陈旧秒数同时保留。
+- 控制隐藏的行为侧信道在 API 层不存在，但白名单投资者直接调用链上 `requestRedemption` 时仍可从 revert 推断 Gate 状态。

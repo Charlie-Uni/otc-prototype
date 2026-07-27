@@ -52,7 +52,11 @@ const SensitivitySchema = z.object({
     investorConcentrationBps: bpsSchema,
     staleAgeDaysRaw: z.coerce.number().int().min(0),
     detectionThresholdBps: bpsSchema.default(6_000),
-    kappaBpsValues: z.array(bpsSchema).min(1).default([...CHAPTER3_KAPPA_BPS_VALUES]),
+    kappaBpsValues: z.array(bpsSchema)
+        .min(1)
+        .max(16)
+        .refine((values) => new Set(values).size === values.length, 'Duplicate kappa values are not allowed')
+        .default([...CHAPTER3_KAPPA_BPS_VALUES]),
 });
 
 function nowSec(): number {

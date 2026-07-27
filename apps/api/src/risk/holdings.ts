@@ -83,18 +83,21 @@ export function assertHolderRegistryMatchesTotalSupply(
   return reconstructedTotalSupply;
 }
 
-export async function readHolderShareSnapshot(): Promise<HolderShareSnapshot> {
-  const [{ ENV }, { rpc }] = await Promise.all([
+export async function readHolderShareSnapshot(blockNumber: bigint): Promise<HolderShareSnapshot> {
+  const [{ ENV }, { rpc, token }] = await Promise.all([
     import('../env'),
     import('../chain'),
   ]);
   const balances = new Map<Address, bigint>();
-  const logs = await rpc.getLogs({
-    address: ENV.FUND_TOKEN_ADDRESS as Address,
-    event: shareBalanceUpdatedEvent,
-    fromBlock: 0n,
-    toBlock: 'latest',
-  });
+  const [logs, chainTotalSupply] = await Promise.all([
+    rpc.getLogs({
+      address: ENV.FUND_TOKEN_ADDRESS as Address,
+      event: shareBalanceUpdatedEvent,
+      fromBlock: 0n,
+      toBlock: blockNumber,
+    }),
+    (token as any).read.totalSupply({ blockNumber }) as Promise<bigint>,
+  ]);
 
   let latestEventTotalSupply: bigint | null = null;
   for (const log of logs) {
@@ -106,10 +109,14 @@ export async function readHolderShareSnapshot(): Promise<HolderShareSnapshot> {
 
   const holderBalances = Array.from(balances.entries()).map(([holder, balance]) => ({ holder, balance }));
   const holderSharesBps = balancesToHolderSharesBps(holderBalances);
+  const eventTotalSupply = latestEventTotalSupply ?? 0n;
   const totalSupply = assertHolderRegistryMatchesTotalSupply(
     holderBalances,
-    latestEventTotalSupply ?? 0n,
+    eventTotalSupply,
   );
+  if (eventTotalSupply !== chainTotalSupply) {
+    throw new Error('HOLDER_EVENT_CHAIN_TOTAL_SUPPLY_MISMATCH');
+  }
 
   return {
     holderSharesBps,
