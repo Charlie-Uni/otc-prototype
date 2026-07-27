@@ -21,7 +21,7 @@ pnpm test:chapter3
 | 隐私保护 | PARTIAL | 受保护端点、聚合披露、VC 承诺哈希 | 许可链原始日志仍含地址；ZK 与生产身份系统不在原型范围 |
 | 仿真映射 | PASS | 链下 shockAt、原始评分锚事件、制度-受众披露滞后、轮询观察滞后和删失值测试 | 第 5、6 章可分别选择三类 lag，不把三者混为一个指标 |
 | 可编程控制 | PASS | score > kappa 自动 Gate、监管解除、Swing Pricing/SidePocket 状态与规则承诺、未配置 fail-closed、Gate 拦截新增和存量赎回测试 | Gate 为全额冻结；扩展控制不执行完整资产会计 |
-| 可审计轨迹 | PASS | 事件幂等索引、commitmentHash、API 审计、CSV 导出、有界查询、重复同步 0 插入 | 默认本地模式为最多 5000 条内存缓冲；PostgreSQL 重启验证由 CI 执行 |
+| 可审计轨迹 | PASS | 事件幂等索引、commitmentHash、API 审计、CSV 导出、有界查询、重复同步 0 插入、PostgreSQL 重启后读取 | 默认本地模式为最多 5000 条内存缓冲；最终 CI 使用 PostgreSQL 16 验证持久化路径 |
 
 ## 测试分层
 
@@ -41,7 +41,7 @@ pnpm test:chapter3
 - 端到端：独立部署、链上指标溯源、7702 bps 高风险评分、Gate、R0-R4、审计与仿真全部通过。
 - 合约行覆盖率：FundToken 96.75%、NAVRegistry 100%、RiskRegistry 97.22%；原始输出由统一测试入口生成到 `coverage.log`。部署脚本由端到端 smoke 验证，不计入业务合约覆盖率。
 - 运行时代码：FundToken 19065 B、NAVRegistry 8419 B、RiskRegistry 19095 B，均低于 EIP-170 的 24576 B。
-- 固定摘要见 `docs/evidence/chapter3-summary.json`。完整日志由本地 `test-results/` 或 GitHub Actions artifact 生成；该次本地运行未配置 PostgreSQL，因此持久化项为 `not_run`，CI 负责执行数据库路径。
+- 固定摘要见 `docs/evidence/chapter3-summary.json`，来源为 `master@6c08f9f` 的 GitHub Actions 运行 `30277745022`。该次运行启用 PostgreSQL 16，并在 API 进程重启后验证 `GateTriggered` 事件和 `risk.submit` 审计记录仍可读取；完整原始日志保存在对应 artifact。
 - Smoke 是压缩时间的功能验证，生命周期 CSV 中接近零的原始时间差不作为制度效果证据；三类 DetectionLag 均以 `/audit/detection-lags` 的情景输出为准。
 
 ## 时间戳口径
