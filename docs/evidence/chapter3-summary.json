@@ -1,0 +1,31 @@
+{
+  "runId": "20260727T060122Z",
+  "status": "passed",
+  "checks": {
+    "contractTests": "passed",
+    "contractTestCount": 56,
+    "fuzzRunsPerFuzzTest": 256,
+    "apiTests": "passed",
+    "apiTestCount": 49,
+    "typecheck": "passed",
+    "endToEndSmoke": "passed",
+    "postgresRestartPersistence": "not_run",
+    "contractCoverage": "passed"
+  },
+  "contractLineCoveragePercent": {
+    "FundToken": 96.72,
+    "NAVRegistry": 100,
+    "RiskRegistry": 97.22
+  },
+  "runtimeCodeSizeBytes": {
+    "FundToken": 18689,
+    "NAVRegistry": 8419,
+    "RiskRegistry": 19095,
+    "eip170Limit": 24576
+  },
+  "notes": [
+    "The local run used the in-memory audit index.",
+    "Raw Foundry coverage output is generated as coverage.log by scripts/test-chapter3.sh.",
+    "The GitHub Actions job executes the same suite with PostgreSQL 16 and uploads complete logs."
+  ]
+}
