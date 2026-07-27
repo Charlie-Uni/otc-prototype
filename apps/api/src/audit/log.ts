@@ -24,6 +24,7 @@ export type RecordAuditInput = {
 };
 
 const memoryAuditLog: AuditEntry[] = [];
+const MAX_MEMORY_AUDIT_ENTRIES = 5_000;
 
 function nowSec(): number {
   return Math.floor(Date.now() / 1000);
@@ -46,6 +47,9 @@ export async function recordAudit(input: RecordAuditInput): Promise<AuditEntry> 
     details: input.details ?? {},
   };
   memoryAuditLog.push(entry);
+  if (memoryAuditLog.length > MAX_MEMORY_AUDIT_ENTRIES) {
+    memoryAuditLog.splice(0, memoryAuditLog.length - MAX_MEMORY_AUDIT_ENTRIES);
+  }
 
   if (ENV.DATABASE_URL) {
     await db.query(
@@ -68,12 +72,39 @@ export async function recordAudit(input: RecordAuditInput): Promise<AuditEntry> 
   return entry;
 }
 
-export function getAuditEntries() {
-  return [...memoryAuditLog];
+function nullableNumber(value: unknown): number | null {
+  return value === null || value === undefined ? null : Number(value);
 }
 
-export function clearMemoryAuditEntries(): void {
-  memoryAuditLog.length = 0;
+function auditEntryFromRow(row: Record<string, unknown>): AuditEntry {
+  return {
+    actor: String(row.actor),
+    action: String(row.action),
+    occurredAt: nullableNumber(row.occurred_at),
+    submittedAt: nullableNumber(row.submitted_at),
+    disclosedAt: nullableNumber(row.disclosed_at),
+    observedAt: Number(row.observed_at),
+    transactionHash: row.transaction_hash as `0x${string}` | null,
+    details: typeof row.payload === 'string'
+      ? JSON.parse(row.payload)
+      : row.payload as Record<string, unknown>,
+  };
+}
+
+export async function listAuditEntries(limit: number): Promise<AuditEntry[]> {
+  if (!Number.isInteger(limit) || limit <= 0 || limit > 1_000) {
+    throw Object.assign(new Error('INVALID_AUDIT_LIMIT'), { statusCode: 400 });
+  }
+  if (!ENV.DATABASE_URL) {
+    return memoryAuditLog.slice(-limit);
+  }
+
+  const { rows } = await db.query(
+    `select actor, action, occurred_at, submitted_at, disclosed_at, observed_at, transaction_hash, payload
+     from audit_log order by id desc limit $1`,
+    [limit],
+  );
+  return rows.reverse().map(auditEntryFromRow);
 }
 
 export async function exportAuditCsv() {

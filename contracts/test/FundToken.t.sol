@@ -7,6 +7,8 @@ import {FundToken} from "src/FundToken.sol";
 import {RiskRegistry} from "src/RiskRegistry.sol";
 
 contract FundTokenTest is Test {
+    using stdStorage for StdStorage;
+
     FundToken token;
     RiskRegistry risk;
     address admin = address(this); // <-- test contract is admin
@@ -280,17 +282,26 @@ contract FundTokenTest is Test {
         token.flagSettlementDelayed(requestId, bytes32(0));
     }
 
-    function testSettlementWithoutRiskGateStillWorks() public {
-        FundToken ungatedToken = new FundToken(admin, "OTC Fund", "OTCF", fundId);
-        ungatedToken.setWhitelisted(alice, true, vcHash);
-        ungatedToken.grantRole(ungatedToken.SUBSCRIPTION_ROLE(), admin);
-        ungatedToken.grantRole(ungatedToken.REDEMPTION_ROLE(), admin);
+    function testSetRiskGateRejectsZeroAddress() public {
+        vm.expectRevert(bytes("INVALID_RISK_GATE"));
+        token.setRiskGate(address(0));
+    }
 
-        _subscribe(ungatedToken, alice, 1e18);
-        uint256 requestId = ungatedToken.requestRedemptionFor(alice, 5e17);
-        ungatedToken.settleRedemption(requestId);
+    function testRedemptionRequestFailsClosedWithoutRiskGate() public {
+        FundToken unconfiguredToken = _newTokenWithoutRiskGate();
+        _subscribe(unconfiguredToken, alice, 1e18);
 
-        assertEq(ungatedToken.balanceOf(alice), 5e17);
+        vm.expectRevert(bytes("RISK_GATE_NOT_CONFIGURED"));
+        unconfiguredToken.requestRedemptionFor(alice, 5e17);
+    }
+
+    function testRedemptionSettlementFailsClosedWhenRiskGateIsRemovedFromStorage() public {
+        _subscribe(token, alice, 1e18);
+        uint256 requestId = token.requestRedemptionFor(alice, 5e17);
+        stdstore.target(address(token)).sig(token.riskGate.selector).checked_write(address(0));
+
+        vm.expectRevert(bytes("RISK_GATE_NOT_CONFIGURED"));
+        token.settleRedemption(requestId);
     }
 
     function testPauseBlocksTransfer() public {
@@ -366,5 +377,12 @@ contract FundTokenTest is Test {
     function _subscribe(FundToken target, address investor, uint256 amount) private {
         uint256 requestId = target.requestSubscriptionFor(investor, amount);
         target.acceptSubscription(requestId);
+    }
+
+    function _newTokenWithoutRiskGate() private returns (FundToken unconfiguredToken) {
+        unconfiguredToken = new FundToken(admin, "OTC Fund", "OTCF", fundId);
+        unconfiguredToken.setWhitelisted(alice, true, vcHash);
+        unconfiguredToken.grantRole(unconfiguredToken.SUBSCRIPTION_ROLE(), admin);
+        unconfiguredToken.grantRole(unconfiguredToken.REDEMPTION_ROLE(), admin);
     }
 }

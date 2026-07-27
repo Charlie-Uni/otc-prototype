@@ -117,6 +117,7 @@ contract FundToken is ERC20, Pausable, AccessControl {
     }
 
     function setRiskGate(address riskGate_) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(riskGate_ != address(0), "INVALID_RISK_GATE");
         riskGate = IRiskGate(riskGate_);
         emit RiskGateConfigured(riskGate_, fundId);
     }
@@ -304,9 +305,8 @@ contract FundToken is ERC20, Pausable, AccessControl {
     }
 
     function _requireNotGated() private view {
-        if (address(riskGate) != address(0)) {
-            require(!riskGate.isGated(fundId), "REDEMPTION_GATED");
-        }
+        require(address(riskGate) != address(0), "RISK_GATE_NOT_CONFIGURED");
+        require(!riskGate.isGated(fundId), "REDEMPTION_GATED");
     }
 
     function _emitRedemptionQueueUpdated() private {

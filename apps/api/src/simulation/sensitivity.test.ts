@@ -92,3 +92,31 @@ test('scans intervention kappa independently while preserving the same risk scor
   assert.deepEqual(rows.map((row) => row.interventionTriggered), [true, true, false]);
   assert.deepEqual(rows.map((row) => row.detected), [true, true, true]);
 });
+
+test('rejects duplicate and unbounded kappa sensitivity inputs', () => {
+  const input = {
+    metricsWithoutStale: {
+      valuationHaircutBps: 1_000,
+      redemptionPressureBps: 1_000,
+      redemptionQueueRatioBps: 1_000,
+      liquidityShortfallBps: 1_000,
+      investorConcentrationBps: 1_000,
+    },
+    staleAgeSecRaw: 0,
+    maxStaleAgeDays: [30],
+    weightSchemes: CHAPTER3_WEIGHT_SCHEMES,
+    detectionThresholdBps: 6_000,
+  } as const;
+
+  assert.throws(
+    () => runRiskSensitivity({ ...input, kappaBpsValues: [7_000, 7_000] }),
+    /DUPLICATE_KAPPA_VALUES/,
+  );
+  assert.throws(
+    () => runRiskSensitivity({
+      ...input,
+      kappaBpsValues: Array.from({ length: 17 }, (_, index) => index),
+    }),
+    /TOO_MANY_KAPPA_VALUES/,
+  );
+});

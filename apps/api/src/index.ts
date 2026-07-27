@@ -10,6 +10,7 @@ import audit from './routes/audit';
 import liquidity from './routes/liquidity';
 import controls from './routes/controls';
 import { initializeDatabase } from './db/client';
+import { classifyHttpError } from './http/errors';
 
 // Global BigInt -> string fallback (harmless if already strings)
 (BigInt.prototype as any).toJSON = function () {
@@ -25,7 +26,8 @@ app.setErrorHandler((error, _request, reply) => {
       issues: error.issues,
     });
   }
-  return reply.send(error);
+  const classified = classifyHttpError(error);
+  return reply.code(classified.statusCode).send({ error: classified.code });
 });
 
 await initializeDatabase();

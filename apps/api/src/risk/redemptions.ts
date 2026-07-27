@@ -78,6 +78,7 @@ export function computeRedemptionPressureSnapshotFromEvents(args: {
 export async function readRedemptionPressureSnapshot(
   occurredAt: number,
   windowSec: number,
+  blockNumber: bigint,
 ): Promise<RedemptionPressureSnapshot> {
   const [{ ENV }, { fundId, rpc, token }] = await Promise.all([
     import('../env'),
@@ -88,15 +89,15 @@ export async function readRedemptionPressureSnapshot(
       address: ENV.FUND_TOKEN_ADDRESS as Address,
       event: redemptionRequestedEvent,
       fromBlock: 0n,
-      toBlock: 'latest',
+      toBlock: blockNumber,
     }),
     rpc.getLogs({
       address: ENV.FUND_TOKEN_ADDRESS as Address,
       event: redemptionSettledEvent,
       fromBlock: 0n,
-      toBlock: 'latest',
+      toBlock: blockNumber,
     }),
-    (token as any).read.totalSupply(),
+    (token as any).read.totalSupply({ blockNumber }),
   ]);
 
   return computeRedemptionPressureSnapshotFromEvents({

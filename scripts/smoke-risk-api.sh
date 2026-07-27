@@ -12,6 +12,7 @@ VC_HASH_B="${VC_HASH_B:-0x000000000000000000000000000000000000000000000000000000
 VC_HASH_C="${VC_HASH_C:-0x00000000000000000000000000000000000000000000000000000000000000c3}"
 VC_HASH_D="${VC_HASH_D:-0x00000000000000000000000000000000000000000000000000000000000000d4}"
 API_KEY_MANAGER="${API_KEY_MANAGER:-dev-manager-api-key-change-me}"
+API_KEY_INVESTOR="${API_KEY_INVESTOR:-dev-investor-api-key-change-me}"
 API_KEY_REGISTRAR="${API_KEY_REGISTRAR:-dev-registrar-api-key-change-me}"
 API_KEY_NAV_ORACLE="${API_KEY_NAV_ORACLE:-dev-nav-oracle-api-key-change-me}"
 API_KEY_LIQUIDITY_ORACLE="${API_KEY_LIQUIDITY_ORACLE:-dev-liquidity-oracle-api-key-change-me}"
@@ -126,6 +127,18 @@ request_and_accept_subscription "$HOLDER_B" 3000
 request_and_accept_subscription "$HOLDER_C" 2000
 request_and_accept_subscription "$HOLDER_D" 1000
 
+printf '%s\n' '--- investor balance reads are identity-bound ---'
+OWN_BALANCE="$(curl -sS -w '|%{http_code}' "$API_URL/token/balance/$HOLDER_A" -H "x-api-key: $API_KEY_INVESTOR")"
+if [[ "$OWN_BALANCE" != *'"balance":"4000"'* || "$OWN_BALANCE" != *'|200' ]]; then
+  printf 'Expected investor credentials to read the bound holder balance.\n' >&2
+  exit 1
+fi
+OTHER_BALANCE="$(curl -sS -w '|%{http_code}' "$API_URL/token/balance/$HOLDER_B" -H "x-api-key: $API_KEY_INVESTOR")"
+if [[ "$OTHER_BALANCE" != *'"error":"HOLDER_ADDRESS_FORBIDDEN"'* || "$OTHER_BALANCE" != *'|403' ]]; then
+  printf 'Expected investor credentials to be forbidden from reading another holder balance.\n' >&2
+  exit 1
+fi
+
 printf '%s\n' '--- request redemption into queue ---'
 curl -sS -X POST "$API_URL/token/redeem" \
   -H "x-api-key: $API_KEY_MANAGER" \
@@ -190,6 +203,25 @@ if [[ "$LIQUIDITY_RESPONSE" != *'"liquidityBufferRatioBps":6500'* || "$LIQUIDITY
   exit 1
 fi
 
+STALE_RISK_INPUT="$(curl -sS -w '|%{http_code}' -X POST "$API_URL/risk/submit" \
+  -H "x-api-key: $API_KEY_RISK_ORACLE" \
+  -H 'content-type: application/json' \
+  -d '{"occurredAt":1}')"
+if [[ "$STALE_RISK_INPUT" != *'"error":"RISK_INPUT_TOO_OLD"'* || "$STALE_RISK_INPUT" != *'|400' ]]; then
+  printf 'Expected the real-time risk endpoint to reject an observation outside its age window.\n' >&2
+  exit 1
+fi
+
+FUTURE_RISK_AT="$((NOW_SEC + 600))"
+FUTURE_RISK_INPUT="$(curl -sS -w '|%{http_code}' -X POST "$API_URL/risk/submit" \
+  -H "x-api-key: $API_KEY_RISK_ORACLE" \
+  -H 'content-type: application/json' \
+  -d "{\"occurredAt\":$FUTURE_RISK_AT}")"
+if [[ "$FUTURE_RISK_INPUT" != *'"error":"RISK_OCCURRED_AT_AFTER_SNAPSHOT"'* || "$FUTURE_RISK_INPUT" != *'|400' ]]; then
+  printf 'Expected the risk endpoint to reject an observation after its fixed snapshot block.\n' >&2
+  exit 1
+fi
+
 RISK_RESPONSE="$(
   curl -sS -X POST "$API_URL/risk/submit" \
     -H "x-api-key: $API_KEY_RISK_ORACLE" \
@@ -242,6 +274,21 @@ fi
 
 if [[ "$RISK_RESPONSE" != *'"liquidityBufferSource":"chain"'* || "$RISK_RESPONSE" != *'"liquidityBufferRatioBps":6500'* ]]; then
   printf 'Expected risk submission to derive liquidity buffer state from the authorized chain update.\n' >&2
+  exit 1
+fi
+
+if [[ "$RISK_RESPONSE" != *'"payloadSchemaVersion":2'* || "$RISK_RESPONSE" != *'"snapshotBlockNumber":'* || "$RISK_RESPONSE" != *'"snapshotBlockTimestamp":'* ]]; then
+  printf 'Expected risk submission to disclose its fixed chain snapshot context.\n' >&2
+  exit 1
+fi
+
+if [[ "$RISK_RESPONSE" != *'"redemptionRequestPressureBps":1800'* || "$RISK_RESPONSE" != *'"redemptionRequestedAmount":"1800"'* || "$RISK_RESPONSE" != *'"redemptionSettledAmount":"0"'* ]]; then
+  printf 'Expected request pressure and realized settlement flow to be exported separately.\n' >&2
+  exit 1
+fi
+
+if [[ "$RISK_RESPONSE" != *'"staleReferenceUsed":"storedAt"'* || "$RISK_RESPONSE" != *'"staleAgeFromAsOfSec":'* || "$RISK_RESPONSE" != *'"staleAgeFromStoredAtSec":'* ]]; then
+  printf 'Expected both raw stale-age definitions and the scoring reference to be exported.\n' >&2
   exit 1
 fi
 
@@ -379,15 +426,15 @@ fi
 
 printf '\n--- redemption must be gated ---\n'
 REDEEM_RESPONSE="$(
-  curl -sS -X POST "$API_URL/token/redeem" \
+  curl -sS -w '|%{http_code}' -X POST "$API_URL/token/redeem" \
     -H "x-api-key: $API_KEY_MANAGER" \
     -H 'content-type: application/json' \
     -d "{\"from\":\"$INVESTOR_ADDRESS\",\"amount\":\"$REDEEM_AMOUNT\"}" || true
 )"
 printf '%s\n' "$REDEEM_RESPONSE"
 
-if [[ "$REDEEM_RESPONSE" != *"REDEMPTION_GATED"* ]]; then
-  printf 'Expected redemption to revert with REDEMPTION_GATED.\n' >&2
+if [[ "$REDEEM_RESPONSE" != *'"error":"REDEMPTION_GATED"'* || "$REDEEM_RESPONSE" != *'|409' ]]; then
+  printf 'Expected gated redemption to return REDEMPTION_GATED with HTTP 409.\n' >&2
   exit 1
 fi
 
@@ -604,6 +651,23 @@ if [[ "$SENSITIVITY_ANALYSIS" != *'"maxStaleAgeDays":[7,14,30,45]'* || "$SENSITI
   exit 1
 fi
 
+DUPLICATE_KAPPA="$(curl -sS -w '|%{http_code}' -X POST "$API_URL/audit/sensitivity" \
+  -H "x-api-key: $API_KEY_AUDITOR" \
+  -H 'content-type: application/json' \
+  -d '{
+    "valuationHaircutBps":9000,
+    "redemptionPressureBps":9000,
+    "redemptionQueueRatioBps":1800,
+    "liquidityShortfallBps":10000,
+    "investorConcentrationBps":3000,
+    "staleAgeDaysRaw":14,
+    "kappaBpsValues":[7000,7000]
+  }')"
+if [[ "$DUPLICATE_KAPPA" != *'"error":"INVALID_REQUEST"'* || "$DUPLICATE_KAPPA" != *'|400' ]]; then
+  printf 'Expected duplicate kappa sensitivity inputs to be rejected.\n' >&2
+  exit 1
+fi
+
 printf '\n--- lifecycle CSV export ---\n'
 AUDIT_CSV="$(curl -sS "$API_URL/audit/lifecycle.csv?regime=R4&audience=regulator" -H "x-api-key: $API_KEY_AUDITOR")"
 if [[ "$AUDIT_CSV" != eventId,contractName,eventName,category,* || "$AUDIT_CSV" != *'GateTriggered'* ]]; then
@@ -616,6 +680,12 @@ printf '\n--- API access audit export ---\n'
 API_AUDIT_CSV="$(curl -sS "$API_URL/audit/export" -H "x-api-key: $API_KEY_AUDITOR")"
 if [[ "$API_AUDIT_CSV" != actor,action,occurredAt,submittedAt,disclosedAt,observedAt,* || "$API_AUDIT_CSV" != *'eligibility.mark'* || "$API_AUDIT_CSV" != *'risk.public.observe'* ]]; then
   printf 'Expected API audit CSV to contain the four-timestamp schema and lifecycle access actions.\n' >&2
+  exit 1
+fi
+
+LIMITED_AUDIT="$(curl -sS "$API_URL/risk/audit?limit=2" -H "x-api-key: $API_KEY_AUDITOR")"
+if [[ "$LIMITED_AUDIT" != *'"count":2'* || "$LIMITED_AUDIT" != *'"limit":2'* ]]; then
+  printf 'Expected the risk audit endpoint to enforce its bounded query limit.\n' >&2
   exit 1
 fi
 printf '\n'

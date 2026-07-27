@@ -3,7 +3,7 @@ import { encodeAbiParameters, keccak256 } from 'viem';
 import { z } from 'zod';
 import { ACCESS_POLICY, auditActorFor, requireAnyRole } from '../auth';
 import { waitForTransactionTimestamp } from '../audit/chain-time';
-import { getAuditEntries, recordAudit } from '../audit/log';
+import { listAuditEntries, recordAudit } from '../audit/log';
 import { fundId, liquidityRiskRegistry, nav, regulatorRiskRegistry, riskRegistry, rpc, token } from '../chain';
 import { ENV } from '../env';
 import {
@@ -14,6 +14,10 @@ import {
 } from '../risk/calc';
 import { HolderShareSnapshot, readHolderShareSnapshot } from '../risk/holdings';
 import { RedemptionPressureSnapshot, readRedemptionPressureSnapshot } from '../risk/redemptions';
+import {
+  RiskSnapshotContext,
+  validateRiskSnapshotTime,
+} from '../risk/snapshot-context';
 import {
   disclosedControlState,
   latestControlTransition,
@@ -46,6 +50,11 @@ const ReleaseGateSchema = z.object({
 const SubmitRiskSchema = z.object({
   occurredAt: z.coerce.number().int().positive(),
 }).strict();
+const RiskAuditQuerySchema = z.object({
+  limit: z.coerce.number().int().positive().max(1_000).default(100),
+});
+const RISK_PAYLOAD_SCHEMA_VERSION = 2;
+const STALE_REFERENCE_USED = 'storedAt' as const;
 
 type WeightsConfig = {
   id: number;
@@ -59,15 +68,22 @@ type ResolvedRiskInput = z.infer<typeof SubmitRiskSchema> & {
   redemptionPressureBps: number;
   redemptionQueueRatioBps: number;
   liquidityBufferRatioBps: number;
-  lastValuationUpdateAt: number;
+  lastValuationAsOf: number;
+  lastValuationStoredAt: number;
 };
 
 type ComputedRisk = {
+  snapshotContext: RiskSnapshotContext;
   config: WeightsConfig;
   metrics: RiskMetrics;
   payloadHash: `0x${string}`;
   valuationHaircutSource: 'chain';
   lastValuationUpdateAt: number;
+  lastValuationAsOf: number;
+  lastValuationStoredAt: number;
+  staleAgeFromAsOfSec: number;
+  staleAgeFromStoredAtSec: number;
+  staleReferenceUsed: typeof STALE_REFERENCE_USED;
   holderSource: 'chain';
   redemptionPressureSource: 'chain';
   redemptionQueueSource: 'chain';
@@ -139,10 +155,24 @@ function normalizeSnapshot(raw: any): RiskSnapshot {
   };
 }
 
-async function readActiveWeightsConfig(): Promise<WeightsConfig> {
+async function captureRiskSnapshotContext(): Promise<RiskSnapshotContext> {
+  const block = await rpc.getBlock({ blockTag: 'latest' });
+  if (block.number === null) {
+    throw new Error('SNAPSHOT_BLOCK_NUMBER_UNAVAILABLE');
+  }
+  return {
+    blockNumber: block.number,
+    blockTimestamp: Number(block.timestamp),
+  };
+}
+
+async function readActiveWeightsConfig(context: RiskSnapshotContext): Promise<WeightsConfig> {
   const c = riskRegistry as any;
-  const activeId = Number(await c.read.activeWeightsConfigId());
-  const [, maxStaleAgeRaw, weightsHash, exists] = await c.read.getWeightsConfig([BigInt(activeId)]);
+  const activeId = Number(await c.read.activeWeightsConfigId({ blockNumber: context.blockNumber }));
+  const [, maxStaleAgeRaw, weightsHash, exists] = await c.read.getWeightsConfig(
+    [BigInt(activeId)],
+    { blockNumber: context.blockNumber },
+  );
   if (!exists) {
     throw new Error('ACTIVE_WEIGHTS_NOT_FOUND');
   }
@@ -154,8 +184,8 @@ async function readActiveWeightsConfig(): Promise<WeightsConfig> {
   };
 }
 
-async function resolveHolderShares() {
-  const holderSnapshot = await readHolderShareSnapshot();
+async function resolveHolderShares(context: RiskSnapshotContext) {
+  const holderSnapshot = await readHolderShareSnapshot(context.blockNumber);
   return {
     holderSharesBps: holderSnapshot.holderSharesBps,
     holderSource: 'chain' as const,
@@ -163,19 +193,25 @@ async function resolveHolderShares() {
   };
 }
 
-async function resolveRedemptionQueueRatio() {
+async function resolveRedemptionQueueRatio(context: RiskSnapshotContext) {
   const c = token as any;
-  const redemptionQueueRatioBps = Number(await c.read.redemptionQueueRatioBps());
+  const redemptionQueueRatioBps = Number(
+    await c.read.redemptionQueueRatioBps({ blockNumber: context.blockNumber }),
+  );
   return {
     redemptionQueueRatioBps,
     redemptionQueueSource: 'chain' as const,
   };
 }
 
-async function resolveRedemptionPressure(body: z.infer<typeof SubmitRiskSchema>) {
+async function resolveRedemptionPressure(
+  body: z.infer<typeof SubmitRiskSchema>,
+  context: RiskSnapshotContext,
+) {
   const redemptionPressureSnapshot = await readRedemptionPressureSnapshot(
     body.occurredAt,
     ENV.REDEMPTION_PRESSURE_WINDOW_SEC,
+    context.blockNumber,
   );
   return {
     redemptionPressureBps: redemptionPressureSnapshot.redemptionPressureBps,
@@ -184,23 +220,41 @@ async function resolveRedemptionPressure(body: z.infer<typeof SubmitRiskSchema>)
   };
 }
 
-async function resolveLastValuationUpdateAt(body: z.infer<typeof SubmitRiskSchema>) {
+async function resolveValuationTiming(
+  body: z.infer<typeof SubmitRiskSchema>,
+  context: RiskSnapshotContext,
+) {
   const c = nav as any;
-  const raw = await c.read.latestNAV([fundId]);
+  const raw = await c.read.latestNAV([fundId], { blockNumber: context.blockNumber });
+  const asOf = Number(raw.asOf ?? raw[1]);
   const storedAt = Number(raw.storedAt ?? raw[2]);
   if (storedAt > body.occurredAt) {
     throw new Error('NAV_STORED_AFTER_OCCURRED_AT');
   }
+  if (asOf > body.occurredAt) {
+    throw new Error('NAV_AS_OF_AFTER_OCCURRED_AT');
+  }
 
   return {
     lastValuationUpdateAt: storedAt,
+    lastValuationAsOf: asOf,
+    lastValuationStoredAt: storedAt,
+    staleAgeFromAsOfSec: body.occurredAt - asOf,
+    staleAgeFromStoredAtSec: body.occurredAt - storedAt,
+    staleReferenceUsed: STALE_REFERENCE_USED,
     stalePricingSource: 'chain' as const,
   };
 }
 
-async function resolveValuationHaircut(body: z.infer<typeof SubmitRiskSchema>) {
+async function resolveValuationHaircut(
+  body: z.infer<typeof SubmitRiskSchema>,
+  context: RiskSnapshotContext,
+) {
   const c = nav as any;
-  const raw = await c.read.latestValuationHaircut([fundId]);
+  const raw = await c.read.latestValuationHaircut(
+    [fundId],
+    { blockNumber: context.blockNumber },
+  );
   const valuationHaircutSnapshot = {
     valuationHaircutBps: Number(raw.valuationHaircutBps ?? raw[0]),
     occurredAt: Number(raw.occurredAt ?? raw[1]),
@@ -218,9 +272,15 @@ async function resolveValuationHaircut(body: z.infer<typeof SubmitRiskSchema>) {
   };
 }
 
-async function resolveLiquidityBuffer(body: z.infer<typeof SubmitRiskSchema>) {
+async function resolveLiquidityBuffer(
+  body: z.infer<typeof SubmitRiskSchema>,
+  context: RiskSnapshotContext,
+) {
   const c = liquidityRiskRegistry as any;
-  const raw = await c.read.latestLiquidityBuffer([fundId]);
+  const raw = await c.read.latestLiquidityBuffer(
+    [fundId],
+    { blockNumber: context.blockNumber },
+  );
   const liquidityBufferSnapshot = {
     liquidityBufferRatioBps: Number(raw.liquidityBufferRatioBps ?? raw[0]),
     occurredAt: Number(raw.occurredAt ?? raw[1]),
@@ -239,7 +299,7 @@ async function resolveLiquidityBuffer(body: z.infer<typeof SubmitRiskSchema>) {
 }
 
 function buildMetrics(body: ResolvedRiskInput, config: WeightsConfig): RiskMetrics {
-  const staleAgeSec = body.occurredAt - body.lastValuationUpdateAt;
+  const staleAgeSec = body.occurredAt - body.lastValuationStoredAt;
   return {
     valuationHaircutBps: body.valuationHaircutBps,
     redemptionPressureBps: body.redemptionPressureBps,
@@ -250,15 +310,25 @@ function buildMetrics(body: ResolvedRiskInput, config: WeightsConfig): RiskMetri
   };
 }
 
-function payloadHashFor(body: ResolvedRiskInput, metrics: RiskMetrics, config: WeightsConfig) {
+function payloadHashFor(
+  body: ResolvedRiskInput,
+  metrics: RiskMetrics,
+  config: WeightsConfig,
+  context: RiskSnapshotContext,
+) {
   return keccak256(encodeAbiParameters(
     [
+      { name: 'payloadSchemaVersion', type: 'uint16' },
+      { name: 'snapshotBlockNumber', type: 'uint256' },
+      { name: 'snapshotBlockTimestamp', type: 'uint64' },
       { name: 'occurredAt', type: 'uint64' },
       { name: 'valuationHaircutBps', type: 'uint16' },
       { name: 'redemptionPressureBps', type: 'uint16' },
       { name: 'redemptionQueueRatioBps', type: 'uint16' },
       { name: 'liquidityBufferRatioBps', type: 'uint256' },
-      { name: 'lastValuationUpdateAt', type: 'uint64' },
+      { name: 'lastValuationAsOf', type: 'uint64' },
+      { name: 'lastValuationStoredAt', type: 'uint64' },
+      { name: 'staleReferenceUsed', type: 'string' },
       { name: 'holderSharesBps', type: 'uint16[]' },
       { name: 'valuationHaircutMetricBps', type: 'uint16' },
       { name: 'redemptionPressureMetricBps', type: 'uint16' },
@@ -271,12 +341,17 @@ function payloadHashFor(body: ResolvedRiskInput, metrics: RiskMetrics, config: W
       { name: 'weightsHash', type: 'bytes32' },
     ],
     [
+      RISK_PAYLOAD_SCHEMA_VERSION,
+      context.blockNumber,
+      BigInt(context.blockTimestamp),
       BigInt(body.occurredAt),
       body.valuationHaircutBps,
       body.redemptionPressureBps,
       body.redemptionQueueRatioBps,
       BigInt(body.liquidityBufferRatioBps),
-      BigInt(body.lastValuationUpdateAt),
+      BigInt(body.lastValuationAsOf),
+      BigInt(body.lastValuationStoredAt),
+      STALE_REFERENCE_USED,
       body.holderSharesBps,
       metrics.valuationHaircutBps,
       metrics.redemptionPressureBps,
@@ -292,14 +367,16 @@ function payloadHashFor(body: ResolvedRiskInput, metrics: RiskMetrics, config: W
 }
 
 async function computeFromChainConfig(body: z.infer<typeof SubmitRiskSchema>): Promise<ComputedRisk> {
-  const config = await readActiveWeightsConfig();
+  const snapshotContext = await captureRiskSnapshotContext();
+  validateRiskSnapshotTime(body.occurredAt, snapshotContext, ENV.RISK_INPUT_MAX_AGE_SEC);
+  const config = await readActiveWeightsConfig(snapshotContext);
   const [valuationState, holderState, pressureState, queueState, liquidityState, staleState] = await Promise.all([
-    resolveValuationHaircut(body),
-    resolveHolderShares(),
-    resolveRedemptionPressure(body),
-    resolveRedemptionQueueRatio(),
-    resolveLiquidityBuffer(body),
-    resolveLastValuationUpdateAt(body),
+    resolveValuationHaircut(body, snapshotContext),
+    resolveHolderShares(snapshotContext),
+    resolveRedemptionPressure(body, snapshotContext),
+    resolveRedemptionQueueRatio(snapshotContext),
+    resolveLiquidityBuffer(body, snapshotContext),
+    resolveValuationTiming(body, snapshotContext),
   ]);
   const resolvedBody = {
     ...body,
@@ -308,11 +385,13 @@ async function computeFromChainConfig(body: z.infer<typeof SubmitRiskSchema>): P
     redemptionPressureBps: pressureState.redemptionPressureBps,
     redemptionQueueRatioBps: queueState.redemptionQueueRatioBps,
     liquidityBufferRatioBps: liquidityState.liquidityBufferRatioBps,
-    lastValuationUpdateAt: staleState.lastValuationUpdateAt,
+    lastValuationAsOf: staleState.lastValuationAsOf,
+    lastValuationStoredAt: staleState.lastValuationStoredAt,
   };
   const metrics = buildMetrics(resolvedBody, config);
-  const payloadHash = payloadHashFor(resolvedBody, metrics, config);
+  const payloadHash = payloadHashFor(resolvedBody, metrics, config, snapshotContext);
   return {
+    snapshotContext,
     config,
     metrics,
     payloadHash,
@@ -613,7 +692,10 @@ export default async function (app: FastifyInstance) {
       transactionHash: result.tx,
       details: {
         fundId,
+        payloadSchemaVersion: RISK_PAYLOAD_SCHEMA_VERSION,
         payloadHash: result.snapshot.payloadHash,
+        snapshotBlockNumber: result.snapshotContext.blockNumber.toString(),
+        snapshotBlockTimestamp: result.snapshotContext.blockTimestamp,
         riskScoreBps: result.snapshot.riskScoreBps,
         weightsConfigId: result.config.id,
         valuationHaircutSource: result.valuationHaircutSource,
@@ -622,11 +704,19 @@ export default async function (app: FastifyInstance) {
         holderSnapshot: result.holderSnapshot,
         redemptionPressureSource: result.redemptionPressureSource,
         redemptionPressureSnapshot: result.redemptionPressureSnapshot,
+        redemptionRequestPressureBps: result.metrics.redemptionPressureBps,
+        redemptionRequestedAmount: result.redemptionPressureSnapshot.requestedAmount,
+        redemptionSettledAmount: result.redemptionPressureSnapshot.settledAmount,
         redemptionQueueSource: result.redemptionQueueSource,
         liquidityBufferSource: result.liquidityBufferSource,
         liquidityBufferSnapshot: result.liquidityBufferSnapshot,
         stalePricingSource: result.stalePricingSource,
         lastValuationUpdateAt: result.lastValuationUpdateAt,
+        lastValuationAsOf: result.lastValuationAsOf,
+        lastValuationStoredAt: result.lastValuationStoredAt,
+        staleAgeFromAsOfSec: result.staleAgeFromAsOfSec,
+        staleAgeFromStoredAtSec: result.staleAgeFromStoredAtSec,
+        staleReferenceUsed: result.staleReferenceUsed,
         retried: result.retried,
       },
     });
@@ -634,7 +724,13 @@ export default async function (app: FastifyInstance) {
     return reply.send({
       tx: result.tx,
       fundId,
+      payloadSchemaVersion: RISK_PAYLOAD_SCHEMA_VERSION,
+      snapshotBlockNumber: result.snapshotContext.blockNumber.toString(),
+      snapshotBlockTimestamp: result.snapshotContext.blockTimestamp,
       metrics: result.metrics,
+      redemptionRequestPressureBps: result.metrics.redemptionPressureBps,
+      redemptionRequestedAmount: result.redemptionPressureSnapshot.requestedAmount,
+      redemptionSettledAmount: result.redemptionPressureSnapshot.settledAmount,
       riskScoreBps: result.snapshot.riskScoreBps,
       weightsConfigId: result.config.id,
       weightsHash: result.config.weightsHash,
@@ -649,6 +745,11 @@ export default async function (app: FastifyInstance) {
       liquidityBufferSnapshot: result.liquidityBufferSnapshot,
       stalePricingSource: result.stalePricingSource,
       lastValuationUpdateAt: result.lastValuationUpdateAt,
+      lastValuationAsOf: result.lastValuationAsOf,
+      lastValuationStoredAt: result.lastValuationStoredAt,
+      staleAgeFromAsOfSec: result.staleAgeFromAsOfSec,
+      staleAgeFromStoredAtSec: result.staleAgeFromStoredAtSec,
+      staleReferenceUsed: result.staleReferenceUsed,
       holderSharesBps: result.holderSnapshot.holderSharesBps,
       holderSnapshot: result.holderSnapshot,
       payloadHash: result.payloadHash,
@@ -704,12 +805,13 @@ export default async function (app: FastifyInstance) {
   app.get('/risk', sendPublicRiskView);
 
   app.get('/risk/audit', { preHandler: requireAnyRole(...ACCESS_POLICY.auditRead) }, async (req) => {
-    const entries = getAuditEntries();
+    const query = RiskAuditQuerySchema.parse(req.query);
+    const entries = await listAuditEntries(query.limit);
     await recordAudit({
       actor: auditActorFor(req),
       action: 'audit.api.read',
-      details: { count: entries.length },
+      details: { count: entries.length, limit: query.limit },
     });
-    return { entries };
+    return { count: entries.length, limit: query.limit, entries };
   });
 }

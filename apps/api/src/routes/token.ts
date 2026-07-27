@@ -4,7 +4,9 @@ import { z } from 'zod';
 import { waitForTransaction, waitForTransactionTimestamp } from '../audit/chain-time';
 import { recordAudit } from '../audit/log';
 import { ACCESS_POLICY, auditActorFor, requireAnyRole } from '../auth';
+import { canReadHolderAddress } from '../auth/resource-auth';
 import { token } from '../chain';
+import { ENV } from '../env';
 
 const AddressSchema = z.string().refine(isAddress, 'Invalid address');
 const AmountSchema = z.coerce.bigint().positive();
@@ -206,8 +208,11 @@ export default async function (app: FastifyInstance) {
     });
 
 
-    app.get('/token/balance/:addr', { preHandler: requireAnyRole(...ACCESS_POLICY.holderBalanceRead) }, async (req) => {
+    app.get('/token/balance/:addr', { preHandler: requireAnyRole(...ACCESS_POLICY.holderBalanceRead) }, async (req, reply) => {
         const { addr } = z.object({ addr: AddressSchema }).parse(req.params);
+        if (!canReadHolderAddress(req.apiRole, addr, ENV.API_KEY_INVESTOR_ADDRESS)) {
+            return reply.code(403).send({ error: 'HOLDER_ADDRESS_FORBIDDEN' });
+        }
         const c = token as any;
         const bal = await c.read.balanceOf([addr as `0x${string}`]);
         const result = { balance: bal.toString() };

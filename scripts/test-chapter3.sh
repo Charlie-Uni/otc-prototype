@@ -25,6 +25,7 @@ RISK_WEIGHT_4_BPS="1667"
 RISK_WEIGHT_5_BPS="1666"
 RISK_WEIGHT_6_BPS="1666"
 API_KEY_INVESTOR="chapter3-investor-api-key"
+API_KEY_INVESTOR_ADDRESS="0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
 API_KEY_MANAGER="chapter3-manager-api-key"
 API_KEY_REGISTRAR="chapter3-registrar-api-key"
 API_KEY_NAV_ORACLE="chapter3-nav-oracle-api-key"
@@ -87,7 +88,8 @@ write_summary() {
     "apiServer": "api.log",
     "anvil": "anvil.log",
     "postgresRestartServer": "api-restart.log",
-    "postgresRestartRead": "postgres-persistence.json"
+    "postgresRestartRead": "postgres-persistence.json",
+    "postgresAuditRestartRead": "postgres-audit-persistence.json"
   }
 }
 JSON
@@ -152,6 +154,7 @@ start_api() {
       DEFAULT_TRANSPARENCY_REGIME="R4" \
       ALLOW_REGIME_QUERY_OVERRIDE="true" \
       API_KEY_INVESTOR="$API_KEY_INVESTOR" \
+      API_KEY_INVESTOR_ADDRESS="$API_KEY_INVESTOR_ADDRESS" \
       API_KEY_MANAGER="$API_KEY_MANAGER" \
       API_KEY_REGISTRAR="$API_KEY_REGISTRAR" \
       API_KEY_NAV_ORACLE="$API_KEY_NAV_ORACLE" \
@@ -160,6 +163,7 @@ start_api() {
       API_KEY_REGULATOR="$API_KEY_REGULATOR" \
       API_KEY_AUDITOR="$API_KEY_AUDITOR" \
       REDEMPTION_PRESSURE_WINDOW_SEC="86400" \
+      RISK_INPUT_MAX_AGE_SEC="300" \
       PORT="$API_PORT" \
       DATABASE_URL="$DATABASE_URL" \
       node --import tsx src/index.ts
@@ -192,7 +196,7 @@ TYPECHECK_STATUS="passed"
 CURRENT_STEP="api_unit_tests"
 (
   cd "$ROOT_DIR/apps/api"
-  node --import tsx --test src/risk/*.test.ts src/auth/*.test.ts src/audit/*.test.ts src/simulation/*.test.ts
+    node --import tsx --test src/risk/*.test.ts src/auth/*.test.ts src/audit/*.test.ts src/http/*.test.ts src/simulation/*.test.ts
 ) > "$RESULTS_DIR/api-tests.tap" 2>&1
 API_TEST_STATUS="passed"
 
@@ -235,6 +239,7 @@ start_api "$RESULTS_DIR/api.log"
 CURRENT_STEP="end_to_end_smoke"
 env \
   API_URL="$API_URL" \
+  API_KEY_INVESTOR="$API_KEY_INVESTOR" \
   API_KEY_MANAGER="$API_KEY_MANAGER" \
   API_KEY_REGISTRAR="$API_KEY_REGISTRAR" \
   API_KEY_NAV_ORACLE="$API_KEY_NAV_ORACLE" \
@@ -254,6 +259,12 @@ if [[ -n "$DATABASE_URL" ]]; then
     -H "x-api-key: $API_KEY_AUDITOR" > "$RESULTS_DIR/postgres-persistence.json"
   if ! grep -q '"eventName":"GateTriggered"' "$RESULTS_DIR/postgres-persistence.json"; then
     printf 'GateTriggered was not available after the API restart.\n' >&2
+    exit 1
+  fi
+  curl -fsS "$API_URL/risk/audit?limit=1000" \
+    -H "x-api-key: $API_KEY_AUDITOR" > "$RESULTS_DIR/postgres-audit-persistence.json"
+  if ! grep -q '"action":"risk.submit"' "$RESULTS_DIR/postgres-audit-persistence.json"; then
+    printf 'Risk API audit entries were not available after the API restart.\n' >&2
     exit 1
   fi
   POSTGRES_STATUS="passed"
