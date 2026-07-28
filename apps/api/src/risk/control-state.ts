@@ -22,21 +22,20 @@ export function latestControlTransition(
   return sortControlTransitions(transitions).at(-1) ?? null;
 }
 
+export function latestDisclosedControlTransition(
+  transitions: readonly ControlTransition[],
+  regime: TransparencyRegime,
+  observedAt: number,
+): ControlTransition | null {
+  return sortControlTransitions(transitions)
+    .filter((transition) => observedAt >= disclosureTimeFor(transition.submittedAt, regime))
+    .at(-1) ?? null;
+}
+
 export function disclosedControlState(
   transitions: readonly ControlTransition[],
   regime: TransparencyRegime,
   observedAt: number,
 ): boolean {
-  const disclosed = sortControlTransitions(transitions)
-    .filter((transition) => observedAt >= disclosureTimeFor(transition.submittedAt, regime));
-  return disclosed.at(-1)?.gated ?? false;
-}
-
-export function latestControlTransitionIsDisclosed(
-  transitions: readonly ControlTransition[],
-  regime: TransparencyRegime,
-  observedAt: number,
-): boolean {
-  const latest = latestControlTransition(transitions);
-  return latest === null || observedAt >= disclosureTimeFor(latest.submittedAt, regime);
+  return latestDisclosedControlTransition(transitions, regime, observedAt)?.gated ?? false;
 }

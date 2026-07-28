@@ -32,9 +32,8 @@ export type PublicRiskViewArgs = {
   snapshot: PublicRiskSnapshot;
   observedAt: number;
   disclosedAt: number;
-  currentGated: boolean;
-  latestControlIsDisclosed: boolean;
-  latestControlEventName: 'GateTriggered' | 'GateReleased' | null;
+  visibleGated: boolean;
+  latestVisibleControlEventName: 'GateTriggered' | 'GateReleased' | null;
 };
 
 export type PublicRiskUnavailableArgs = {
@@ -185,14 +184,13 @@ export function controlDisclosureAllowedFor(
 }
 
 export function buildPublicRiskPayload(args: PublicRiskViewArgs) {
-  const riskLevelWithoutControl = riskLevelFor(args.snapshot.riskScoreBps, false);
-  const controlDisclosed = args.latestControlIsDisclosed && controlDisclosureAllowedFor(args.regime, {
+  const controlDisclosed = controlDisclosureAllowedFor(args.regime, {
     audience: 'public',
-    currentGated: args.currentGated,
+    currentGated: args.visibleGated,
     riskScoreBps: args.snapshot.riskScoreBps,
-    eventName: args.latestControlEventName,
+    eventName: args.latestVisibleControlEventName,
   });
-  const visibleGated = controlDisclosed ? args.currentGated : false;
+  const visibleGated = controlDisclosed ? args.visibleGated : false;
   const riskLevel = riskLevelFor(args.snapshot.riskScoreBps, visibleGated);
   const base = {
     available: true,
@@ -206,7 +204,7 @@ export function buildPublicRiskPayload(args: PublicRiskViewArgs) {
   };
 
   const withControl = controlDisclosed
-    ? { ...base, gated: args.currentGated }
+    ? { ...base, gated: args.visibleGated }
     : base;
 
   if (args.regime.granularity === 'detailed') {

@@ -21,7 +21,7 @@ import {
 import {
   disclosedControlState,
   latestControlTransition,
-  latestControlTransitionIsDisclosed,
+  latestDisclosedControlTransition,
 } from '../risk/control-state';
 import { readControlTransitions } from '../risk/controls';
 import {
@@ -512,8 +512,13 @@ async function buildPublicRiskView(regimeId: TransparencyRegimeId, actor: string
     readControlTransitions(),
     c.read.isGated([fundId]).then(Boolean),
   ]);
-  const latestControlIsDisclosed = latestControlTransitionIsDisclosed(transitions, regime, observedAt);
-  const latestControlEventName = latestControlTransition(transitions)?.eventName ?? null;
+  const usesDisclosureBoundary = regime.visibility === 'public';
+  const latestVisibleControl = usesDisclosureBoundary
+    ? latestDisclosedControlTransition(transitions, regime, observedAt)
+    : latestControlTransition(transitions);
+  const visibleGated = usesDisclosureBoundary
+    ? disclosedControlState(transitions, regime, observedAt)
+    : currentGated;
 
   await recordAudit({
     actor,
@@ -536,9 +541,8 @@ async function buildPublicRiskView(regimeId: TransparencyRegimeId, actor: string
     snapshot,
     observedAt,
     disclosedAt: disclosedAt as number,
-    currentGated,
-    latestControlIsDisclosed,
-    latestControlEventName,
+    visibleGated,
+    latestVisibleControlEventName: latestVisibleControl?.eventName ?? null,
   });
 }
 

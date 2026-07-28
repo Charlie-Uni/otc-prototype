@@ -4,9 +4,9 @@ import {
   ControlTransition,
   disclosedControlState,
   latestControlTransition,
-  latestControlTransitionIsDisclosed,
+  latestDisclosedControlTransition,
 } from './control-state';
-import { TRANSPARENCY_REGIMES } from './regimes';
+import { TRANSPARENCY_REGIMES, buildPublicRiskPayload } from './regimes';
 
 const txA = `0x${'1'.repeat(64)}` as const;
 const txB = `0x${'2'.repeat(64)}` as const;
@@ -46,13 +46,45 @@ test('R3 uses real control event time and preserves the last disclosed state', (
   assert.equal(disclosedControlState([released, triggered], regime, releaseDisclosedAt), false);
 });
 
-test('reports whether the latest control transition has reached its policy disclosure time', () => {
+test('selects the latest transition that has reached its policy disclosure time', () => {
   const regime = TRANSPARENCY_REGIMES.R3;
 
-  assert.equal(latestControlTransitionIsDisclosed([], regime, 0), true);
-  assert.equal(latestControlTransitionIsDisclosed([triggered], regime, 1_000), false);
-  assert.equal(
-    latestControlTransitionIsDisclosed([triggered], regime, 1_000 + regime.delaySec),
-    true,
+  assert.equal(latestDisclosedControlTransition([], regime, 0), null);
+  assert.equal(latestDisclosedControlTransition([triggered], regime, 1_000), null);
+  assert.deepEqual(
+    latestDisclosedControlTransition([triggered], regime, 1_000 + regime.delaySec),
+    triggered,
   );
+});
+
+test('R3 public view retains a disclosed gate until the release reaches its boundary', () => {
+  const regime = TRANSPARENCY_REGIMES.R3;
+  const observedAt = released.submittedAt + regime.delaySec - 1;
+  const latestVisible = latestDisclosedControlTransition([released, triggered], regime, observedAt);
+  const view = buildPublicRiskPayload({
+    regime,
+    snapshot: {
+      metrics: {
+        valuationHaircutBps: 1_000,
+        redemptionPressureBps: 1_000,
+        redemptionQueueRatioBps: 1_000,
+        liquidityShortfallBps: 1_000,
+        stalePricingRiskBps: 1_000,
+        investorConcentrationBps: 1_000,
+      },
+      riskScoreBps: 1_000,
+      kappaBps: 7_000,
+      occurredAt: 1_000,
+      submittedAt: 1_000,
+      payloadHash: txA,
+    },
+    observedAt,
+    disclosedAt: triggered.submittedAt + regime.delaySec,
+    visibleGated: disclosedControlState([released, triggered], regime, observedAt),
+    latestVisibleControlEventName: latestVisible?.eventName ?? null,
+  }) as Record<string, unknown>;
+
+  assert.equal(view.controlDisclosed, true);
+  assert.equal(view.gated, true);
+  assert.equal(view.riskLevel, 'red');
 });
