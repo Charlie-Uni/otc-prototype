@@ -134,7 +134,7 @@ Visibility 是双层实现：端点 RBAC 决定谁能调用；披露引擎决定
 
 投资者 API Key 额外绑定一个 EIP-55 地址，余额端点强制投资者只查询绑定地址；管理人、登记代理、监管者和审计者仍按角色矩阵访问。这提供原型范围内的横向隔离，但不替代生产身份系统。
 
-链上签名层已将 risk oracle、liquidity oracle 和 regulator 与 admin 分离；NAV、登记和扩展控制在当前原型中仍由 admin 签名账户执行。该合并是研究原型边界，不能表述为生产级职责分离。
+部署脚本要求 risk oracle、liquidity oracle、regulator 与 admin 及彼此使用不同账户，并在授权后撤销 admin 对应的操作角色；admin 仍保留角色治理权限。NAV、登记和扩展控制在当前原型中仍由 admin 签名账户执行。该合并是研究原型边界，不能表述为生产级职责分离。
 
 ## 7. 审计与四时间戳
 

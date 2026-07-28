@@ -29,12 +29,15 @@ contract Deploy is Script {
         FundToken token = new FundToken(config.admin, "OTC Fund", "OTCF", config.fundId);
         NAVRegistry nav = new NAVRegistry(config.admin);
         RiskRegistry risk = new RiskRegistry(config.admin, config.weights, config.maxStaleAgeSec, config.kappaBps);
-        // grant roles for self-contained demo
+        // Configure demo operators while keeping risk duties separate from admin.
         token.grantRole(token.SUBSCRIPTION_ROLE(), config.admin);
         token.grantRole(token.REDEMPTION_ROLE(), config.admin);
         risk.grantRole(risk.RISK_ORACLE_ROLE(), config.oracle);
         risk.grantRole(risk.LIQUIDITY_ORACLE_ROLE(), config.liquidityOracle);
         risk.grantRole(risk.REGULATOR_ROLE(), config.regulator);
+        risk.revokeRole(risk.RISK_ORACLE_ROLE(), config.admin);
+        risk.revokeRole(risk.LIQUIDITY_ORACLE_ROLE(), config.admin);
+        risk.revokeRole(risk.REGULATOR_ROLE(), config.admin);
         token.setRiskGate(address(risk));
         vm.stopBroadcast();
 
@@ -55,6 +58,12 @@ contract Deploy is Script {
         config.oracle = vm.addr(vm.envUint("ORACLE_PRIVATE_KEY"));
         config.regulator = vm.addr(vm.envUint("REGULATOR_PRIVATE_KEY"));
         config.liquidityOracle = vm.addr(vm.envUint("LIQUIDITY_ORACLE_PRIVATE_KEY"));
+        require(config.oracle != config.admin, "ORACLE_MUST_DIFFER_FROM_ADMIN");
+        require(config.regulator != config.admin, "REGULATOR_MUST_DIFFER_FROM_ADMIN");
+        require(config.liquidityOracle != config.admin, "LIQUIDITY_ORACLE_MUST_DIFFER_FROM_ADMIN");
+        require(config.oracle != config.regulator, "ORACLE_REGULATOR_ROLE_COLLISION");
+        require(config.oracle != config.liquidityOracle, "ORACLE_LIQUIDITY_ROLE_COLLISION");
+        require(config.regulator != config.liquidityOracle, "REGULATOR_LIQUIDITY_ROLE_COLLISION");
         config.fundIdLabel = vm.envOr("FUND_ID_LABEL", string("OTC_FUND_1"));
         config.fundId = keccak256(bytes(config.fundIdLabel));
         config.weights[0] = _envBps("RISK_WEIGHT_1_BPS", 1_667);

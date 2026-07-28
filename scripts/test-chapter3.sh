@@ -38,6 +38,7 @@ CONTRACT_STATUS="pending"
 CONTRACT_COVERAGE_STATUS="pending"
 TYPECHECK_STATUS="pending"
 API_TEST_STATUS="pending"
+ROLE_SEPARATION_STATUS="pending"
 SMOKE_STATUS="pending"
 POSTGRES_STATUS="not_run"
 CURRENT_STEP="initialization"
@@ -75,6 +76,7 @@ write_summary() {
     "contractCoverage": $(json_status "$CONTRACT_COVERAGE_STATUS"),
     "typecheck": $(json_status "$TYPECHECK_STATUS"),
     "apiTests": $(json_status "$API_TEST_STATUS"),
+    "deploymentRoleSeparation": $(json_status "$ROLE_SEPARATION_STATUS"),
     "endToEndSmoke": $(json_status "$SMOKE_STATUS"),
     "postgresRestartPersistence": $(json_status "$POSTGRES_STATUS")
   },
@@ -84,6 +86,7 @@ write_summary() {
     "typecheck": "typecheck.log",
     "apiTests": "api-tests.tap",
     "deployment": "deploy.log",
+    "deploymentRoleSeparation": "role-separation.log",
     "endToEndSmoke": "smoke.log",
     "apiServer": "api.log",
     "anvil": "anvil.log",
@@ -135,6 +138,28 @@ wait_for_api() {
     sleep 0.25
   done
   return 1
+}
+
+verify_role_assignment() {
+  local role_name="$1"
+  local assigned_account="$2"
+  local admin_account="$3"
+  local role_hash
+  local assigned_has_role
+  local admin_has_role
+  role_hash="$(cast keccak "$role_name")"
+  assigned_has_role="$(
+    cast call "$RISK_REGISTRY_ADDRESS" \
+      'hasRole(bytes32,address)(bool)' "$role_hash" "$assigned_account" \
+      --rpc-url "$RPC_URL"
+  )"
+  admin_has_role="$(
+    cast call "$RISK_REGISTRY_ADDRESS" \
+      'hasRole(bytes32,address)(bool)' "$role_hash" "$admin_account" \
+      --rpc-url "$RPC_URL"
+  )"
+  printf '%s assigned=%s admin=%s\n' "$role_name" "$assigned_has_role" "$admin_has_role"
+  [[ "$assigned_has_role" == "true" && "$admin_has_role" == "false" ]]
 }
 
 start_api() {
@@ -232,6 +257,18 @@ if [[ -z "$FUND_TOKEN_ADDRESS" || -z "$NAV_REGISTRY_ADDRESS" || -z "$RISK_REGIST
   printf 'Unable to parse deployed contract addresses.\n' >&2
   exit 1
 fi
+
+CURRENT_STEP="deployment_role_separation"
+ADMIN_ADDRESS="$(cast wallet address --private-key "$PRIVATE_KEY")"
+ORACLE_ADDRESS="$(cast wallet address --private-key "$ORACLE_PRIVATE_KEY")"
+REGULATOR_ADDRESS="$(cast wallet address --private-key "$REGULATOR_PRIVATE_KEY")"
+LIQUIDITY_ORACLE_ADDRESS="$(cast wallet address --private-key "$LIQUIDITY_ORACLE_PRIVATE_KEY")"
+{
+  verify_role_assignment "RISK_ORACLE_ROLE" "$ORACLE_ADDRESS" "$ADMIN_ADDRESS"
+  verify_role_assignment "LIQUIDITY_ORACLE_ROLE" "$LIQUIDITY_ORACLE_ADDRESS" "$ADMIN_ADDRESS"
+  verify_role_assignment "REGULATOR_ROLE" "$REGULATOR_ADDRESS" "$ADMIN_ADDRESS"
+} > "$RESULTS_DIR/role-separation.log"
+ROLE_SEPARATION_STATUS="passed"
 
 CURRENT_STEP="api_start"
 start_api "$RESULTS_DIR/api.log"

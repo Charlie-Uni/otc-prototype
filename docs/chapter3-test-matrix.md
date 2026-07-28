@@ -30,13 +30,13 @@ pnpm test:chapter3
 | 合约单元、Fuzz 与覆盖率 | Foundry、Solidity、256 组 Fuzz、forge coverage | 权限、认购状态机、基金化 NAV、NAVAdjustment、Oracle 状态、评分不变量、阈值、Gate、扩展控制、赎回队列、事件 | `contracts.log`、`coverage.log` |
 | API 单元 | Node test runner、TypeScript、纯函数测试 | 指标计算、固定快照时间、最大余数法、制度引擎、RBAC/资源授权、错误映射、控制事件时间、DetectionLag、敏感性 | `api-tests.tap` |
 | 静态检查 | TypeScript strict mode | 类型边界、ABI 调用和路由组合 | `typecheck.log` |
-| 端到端 | Anvil、Foundry Script、Fastify、curl | 准入、认购、登记、NAV、估值/流动性 Oracle、赎回、评分、Gate、扩展控制、披露、审计 | `smoke.log` |
+| 端到端 | Anvil、Foundry Script、Cast、Fastify、curl | 部署角色分离、准入、认购、登记、NAV、估值/流动性 Oracle、赎回、评分、Gate、扩展控制、披露、审计 | `role-separation.log`、`smoke.log` |
 | 持久化集成 | PostgreSQL、API 重启验证 | 建表、upsert、重启后事件和 API 审计仍可读取 | `postgres-persistence.json`、`postgres-audit-persistence.json` |
 
 ## 当前验证快照
 
 - Foundry：58 项合约测试通过，其中 Fuzz 每次运行 256 组输入。
-- API：59 项 Node/TypeScript 测试通过。
+- API：60 项 Node/TypeScript 测试通过。
 - 静态检查：TypeScript `--noEmit` 通过。
 - 端到端：独立部署、链上指标溯源、7702 bps 高风险评分、Gate、R0-R4、审计与仿真全部通过。
 - 合约行覆盖率：FundToken 96.75%、NAVRegistry 100%、RiskRegistry 97.22%；原始输出由统一测试入口生成到 `coverage.log`。部署脚本由端到端 smoke 验证，不计入业务合约覆盖率。
