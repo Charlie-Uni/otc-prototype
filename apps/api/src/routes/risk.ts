@@ -24,6 +24,8 @@ import {
   latestDisclosedControlTransition,
 } from '../risk/control-state';
 import { readControlTransitions } from '../risk/controls';
+import { searchLatestDisclosedSnapshot } from '../risk/disclosure-search';
+import { submitRiskWithOneConfigRetry } from '../risk/submit-retry';
 import {
   TRANSPARENCY_REGIME_IDS,
   TransparencyRegime,
@@ -407,32 +409,29 @@ async function computeFromChainConfig(body: z.infer<typeof SubmitRiskSchema>): P
 async function submitWithOneConfigRetry(body: z.infer<typeof SubmitRiskSchema>) {
   const c = riskRegistry as any;
 
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const computed = await computeFromChainConfig(body);
-    try {
-      const tx = await c.write.submitMetrics([
+  const { computed, tx, snapshot, retried } = await submitRiskWithOneConfigRetry<ComputedRisk, RiskSnapshot>({
+    compute: () => computeFromChainConfig(body),
+    submit: async (batch) => {
+      const hash = await c.write.submitMetrics([
         fundId,
-        computed.metrics,
-        BigInt(computed.config.id),
+        batch.metrics,
+        BigInt(batch.config.id),
         BigInt(body.occurredAt),
-        computed.payloadHash,
+        batch.payloadHash,
       ]);
-      await rpc.waitForTransactionReceipt({ hash: tx });
-      const snapshot = await readLatestSnapshot();
-      if (!snapshot || snapshot.payloadHash !== computed.payloadHash || snapshot.weightsConfigId !== computed.config.id) {
+      await rpc.waitForTransactionReceipt({ hash });
+      return hash;
+    },
+    confirm: async (batch) => {
+      const latest = await readLatestSnapshot();
+      if (!latest || latest.payloadHash !== batch.payloadHash || latest.weightsConfigId !== batch.config.id) {
         throw new Error('RISK_SNAPSHOT_CONFIRMATION_FAILED');
       }
+      return latest;
+    },
+  });
 
-      return { tx, snapshot, retried: attempt > 0, ...computed };
-    } catch (error) {
-      if (attempt === 0 && messageOf(error).includes('INACTIVE_WEIGHTS')) {
-        continue;
-      }
-      throw error;
-    }
-  }
-
-  throw new Error('RISK_SUBMIT_RETRY_EXHAUSTED');
+  return { tx, snapshot, retried, ...computed };
 }
 
 async function readSnapshotAt(index: number): Promise<RiskSnapshot> {
@@ -463,23 +462,7 @@ function resolveRegimeId(rawRegime: string | undefined): TransparencyRegimeId {
 async function findLatestDisclosedSnapshot(regime: TransparencyRegime, observedAt: number) {
   const c = riskRegistry as any;
   const length = Number(await c.read.historyLength([fundId]));
-  if (length === 0) {
-    return { snapshot: null, disclosedAt: null, nextDisclosedAt: null };
-  }
-
-  let nextDisclosedAt: number | null = null;
-  for (let index = length - 1; index >= 0; index -= 1) {
-    const snapshot = await readSnapshotAt(index);
-    const disclosedAt = disclosureTimeFor(snapshot.submittedAt, regime);
-    if (observedAt >= disclosedAt) {
-      return { snapshot, disclosedAt, nextDisclosedAt };
-    }
-    nextDisclosedAt = nextDisclosedAt === null
-      ? disclosedAt
-      : Math.min(nextDisclosedAt, disclosedAt);
-  }
-
-  return { snapshot: null, disclosedAt: null, nextDisclosedAt };
+  return searchLatestDisclosedSnapshot(readSnapshotAt, length, regime, observedAt);
 }
 
 async function buildPublicRiskView(regimeId: TransparencyRegimeId, actor: string) {

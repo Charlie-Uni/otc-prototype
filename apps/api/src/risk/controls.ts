@@ -9,9 +9,13 @@ const CONTROL_EVENT_ABI = parseAbi([
 ]);
 
 export async function readControlTransitions(): Promise<ControlTransition[]> {
+  // Filter to the two control events server-side (by topic) and start from the
+  // configured deployment block so public views do not trigger unbounded
+  // full-chain scans as history grows.
   const logs = await rpc.getLogs({
     address: ENV.RISK_REGISTRY_ADDRESS as `0x${string}`,
-    fromBlock: 0n,
+    events: CONTROL_EVENT_ABI,
+    fromBlock: BigInt(ENV.CHAIN_LOG_START_BLOCK),
     toBlock: 'latest',
   });
   const transitions: ControlTransition[] = [];

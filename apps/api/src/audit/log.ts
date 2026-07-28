@@ -1,5 +1,6 @@
 import { db } from '../db/client';
 import { ENV } from '../env';
+import { csvEscape, pushBoundedAuditEntry } from './retention';
 
 export type AuditEntry = {
   actor: string;
@@ -30,11 +31,6 @@ function nowSec(): number {
   return Math.floor(Date.now() / 1000);
 }
 
-function csvEscape(value: unknown): string {
-  const text = typeof value === 'string' ? value : JSON.stringify(value) ?? String(value);
-  return `"${text.replace(/"/g, '""')}"`;
-}
-
 export async function recordAudit(input: RecordAuditInput): Promise<AuditEntry> {
   const entry: AuditEntry = {
     actor: input.actor,
@@ -46,10 +42,7 @@ export async function recordAudit(input: RecordAuditInput): Promise<AuditEntry> 
     transactionHash: input.transactionHash ?? null,
     details: input.details ?? {},
   };
-  memoryAuditLog.push(entry);
-  if (memoryAuditLog.length > MAX_MEMORY_AUDIT_ENTRIES) {
-    memoryAuditLog.splice(0, memoryAuditLog.length - MAX_MEMORY_AUDIT_ENTRIES);
-  }
+  pushBoundedAuditEntry(memoryAuditLog, entry, MAX_MEMORY_AUDIT_ENTRIES);
 
   if (ENV.DATABASE_URL) {
     await db.query(
@@ -109,9 +102,14 @@ export async function listAuditEntries(limit: number): Promise<AuditEntry[]> {
 
 export async function exportAuditCsv() {
   if (ENV.DATABASE_URL) {
+    // Bounded export (newest rows win, returned in ascending order) so a
+    // long-lived audit_log cannot make the export unbounded.
     const { rows } = await db.query(
-      `select actor, action, occurred_at, submitted_at, disclosed_at, observed_at, transaction_hash, payload
-       from audit_log order by id asc`,
+      `select * from (
+         select id, actor, action, occurred_at, submitted_at, disclosed_at, observed_at, transaction_hash, payload
+         from audit_log order by id desc limit $1
+       ) latest order by id asc`,
+      [ENV.AUDIT_EXPORT_MAX_ROWS],
     );
     return [
       'actor,action,occurredAt,submittedAt,disclosedAt,observedAt,transactionHash,payload',

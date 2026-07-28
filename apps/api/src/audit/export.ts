@@ -1,9 +1,5 @@
 import { LifecycleTimelineEntry } from './lifecycle';
-
-function csvEscape(value: unknown): string {
-  const text = typeof value === 'string' ? value : JSON.stringify(value) ?? String(value);
-  return `"${text.replace(/"/g, '""')}"`;
-}
+import { csvEscape } from './retention';
 
 export function exportLifecycleCsv(entries: readonly LifecycleTimelineEntry[]): string {
   return [

@@ -6,10 +6,10 @@ import { isAddress, getAddress } from "viem";
 const ApiKeySchema = z.string().min(16, "API key must contain at least 16 characters");
 
 /**
- * Explicitly load apps/api/.env
- * This avoids cwd / monorepo / tsx issues entirely.
+ * Explicitly load apps/api/.env, resolved relative to this module
+ * (not the process cwd), so starting the API from the repo root works too.
  */
-dotenv.config({ path: "./.env" });
+dotenv.config({ path: new URL("../.env", import.meta.url).pathname });
 
 const EnvSchema = z.object({
   RPC_URL: z.string().url(),
@@ -42,6 +42,12 @@ const EnvSchema = z.object({
   API_KEY_AUDITOR: ApiKeySchema,
   REDEMPTION_PRESSURE_WINDOW_SEC: z.coerce.number().int().positive().default(24 * 60 * 60),
   RISK_INPUT_MAX_AGE_SEC: z.coerce.number().int().positive().default(300),
+  // First block to scan for lifecycle/control logs (set to the deployment block
+  // in long-lived environments to bound public-view log scans).
+  CHAIN_LOG_START_BLOCK: z.coerce.number().int().nonnegative().default(0),
+  // Upper bound for /audit/export rows in PostgreSQL mode (memory mode is
+  // already bounded by the in-memory buffer).
+  AUDIT_EXPORT_MAX_ROWS: z.coerce.number().int().positive().default(50_000),
   PORT: z.coerce.number().default(3001),
   DATABASE_URL: z.string().optional(),
 });
