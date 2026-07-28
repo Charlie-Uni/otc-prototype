@@ -26,8 +26,8 @@ contract Deploy is Script {
         DeploymentConfig memory config = _loadConfig();
 
         vm.startBroadcast(config.deployerPrivateKey);
-        FundToken token = new FundToken(config.admin, "OTC Fund", "OTCF", config.fundId);
         NAVRegistry nav = new NAVRegistry(config.admin);
+        FundToken token = new FundToken(config.admin, "OTC Fund", "OTCF", config.fundId, address(nav));
         RiskRegistry risk = new RiskRegistry(config.admin, config.weights, config.maxStaleAgeSec, config.kappaBps);
         // Configure demo operators while keeping risk duties separate from admin.
         token.grantRole(token.SUBSCRIPTION_ROLE(), config.admin);

@@ -9,17 +9,17 @@ import {
 export const FUND_TOKEN_EVENT_ABI = parseAbi([
   'event RiskGateConfigured(address indexed riskGate, bytes32 indexed fundId)',
   'event InvestorWhitelisted(address indexed investor, bool eligible, bytes32 indexed vcHash, address indexed by)',
-  'event SubscriptionRequested(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt, bytes32 requestHash)',
-  'event SubscriptionAccepted(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt, uint64 acceptedAt, bytes32 requestHash)',
+  'event SubscriptionRequested(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 subscriptionAmount, uint64 requestedAt, bytes32 requestHash)',
+  'event SubscriptionAccepted(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 subscriptionAmount, uint256 mintedShares, uint256 navUsed, uint64 navAsOf, uint64 requestedAt, uint64 acceptedAt, bytes32 requestHash)',
   'event ShareBalanceUpdated(address indexed investor, uint256 balance, uint256 totalSupply, bytes32 indexed reason)',
-  'event RedemptionRequested(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt)',
+  'event RedemptionRequested(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 redeemedShares, uint64 requestedAt)',
   'event RedemptionQueueUpdated(bytes32 indexed fundId, uint256 totalQueuedRedemption, uint256 totalSupply, uint16 redemptionQueueRatioBps, uint64 updatedAt)',
-  'event RedemptionSettled(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt, uint64 settledAt)',
-  'event SettlementDelayed(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt, uint64 delayedAt, bytes32 reasonHash)',
+  'event RedemptionSettled(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 redeemedShares, uint256 redemptionAmount, uint256 settlementNav, uint64 settlementNavAsOf, uint64 requestedAt, uint64 settledAt)',
+  'event SettlementDelayed(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 redeemedShares, uint64 requestedAt, uint64 delayedAt, bytes32 reasonHash)',
 ]);
 
 export const NAV_REGISTRY_EVENT_ABI = parseAbi([
-  'event NAVUpdatedEvent(bytes32 indexed fundId, uint256 nav, uint64 asOf, uint64 storedAt, int256 navAdjustmentBps, bytes32 payloadHash, address indexed by)',
+  'event NAVUpdatedEvent(bytes32 indexed fundId, uint256 nav, uint256 netAssetValue, uint256 totalSharesSnapshot, uint64 asOf, uint64 storedAt, int256 navAdjustmentBps, bytes32 payloadHash, bool isInitial, address indexed by)',
   'event ValuationHaircutEvent(bytes32 indexed fundId, uint16 valuationHaircutBps, uint64 occurredAt, uint64 submittedAt, bytes32 payloadHash, address indexed submittedBy)',
 ]);
 

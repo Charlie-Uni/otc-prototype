@@ -12,14 +12,14 @@ test('computes redemption pressure from matching request events inside the windo
     windowSec: 100,
     totalSupply: 10_000n,
     requests: [
-      { fundId: FUND_ID, amount: 1_000n, requestedAt: 950 },
-      { fundId: FUND_ID, amount: 800n, requestedAt: 1_000 },
-      { fundId: FUND_ID, amount: 900n, requestedAt: 899 },
-      { fundId: OTHER_FUND_ID, amount: 5_000n, requestedAt: 950 },
+      { fundId: FUND_ID, redeemedShares: 1_000n, requestedAt: 950 },
+      { fundId: FUND_ID, redeemedShares: 800n, requestedAt: 1_000 },
+      { fundId: FUND_ID, redeemedShares: 900n, requestedAt: 899 },
+      { fundId: OTHER_FUND_ID, redeemedShares: 5_000n, requestedAt: 950 },
     ],
     settlements: [
-      { fundId: FUND_ID, amount: 300n, settledAt: 975 },
-      { fundId: FUND_ID, amount: 200n, settledAt: 800 },
+      { fundId: FUND_ID, redeemedShares: 300n, settledAt: 975 },
+      { fundId: FUND_ID, redeemedShares: 200n, settledAt: 800 },
     ],
   });
 

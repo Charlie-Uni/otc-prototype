@@ -2,6 +2,7 @@
 pragma solidity ^0.8.30;
 
 import "forge-std/Test.sol";
+import {Math} from "openzeppelin/utils/math/Math.sol";
 import {NAVRegistry} from "src/NAVRegistry.sol";
 
 contract NAVRegistryTest is Test {
@@ -16,10 +17,13 @@ contract NAVRegistryTest is Test {
     event NAVUpdatedEvent(
         bytes32 indexed fundId,
         uint256 nav,
+        uint256 netAssetValue,
+        uint256 totalSharesSnapshot,
         uint64 asOf,
         uint64 storedAt,
         int256 navAdjustmentBps,
         bytes32 payloadHash,
+        bool isInitial,
         address indexed by
     );
     event ValuationHaircutEvent(
@@ -37,28 +41,64 @@ contract NAVRegistryTest is Test {
         vm.warp(1_710_000_000);
     }
 
-    function testPostStoresFundScopedNAVAndCommitment() public {
+    function testInitialNAVStoresFundScopedOfferingPriceAndCommitment() public {
         vm.expectEmit(true, true, false, true, address(nav));
-        emit NAVUpdatedEvent(fundA, 123_456_789, 1_709_999_000, uint64(block.timestamp), 0, payloadA, admin);
+        emit NAVUpdatedEvent(fundA, 1e18, 0, 0, 1_709_999_000, uint64(block.timestamp), 0, payloadA, true, admin);
 
         vm.prank(admin);
-        nav.postNAV(fundA, 123_456_789, 1_709_999_000, payloadA);
+        nav.postInitialNAV(fundA, 1e18, 1_709_999_000, payloadA);
 
         NAVRegistry.NavRecord memory record = nav.latestNAV(fundA);
-        assertEq(record.nav, 123_456_789);
+        assertEq(record.nav, 1e18);
+        assertEq(record.netAssetValue, 0);
+        assertEq(record.totalSharesSnapshot, 0);
         assertEq(record.asOf, 1_709_999_000);
         assertEq(record.storedAt, block.timestamp);
         assertEq(record.navAdjustmentBps, 0);
         assertEq(record.payloadHash, payloadA);
+        assertTrue(record.isInitial);
         assertEq(nav.historyLength(fundA), 1);
         assertEq(nav.historyLength(fundB), 0);
     }
 
-    function testNAVAdjustmentSupportsPositiveAndNegativeChanges() public {
+    function testPostNAVComputesFormulaOnChainAndStoresInputs() public {
         vm.startPrank(admin);
-        nav.postNAV(fundA, 1_000_000, 1_709_999_000, payloadA);
-        nav.postNAV(fundA, 1_100_000, 1_709_999_500, payloadB);
-        nav.postNAV(fundA, 990_000, 1_709_999_800, keccak256("nav-c"));
+        nav.postInitialNAV(fundA, 1e18, 1_709_999_000, payloadA);
+
+        vm.expectEmit(true, true, false, true, address(nav));
+        emit NAVUpdatedEvent(
+            fundA, 1.1e18, 1_100e18, 1_000e18, 1_709_999_500, uint64(block.timestamp), 1_000, payloadB, false, admin
+        );
+        nav.postNAV(fundA, 1_100e18, 1_000e18, 1_709_999_500, payloadB);
+        vm.stopPrank();
+
+        NAVRegistry.NavRecord memory record = nav.latestNAV(fundA);
+        assertEq(record.nav, 1.1e18);
+        assertEq(record.netAssetValue, 1_100e18);
+        assertEq(record.totalSharesSnapshot, 1_000e18);
+        assertEq(record.navAdjustmentBps, 1_000);
+        assertFalse(record.isInitial);
+    }
+
+    function testFuzz_PostNAVAlwaysMatchesNetAssetValueOverShares(uint128 rawNetAssets, uint128 rawShares) public {
+        uint256 netAssetValue = bound(uint256(rawNetAssets), 1e18, 1e30);
+        uint256 totalSharesSnapshot = bound(uint256(rawShares), 1, 1e24);
+        vm.startPrank(admin);
+        nav.postInitialNAV(fundA, 1e18, 1_709_999_000, payloadA);
+        nav.postNAV(fundA, netAssetValue, totalSharesSnapshot, 1_709_999_001, payloadB);
+        vm.stopPrank();
+
+        NAVRegistry.NavRecord memory record = nav.latestNAV(fundA);
+        assertEq(record.nav, Math.mulDiv(netAssetValue, nav.NAV_SCALE(), totalSharesSnapshot));
+        assertEq(record.netAssetValue, netAssetValue);
+        assertEq(record.totalSharesSnapshot, totalSharesSnapshot);
+    }
+
+    function testNAVAdjustmentSupportsPositiveAndNegativeFormulaChanges() public {
+        vm.startPrank(admin);
+        nav.postInitialNAV(fundA, 1e18, 1_709_999_000, payloadA);
+        nav.postNAV(fundA, 1_100e18, 1_000e18, 1_709_999_500, payloadB);
+        nav.postNAV(fundA, 990e18, 1_000e18, 1_709_999_800, keccak256("nav-c"));
         vm.stopPrank();
 
         assertEq(nav.navAt(fundA, 1).navAdjustmentBps, 1_000);
@@ -68,14 +108,52 @@ contract NAVRegistryTest is Test {
 
     function testFundHistoriesAreIsolated() public {
         vm.startPrank(admin);
-        nav.postNAV(fundA, 1_000_000, 1_709_999_000, payloadA);
-        nav.postNAV(fundB, 2_000_000, 1_709_999_000, payloadB);
+        nav.postInitialNAV(fundA, 1e18, 1_709_999_000, payloadA);
+        nav.postInitialNAV(fundB, 2e18, 1_709_999_000, payloadB);
         vm.stopPrank();
 
-        assertEq(nav.latestNAV(fundA).nav, 1_000_000);
-        assertEq(nav.latestNAV(fundB).nav, 2_000_000);
-        assertEq(nav.latestNAV(fundA).navAdjustmentBps, 0);
-        assertEq(nav.latestNAV(fundB).navAdjustmentBps, 0);
+        assertEq(nav.latestNAV(fundA).nav, 1e18);
+        assertEq(nav.latestNAV(fundB).nav, 2e18);
+    }
+
+    function testInitialNAVRejectsInvalidStateAndDuplicateInitialization() public {
+        vm.startPrank(admin);
+        vm.expectRevert(bytes("INVALID_FUND_ID"));
+        nav.postInitialNAV(bytes32(0), 1e18, 1, payloadA);
+
+        vm.expectRevert(bytes("INVALID_NAV"));
+        nav.postInitialNAV(fundA, 0, 1, payloadA);
+
+        vm.expectRevert(bytes("INVALID_AS_OF"));
+        nav.postInitialNAV(fundA, 1e18, 0, payloadA);
+
+        vm.expectRevert(bytes("FUTURE_AS_OF"));
+        nav.postInitialNAV(fundA, 1e18, uint64(block.timestamp + 1), payloadA);
+
+        vm.expectRevert(bytes("INVALID_PAYLOAD_HASH"));
+        nav.postInitialNAV(fundA, 1e18, 1, bytes32(0));
+
+        nav.postInitialNAV(fundA, 1e18, 1_709_999_000, payloadA);
+        vm.expectRevert(bytes("NAV_ALREADY_INITIALIZED"));
+        nav.postInitialNAV(fundA, 1e18, 1_709_999_001, payloadB);
+        vm.stopPrank();
+    }
+
+    function testFormulaNAVRequiresInitializationAndPositiveInputs() public {
+        vm.startPrank(admin);
+        vm.expectRevert(bytes("NAV_NOT_INITIALIZED"));
+        nav.postNAV(fundA, 1_000e18, 1_000e18, 1_709_999_000, payloadA);
+
+        nav.postInitialNAV(fundA, 1e18, 1_709_999_000, payloadA);
+        vm.expectRevert(bytes("INVALID_NET_ASSET_VALUE"));
+        nav.postNAV(fundA, 0, 1_000e18, 1_709_999_001, payloadB);
+
+        vm.expectRevert(bytes("INVALID_TOTAL_SHARES"));
+        nav.postNAV(fundA, 1_000e18, 0, 1_709_999_001, payloadB);
+
+        vm.expectRevert(bytes("AS_OF_BEFORE_LATEST"));
+        nav.postNAV(fundA, 1_000e18, 1_000e18, 1_709_998_999, payloadB);
+        vm.stopPrank();
     }
 
     function testValuationOracleStoresHaircutStateAndCommitment() public {
@@ -108,33 +186,10 @@ contract NAVRegistryTest is Test {
         nav.postValuationHaircut(fundA, 1_000, uint64(block.timestamp), payloadA);
     }
 
-    function testPostRejectsInvalidState() public {
-        vm.startPrank(admin);
-        vm.expectRevert(bytes("INVALID_FUND_ID"));
-        nav.postNAV(bytes32(0), 1, 1, payloadA);
-
-        vm.expectRevert(bytes("INVALID_NAV"));
-        nav.postNAV(fundA, 0, 1, payloadA);
-
-        vm.expectRevert(bytes("INVALID_AS_OF"));
-        nav.postNAV(fundA, 1, 0, payloadA);
-
-        vm.expectRevert(bytes("FUTURE_AS_OF"));
-        nav.postNAV(fundA, 1, uint64(block.timestamp + 1), payloadA);
-
-        vm.expectRevert(bytes("INVALID_PAYLOAD_HASH"));
-        nav.postNAV(fundA, 1, 1, bytes32(0));
-
-        nav.postNAV(fundA, 1_000_000, 1_709_999_000, payloadA);
-        vm.expectRevert(bytes("AS_OF_BEFORE_LATEST"));
-        nav.postNAV(fundA, 1_000_001, 1_709_998_999, payloadB);
-        vm.stopPrank();
-    }
-
     function testNonManagerCannotPostNAV() public {
         vm.prank(stranger);
         vm.expectRevert();
-        nav.postNAV(fundA, 1_000_000, 1_709_999_000, payloadA);
+        nav.postInitialNAV(fundA, 1e18, 1_709_999_000, payloadA);
     }
 
     function testLatestNAVRejectsUnknownFund() public {
@@ -146,15 +201,16 @@ contract NAVRegistryTest is Test {
         // Documented boundary: asOf is monotone but equal asOf stays allowed so a
         // valuation correction for the same reference time can be recorded.
         vm.startPrank(admin);
-        nav.postNAV(fundA, 1_000_000, 1_709_999_000, payloadA);
-        nav.postNAV(fundA, 1_010_000, 1_709_999_000, payloadB);
+        nav.postInitialNAV(fundA, 1e18, 1_709_999_000, payloadA);
+        nav.postNAV(fundA, 1_000e18, 1_000e18, 1_709_999_500, payloadB);
+        nav.postNAV(fundA, 1_010e18, 1_000e18, 1_709_999_500, keccak256("nav-correction"));
         vm.stopPrank();
 
         NAVRegistry.NavRecord memory latest = nav.latestNAV(fundA);
-        assertEq(latest.nav, 1_010_000);
-        assertEq(latest.asOf, 1_709_999_000);
+        assertEq(latest.nav, 1.01e18);
+        assertEq(latest.asOf, 1_709_999_500);
         assertEq(latest.navAdjustmentBps, 100);
-        assertEq(nav.historyLength(fundA), 2);
+        assertEq(nav.historyLength(fundA), 3);
     }
 
     function testValuationHaircutRejectsOccurredAtRegressionButAllowsCorrection() public {
@@ -177,10 +233,15 @@ contract NAVRegistryTest is Test {
 
     function testNavAtRejectsOutOfRangeIndex() public {
         vm.prank(admin);
-        nav.postNAV(fundA, 1_000_000, 1_709_999_000, payloadA);
+        nav.postInitialNAV(fundA, 1e18, 1_709_999_000, payloadA);
 
-        assertEq(nav.navAt(fundA, 0).nav, 1_000_000);
+        assertEq(nav.navAt(fundA, 0).nav, 1e18);
         vm.expectRevert(bytes("NAV_OUT_OF_RANGE"));
         nav.navAt(fundA, 1);
+    }
+
+    function testDeploymentRejectsZeroAdmin() public {
+        vm.expectRevert(bytes("INVALID_ADMIN"));
+        new NAVRegistry(address(0));
     }
 }

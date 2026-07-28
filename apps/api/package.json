@@ -5,7 +5,7 @@
         "dev": "node --import tsx src/index.ts",
         "test:risk": "node --import tsx --test src/risk/*.test.ts",
         "test:auth": "node --import tsx --test src/auth/*.test.ts",
-        "test": "node --import tsx --test src/risk/*.test.ts src/auth/*.test.ts src/audit/*.test.ts src/http/*.test.ts src/simulation/*.test.ts"
+        "test": "node --import tsx --test src/*.test.ts src/risk/*.test.ts src/auth/*.test.ts src/audit/*.test.ts src/http/*.test.ts src/simulation/*.test.ts"
     },
     "dependencies": {
         "dotenv": "^16.6.1",

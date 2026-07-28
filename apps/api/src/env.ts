@@ -48,6 +48,8 @@ const EnvSchema = z.object({
   // Upper bound for /audit/export rows in PostgreSQL mode (memory mode is
   // already bounded by the in-memory buffer).
   AUDIT_EXPORT_MAX_ROWS: z.coerce.number().int().positive().default(50_000),
+  MAX_VALUATION_HAIRCUT_AGE_SEC: z.coerce.number().int().positive().optional(),
+  MAX_LIQUIDITY_BUFFER_AGE_SEC: z.coerce.number().int().positive().optional(),
   PORT: z.coerce.number().default(3001),
   DATABASE_URL: z.string().optional(),
 });

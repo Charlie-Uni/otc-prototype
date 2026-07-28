@@ -5,10 +5,11 @@ import {
   getTransparencyRegime,
 } from '../risk/regimes';
 import { LifecycleEvent, eventDisclosureTimeFor, sortLifecycleEvents } from '../audit/lifecycle';
-import { MAX_BPS } from '../risk/calc';
+import { MAX_BPS, RED_SCORE_BPS, YELLOW_SCORE_BPS } from '../risk/calc';
 
 export type DetectionScenario = {
   scenarioId: string;
+  fundId: `0x${string}`;
   shockAt: number;
   detectionThresholdBps: number;
   observationStartAt: number;
@@ -23,6 +24,7 @@ export type DetectionLagRow = {
   disclosureDetectionLagSec: number | null;
   observationDetectionLagSec: number | null;
   censored: boolean;
+  censorReason: 'not_disclosed' | 'threshold_not_identifiable' | null;
 };
 
 export type DetectionLagAnalysis = {
@@ -30,6 +32,7 @@ export type DetectionLagAnalysis = {
   anchor: {
     eventId: string;
     eventName: 'RiskMetricsSubmitted';
+    fundId: `0x${string}`;
     riskScoreBps: number;
     occurredAt: number;
     submittedAt: number;
@@ -48,6 +51,7 @@ function riskScoreFor(event: LifecycleEvent): number | null {
 
 function validateScenario(scenario: DetectionScenario): void {
   if (!scenario.scenarioId.trim()) throw new Error('INVALID_SCENARIO_ID');
+  if (!/^0x[0-9a-fA-F]{64}$/.test(scenario.fundId)) throw new Error('INVALID_SCENARIO_FUND_ID');
   if (!Number.isInteger(scenario.shockAt) || scenario.shockAt <= 0) throw new Error('INVALID_SHOCK_AT');
   if (
     !Number.isInteger(scenario.detectionThresholdBps)
@@ -62,6 +66,19 @@ function validateScenario(scenario: DetectionScenario): void {
   if (!Number.isInteger(scenario.pollingIntervalSec) || scenario.pollingIntervalSec <= 0) {
     throw new Error('INVALID_POLLING_INTERVAL');
   }
+}
+
+function sameFundId(a: `0x${string}`, b: `0x${string}`): boolean {
+  return a.toLowerCase() === b.toLowerCase();
+}
+
+function publicThresholdIsIdentifiable(
+  granularity: 'aggregate' | 'detailed' | 'tiered',
+  thresholdBps: number,
+): boolean {
+  return granularity === 'detailed'
+    || thresholdBps === YELLOW_SCORE_BPS
+    || thresholdBps === RED_SCORE_BPS;
 }
 
 export function firstScheduledObservationAt(
@@ -81,7 +98,9 @@ export function analyzeDetectionLags(
   validateScenario(scenario);
   const anchorEvent = sortLifecycleEvents(events).find((event) => {
     const riskScoreBps = riskScoreFor(event);
-    return event.submittedAt >= scenario.shockAt
+    return sameFundId(event.fundId, scenario.fundId)
+      && event.occurredAt >= scenario.shockAt
+      && event.submittedAt >= scenario.shockAt
       && riskScoreBps !== null
       && riskScoreBps >= scenario.detectionThresholdBps;
   });
@@ -91,6 +110,21 @@ export function analyzeDetectionLags(
   const rows = TRANSPARENCY_REGIME_IDS.flatMap((regimeId) => {
     const regime = getTransparencyRegime(regimeId);
     return AUDIENCES.map((audience): DetectionLagRow => {
+      if (
+        audience === 'public'
+        && !publicThresholdIsIdentifiable(regime.granularity, scenario.detectionThresholdBps)
+      ) {
+        return {
+          regime: regimeId,
+          audience,
+          disclosedAt: null,
+          observedAt: null,
+          disclosureDetectionLagSec: null,
+          observationDetectionLagSec: null,
+          censored: true,
+          censorReason: 'threshold_not_identifiable',
+        };
+      }
       const disclosedAt = eventDisclosureTimeFor(anchorEvent, regime, audience);
       if (disclosedAt === null) {
         return {
@@ -101,6 +135,7 @@ export function analyzeDetectionLags(
           disclosureDetectionLagSec: null,
           observationDetectionLagSec: null,
           censored: true,
+          censorReason: 'not_disclosed',
         };
       }
       const observedAt = firstScheduledObservationAt(
@@ -116,6 +151,7 @@ export function analyzeDetectionLags(
         disclosureDetectionLagSec: disclosedAt - scenario.shockAt,
         observationDetectionLagSec: observedAt - scenario.shockAt,
         censored: false,
+        censorReason: null,
       };
     });
   });
@@ -125,6 +161,7 @@ export function analyzeDetectionLags(
     anchor: {
       eventId: anchorEvent.eventId,
       eventName: 'RiskMetricsSubmitted',
+      fundId: anchorEvent.fundId,
       riskScoreBps,
       occurredAt: anchorEvent.occurredAt,
       submittedAt: anchorEvent.submittedAt,

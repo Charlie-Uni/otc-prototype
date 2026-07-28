@@ -14,22 +14,22 @@ export type RedemptionPressureSnapshot = {
 
 export type RedemptionRequestFlow = {
   fundId: `0x${string}`;
-  amount: bigint;
+  redeemedShares: bigint;
   requestedAt: number;
 };
 
 export type RedemptionSettlementFlow = {
   fundId: `0x${string}`;
-  amount: bigint;
+  redeemedShares: bigint;
   settledAt: number;
 };
 
 const redemptionRequestedEvent = parseAbiItem(
-  'event RedemptionRequested(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt)',
+  'event RedemptionRequested(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 redeemedShares, uint64 requestedAt)',
 );
 
 const redemptionSettledEvent = parseAbiItem(
-  'event RedemptionSettled(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt, uint64 settledAt)',
+  'event RedemptionSettled(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 redeemedShares, uint256 redemptionAmount, uint256 settlementNav, uint64 settlementNavAsOf, uint64 requestedAt, uint64 settledAt)',
 );
 
 function inWindow(timestamp: number, startAt: number, endAt: number): boolean {
@@ -59,11 +59,11 @@ export function computeRedemptionPressureSnapshotFromEvents(args: {
   const requestedAmount = args.requests
     .filter((request) => sameBytes32(request.fundId, args.fundId))
     .filter((request) => inWindow(request.requestedAt, windowStartAt, args.occurredAt))
-    .reduce((sum, request) => sum + request.amount, 0n);
+    .reduce((sum, request) => sum + request.redeemedShares, 0n);
   const settledAmount = args.settlements
     .filter((settlement) => sameBytes32(settlement.fundId, args.fundId))
     .filter((settlement) => inWindow(settlement.settledAt, windowStartAt, args.occurredAt))
-    .reduce((sum, settlement) => sum + settlement.amount, 0n);
+    .reduce((sum, settlement) => sum + settlement.redeemedShares, 0n);
 
   return {
     redemptionPressureBps: computeRedemptionPressureBps(requestedAmount, args.totalSupply),
@@ -107,12 +107,12 @@ export async function readRedemptionPressureSnapshot(
     totalSupply: totalSupplyRaw as bigint,
     requests: requestLogs.map((log) => ({
       fundId: log.args.fundId as `0x${string}`,
-      amount: log.args.amount as bigint,
+      redeemedShares: log.args.redeemedShares as bigint,
       requestedAt: Number(log.args.requestedAt),
     })),
     settlements: settledLogs.map((log) => ({
       fundId: log.args.fundId as `0x${string}`,
-      amount: log.args.amount as bigint,
+      redeemedShares: log.args.redeemedShares as bigint,
       settledAt: Number(log.args.settledAt),
     })),
   });

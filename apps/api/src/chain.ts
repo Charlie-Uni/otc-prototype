@@ -2,6 +2,7 @@
 import { createWalletClient, createPublicClient, getContract, http, keccak256, parseAbi, toBytes } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { foundry } from 'viem/chains';
+import { assertFundBinding } from './chain-config';
 import { ENV } from './env';
 
 export const account = privateKeyToAccount(ENV.PRIVATE_KEY as `0x${string}`);
@@ -48,9 +49,10 @@ const liquidityOracleClients = { public: rpc as any, wallet: liquidityOracleWall
 export const nav = getContract({
   address: ENV.NAV_REGISTRY_ADDRESS as `0x${string}`,
   abi: parseAbi([
-    'function postNAV(bytes32 fundId, uint256 nav, uint64 asOf, bytes32 payloadHash) external',
-    'function latestNAV(bytes32 fundId) view returns (uint256 nav, uint64 asOf, uint64 storedAt, int256 navAdjustmentBps, bytes32 payloadHash)',
-    'function navAt(bytes32 fundId, uint256 index) view returns (uint256 nav, uint64 asOf, uint64 storedAt, int256 navAdjustmentBps, bytes32 payloadHash)',
+    'function postInitialNAV(bytes32 fundId, uint256 initialNav, uint64 asOf, bytes32 payloadHash) external',
+    'function postNAV(bytes32 fundId, uint256 netAssetValue, uint256 totalSharesSnapshot, uint64 asOf, bytes32 payloadHash) external',
+    'function latestNAV(bytes32 fundId) view returns (uint256 nav, uint256 netAssetValue, uint256 totalSharesSnapshot, uint64 asOf, uint64 storedAt, int256 navAdjustmentBps, bytes32 payloadHash, bool isInitial)',
+    'function navAt(bytes32 fundId, uint256 index) view returns (uint256 nav, uint256 netAssetValue, uint256 totalSharesSnapshot, uint64 asOf, uint64 storedAt, int256 navAdjustmentBps, bytes32 payloadHash, bool isInitial)',
     'function historyLength(bytes32 fundId) view returns (uint256)',
     'function postValuationHaircut(bytes32 fundId, uint16 valuationHaircutBps, uint64 occurredAt, bytes32 payloadHash) external',
     'function latestValuationHaircut(bytes32 fundId) view returns (uint16 valuationHaircutBps, uint64 occurredAt, uint64 submittedAt, bytes32 payloadHash, address submittedBy, bool exists)',
@@ -62,12 +64,14 @@ export const nav = getContract({
 export const token = getContract({
   address: ENV.FUND_TOKEN_ADDRESS as `0x${string}`,
   abi: parseAbi([
-    'function requestSubscription(uint256 amount) external returns (uint256 requestId)',
-    'function requestSubscriptionFor(address investor, uint256 amount) external returns (uint256 requestId)',
+    'function fundId() view returns (bytes32)',
+    'function navRegistry() view returns (address)',
+    'function requestSubscription(uint256 subscriptionAmount) external returns (uint256 requestId)',
+    'function requestSubscriptionFor(address investor, uint256 subscriptionAmount) external returns (uint256 requestId)',
     'function acceptSubscription(uint256 requestId) external',
     'function subscriptionRequestCount() view returns (uint256)',
-    'function subscriptionRequestAt(uint256 requestId) view returns (address investor, uint256 amount, uint64 requestedAt, uint64 acceptedAt, bytes32 requestHash, bool accepted)',
-    'function requestRedemptionFor(address investor, uint256 amount) external returns (uint256 requestId)',
+    'function subscriptionRequestAt(uint256 requestId) view returns (address investor, uint256 subscriptionAmount, uint256 mintedShares, uint256 navUsed, uint64 navAsOf, uint64 requestedAt, uint64 acceptedAt, bytes32 requestHash, bool accepted)',
+    'function requestRedemptionFor(address investor, uint256 redeemedShares) external returns (uint256 requestId)',
     'function settleRedemption(uint256 requestId) external',
     'function flagSettlementDelayed(uint256 requestId, bytes32 reasonHash) external',
     'function balanceOf(address a) view returns (uint256)',
@@ -75,7 +79,7 @@ export const token = getContract({
     'function queuedRedemptionOf(address a) view returns (uint256)',
     'function totalQueuedRedemption() view returns (uint256)',
     'function redemptionQueueRatioBps() view returns (uint16)',
-    'function redemptionRequestAt(uint256 requestId) view returns ((address investor, uint256 amount, uint64 requestedAt, uint64 settledAt, uint64 delayedAt, bytes32 delayReasonHash, bool settled, bool delayed) request)',
+    'function redemptionRequestAt(uint256 requestId) view returns ((address investor, uint256 redeemedShares, uint256 redemptionAmount, uint256 settlementNav, uint64 settlementNavAsOf, uint64 requestedAt, uint64 settledAt, uint64 delayedAt, bytes32 delayReasonHash, bool settled, bool delayed) request)',
     'function setWhitelisted(address investor, bool eligible, bytes32 vcHash) external',
     'function whitelist(address investor) view returns (bool)',
   ]),
@@ -124,3 +128,17 @@ export const controlRiskRegistry = getContract({
   abi: riskRegistryAbi,
   client: clients as any,
 });
+
+export async function validateChainConfiguration(): Promise<void> {
+  const c = token as any;
+  const [onChainFundId, onChainNavRegistry] = await Promise.all([
+    c.read.fundId(),
+    c.read.navRegistry(),
+  ]);
+  assertFundBinding({
+    expectedFundId: fundId,
+    actualFundId: onChainFundId,
+    expectedNavRegistry: ENV.NAV_REGISTRY_ADDRESS,
+    actualNavRegistry: onChainNavRegistry,
+  });
+}

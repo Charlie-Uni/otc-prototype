@@ -1,4 +1,5 @@
 export type RiskSnapshotContext = {
+  chainId: number;
   blockNumber: bigint;
   blockTimestamp: number;
 };

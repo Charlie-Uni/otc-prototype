@@ -4,21 +4,41 @@ pragma solidity ^0.8.30;
 import {ERC20} from "openzeppelin/token/ERC20/ERC20.sol";
 import {Pausable} from "openzeppelin/utils/Pausable.sol";
 import {AccessControl} from "openzeppelin/access/AccessControl.sol";
+import {Math} from "openzeppelin/utils/math/Math.sol";
 import {SafeCast} from "openzeppelin/utils/math/SafeCast.sol";
 
 interface IRiskGate {
     function isGated(bytes32 fundId) external view returns (bool);
 }
 
+interface INAVRegistry {
+    struct NavRecord {
+        uint256 nav;
+        uint256 netAssetValue;
+        uint256 totalSharesSnapshot;
+        uint64 asOf;
+        uint64 storedAt;
+        int256 navAdjustmentBps;
+        bytes32 payloadHash;
+        bool isInitial;
+    }
+
+    function latestNAV(bytes32 fundId) external view returns (NavRecord memory);
+}
+
 contract FundToken is ERC20, Pausable, AccessControl {
     uint16 public constant MAX_BPS = 10_000;
+    uint256 public constant NAV_SCALE = 1e18;
     bytes32 public constant SUBSCRIPTION_ROLE = keccak256("SUBSCRIPTION_ROLE");
     bytes32 public constant REDEMPTION_ROLE = keccak256("REDEMPTION_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     struct SubscriptionRequest {
         address investor;
-        uint256 amount;
+        uint256 subscriptionAmount;
+        uint256 mintedShares;
+        uint256 navUsed;
+        uint64 navAsOf;
         uint64 requestedAt;
         uint64 acceptedAt;
         bytes32 requestHash;
@@ -27,7 +47,10 @@ contract FundToken is ERC20, Pausable, AccessControl {
 
     struct RedemptionRequest {
         address investor;
-        uint256 amount;
+        uint256 redeemedShares;
+        uint256 redemptionAmount;
+        uint256 settlementNav;
+        uint64 settlementNavAsOf;
         uint64 requestedAt;
         uint64 settledAt;
         uint64 delayedAt;
@@ -42,6 +65,7 @@ contract FundToken is ERC20, Pausable, AccessControl {
     uint256 public totalQueuedRedemption;
     uint256 public redemptionRequestCount;
     IRiskGate public riskGate;
+    INAVRegistry public immutable navRegistry;
     bytes32 public immutable fundId;
     mapping(uint256 => SubscriptionRequest) private subscriptionRequests;
     mapping(uint256 => RedemptionRequest) private redemptionRequests;
@@ -53,7 +77,7 @@ contract FundToken is ERC20, Pausable, AccessControl {
         bytes32 indexed fundId,
         address indexed investor,
         uint256 indexed requestId,
-        uint256 amount,
+        uint256 subscriptionAmount,
         uint64 requestedAt,
         bytes32 requestHash
     );
@@ -61,13 +85,20 @@ contract FundToken is ERC20, Pausable, AccessControl {
         bytes32 indexed fundId,
         address indexed investor,
         uint256 indexed requestId,
-        uint256 amount,
+        uint256 subscriptionAmount,
+        uint256 mintedShares,
+        uint256 navUsed,
+        uint64 navAsOf,
         uint64 requestedAt,
         uint64 acceptedAt,
         bytes32 requestHash
     );
     event RedemptionRequested(
-        bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt
+        bytes32 indexed fundId,
+        address indexed investor,
+        uint256 indexed requestId,
+        uint256 redeemedShares,
+        uint64 requestedAt
     );
     event RedemptionQueueUpdated(
         bytes32 indexed fundId,
@@ -80,7 +111,10 @@ contract FundToken is ERC20, Pausable, AccessControl {
         bytes32 indexed fundId,
         address indexed investor,
         uint256 indexed requestId,
-        uint256 amount,
+        uint256 redeemedShares,
+        uint256 redemptionAmount,
+        uint256 settlementNav,
+        uint64 settlementNavAsOf,
         uint64 requestedAt,
         uint64 settledAt
     );
@@ -88,17 +122,22 @@ contract FundToken is ERC20, Pausable, AccessControl {
         bytes32 indexed fundId,
         address indexed investor,
         uint256 indexed requestId,
-        uint256 amount,
+        uint256 redeemedShares,
         uint64 requestedAt,
         uint64 delayedAt,
         bytes32 reasonHash
     );
 
-    constructor(address admin, string memory name_, string memory symbol_, bytes32 fundId_) ERC20(name_, symbol_) {
+    constructor(address admin, string memory name_, string memory symbol_, bytes32 fundId_, address navRegistry_)
+        ERC20(name_, symbol_)
+    {
+        require(admin != address(0), "INVALID_ADMIN");
         require(fundId_ != bytes32(0), "INVALID_FUND_ID");
+        require(navRegistry_ != address(0), "INVALID_NAV_REGISTRY");
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(PAUSER_ROLE, admin);
         fundId = fundId_;
+        navRegistry = INAVRegistry(navRegistry_);
     }
 
     function pause() external onlyRole(PAUSER_ROLE) {
@@ -139,20 +178,29 @@ contract FundToken is ERC20, Pausable, AccessControl {
         require(request.investor != address(0), "UNKNOWN_SUBSCRIPTION_REQUEST");
         require(!request.accepted, "SUBSCRIPTION_ALREADY_ACCEPTED");
         require(whitelist[request.investor], "NOT_WHITELISTED");
+        INAVRegistry.NavRecord memory navRecord = navRegistry.latestNAV(fundId);
+        uint256 mintedShares = Math.mulDiv(request.subscriptionAmount, NAV_SCALE, navRecord.nav);
+        require(mintedShares > 0, "SUBSCRIPTION_TOO_SMALL");
 
         request.accepted = true;
         request.acceptedAt = uint64(block.timestamp);
+        request.mintedShares = mintedShares;
+        request.navUsed = navRecord.nav;
+        request.navAsOf = navRecord.asOf;
 
         emit SubscriptionAccepted(
             fundId,
             request.investor,
             requestId,
-            request.amount,
+            request.subscriptionAmount,
+            mintedShares,
+            navRecord.nav,
+            navRecord.asOf,
             request.requestedAt,
             request.acceptedAt,
             request.requestHash
         );
-        _mint(request.investor, request.amount);
+        _mint(request.investor, mintedShares);
     }
 
     function subscriptionRequestAt(uint256 requestId) external view returns (SubscriptionRequest memory) {
@@ -178,16 +226,30 @@ contract FundToken is ERC20, Pausable, AccessControl {
         RedemptionRequest storage request = redemptionRequests[requestId];
         require(request.investor != address(0), "UNKNOWN_REDEMPTION_REQUEST");
         require(!request.settled, "REDEMPTION_ALREADY_SETTLED");
+        INAVRegistry.NavRecord memory navRecord = navRegistry.latestNAV(fundId);
+        uint256 redemptionAmount = Math.mulDiv(request.redeemedShares, navRecord.nav, NAV_SCALE);
+        require(redemptionAmount > 0, "REDEMPTION_TOO_SMALL");
 
         request.settled = true;
         request.settledAt = uint64(block.timestamp);
-        totalQueuedRedemption -= request.amount;
-        queuedRedemptionOf[request.investor] -= request.amount;
+        request.redemptionAmount = redemptionAmount;
+        request.settlementNav = navRecord.nav;
+        request.settlementNavAsOf = navRecord.asOf;
+        totalQueuedRedemption -= request.redeemedShares;
+        queuedRedemptionOf[request.investor] -= request.redeemedShares;
 
-        _burn(request.investor, request.amount);
+        _burn(request.investor, request.redeemedShares);
 
         emit RedemptionSettled(
-            fundId, request.investor, requestId, request.amount, request.requestedAt, request.settledAt
+            fundId,
+            request.investor,
+            requestId,
+            request.redeemedShares,
+            redemptionAmount,
+            navRecord.nav,
+            navRecord.asOf,
+            request.requestedAt,
+            request.settledAt
         );
         _emitRedemptionQueueUpdated();
     }
@@ -203,7 +265,13 @@ contract FundToken is ERC20, Pausable, AccessControl {
         request.delayedAt = uint64(block.timestamp);
         request.delayReasonHash = reasonHash;
         emit SettlementDelayed(
-            fundId, request.investor, requestId, request.amount, request.requestedAt, request.delayedAt, reasonHash
+            fundId,
+            request.investor,
+            requestId,
+            request.redeemedShares,
+            request.requestedAt,
+            request.delayedAt,
+            reasonHash
         );
     }
 
@@ -248,41 +316,48 @@ contract FundToken is ERC20, Pausable, AccessControl {
         return keccak256("SHARE_TRANSFERRED");
     }
 
-    function _requestSubscription(address investor, uint256 amount) private returns (uint256 requestId) {
+    function _requestSubscription(address investor, uint256 subscriptionAmount) private returns (uint256 requestId) {
         require(investor != address(0), "INVALID_INVESTOR");
         require(whitelist[investor], "NOT_WHITELISTED");
-        require(amount > 0, "INVALID_SUBSCRIPTION_AMOUNT");
+        require(subscriptionAmount > 0, "INVALID_SUBSCRIPTION_AMOUNT");
 
         requestId = subscriptionRequestCount;
         subscriptionRequestCount += 1;
         uint64 requestedAt = uint64(block.timestamp);
-        bytes32 requestHash =
-            keccak256(abi.encode(block.chainid, address(this), fundId, requestId, investor, amount, requestedAt));
+        bytes32 requestHash = keccak256(
+            abi.encode(block.chainid, address(this), fundId, requestId, investor, subscriptionAmount, requestedAt)
+        );
         subscriptionRequests[requestId] = SubscriptionRequest({
             investor: investor,
-            amount: amount,
+            subscriptionAmount: subscriptionAmount,
+            mintedShares: 0,
+            navUsed: 0,
+            navAsOf: 0,
             requestedAt: requestedAt,
             acceptedAt: 0,
             requestHash: requestHash,
             accepted: false
         });
 
-        emit SubscriptionRequested(fundId, investor, requestId, amount, requestedAt, requestHash);
+        emit SubscriptionRequested(fundId, investor, requestId, subscriptionAmount, requestedAt, requestHash);
     }
 
-    function _requestRedemption(address investor, uint256 amount) private returns (uint256 requestId) {
+    function _requestRedemption(address investor, uint256 redeemedShares) private returns (uint256 requestId) {
         require(investor != address(0), "INVALID_INVESTOR");
         require(whitelist[investor], "NOT_WHITELISTED");
-        require(amount > 0, "INVALID_REDEMPTION_AMOUNT");
+        require(redeemedShares > 0, "INVALID_REDEMPTION_AMOUNT");
         _requireNotGated();
-        _requireAvailableShares(investor, amount);
+        _requireAvailableShares(investor, redeemedShares);
 
         requestId = redemptionRequestCount;
         redemptionRequestCount += 1;
         uint64 requestedAt = uint64(block.timestamp);
         redemptionRequests[requestId] = RedemptionRequest({
             investor: investor,
-            amount: amount,
+            redeemedShares: redeemedShares,
+            redemptionAmount: 0,
+            settlementNav: 0,
+            settlementNavAsOf: 0,
             requestedAt: requestedAt,
             settledAt: 0,
             delayedAt: 0,
@@ -290,10 +365,10 @@ contract FundToken is ERC20, Pausable, AccessControl {
             settled: false,
             delayed: false
         });
-        queuedRedemptionOf[investor] += amount;
-        totalQueuedRedemption += amount;
+        queuedRedemptionOf[investor] += redeemedShares;
+        totalQueuedRedemption += redeemedShares;
 
-        emit RedemptionRequested(fundId, investor, requestId, amount, requestedAt);
+        emit RedemptionRequested(fundId, investor, requestId, redeemedShares, requestedAt);
         _emitRedemptionQueueUpdated();
     }
 

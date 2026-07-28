@@ -39,6 +39,7 @@ const TimelineQuerySchema = z.object({
 const bpsSchema = z.coerce.number().int().min(0).max(MAX_BPS);
 const DetectionScenarioSchema = z.object({
     scenarioId: z.string().min(1),
+    fundId: z.string().regex(/^0x[0-9a-fA-F]{64}$/),
     shockAt: z.coerce.number().int().positive(),
     detectionThresholdBps: bpsSchema,
     observationStartAt: z.coerce.number().int().positive().optional(),
@@ -145,6 +146,7 @@ export default async function (app: FastifyInstance) {
         const body = DetectionScenarioSchema.parse(req.body);
         const scenario = {
             ...body,
+            fundId: body.fundId as `0x${string}`,
             observationStartAt: body.observationStartAt ?? body.shockAt,
         };
         const analysis = analyzeDetectionLags(await listLifecycleEvents(10_000), scenario);
@@ -155,6 +157,7 @@ export default async function (app: FastifyInstance) {
             observedAt: nowSec(),
             details: {
                 scenarioId: scenario.scenarioId,
+                fundId: scenario.fundId,
                 detectionThresholdBps: scenario.detectionThresholdBps,
                 pollingIntervalSec: scenario.pollingIntervalSec,
                 anchorEventId: analysis.anchor.eventId,

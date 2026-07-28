@@ -8,8 +8,8 @@
 
 ## 系统组成
 
-- `contracts/src/FundToken.sol`：投资者准入、认购申请/确认、份额登记、赎回队列、结算和 Gate 拦截。
-- `contracts/src/NAVRegistry.sol`：按基金登记 NAV、NAVAdjustment 和 ValuationHaircut。
+- `contracts/src/FundToken.sol`：投资者准入、现金认购到份额换算、份额登记、赎回队列、按 NAV 计算现金结算和 Gate 拦截。
+- `contracts/src/NAVRegistry.sol`：首期发行 NAV，以及按 `NetAssetValue / TotalShares` 计算的后续 NAV、NAVAdjustment 和 ValuationHaircut。
 - `contracts/src/RiskRegistry.sol`：流动性状态、六项风险指标、版本化权重、链上评分、阈值控制、Swing Pricing 和 Side Pocket 状态。
 - `apps/api/src/routes/`：角色级访问控制、链上读写、公开/监管披露端点和审计导出。
 - `apps/api/src/risk/regimes.ts`：以五维参数包实现 R0-R4。
@@ -76,7 +76,8 @@ pnpm dev:anvil
 cd contracts
 forge script script/Deploy.s.sol:Deploy \
   --rpc-url http://127.0.0.1:8545 \
-  --broadcast
+  --broadcast \
+  --slow
 ```
 
 部署脚本从环境变量读取管理人、风险 Oracle、监管者、流动性 Oracle 私钥、`FUND_ID_LABEL`、`KAPPA_BPS`、`MAX_STALE_AGE_SEC` 和六项 `RISK_WEIGHT_*_BPS`。未提供研究参数时使用上述基线；合约仍强制权重总和为 10000、κ 位于 0..10000 且陈旧期限为正数。部署脚本和 API 从同一 `FUND_ID_LABEL` 派生 `fundId`，并通过部署脚本测试与端到端 Gate 测试降低配置错配风险；原型未实现 fundId 与合约地址之间的中央链上登记约束（见 `docs/chapter3-system-implementation.md` 第 10 节）。
@@ -88,7 +89,9 @@ cp apps/api/.env.example apps/api/.env
 pnpm dev:api
 ```
 
-把部署输出的三个合约地址写入 `apps/api/.env`，并用 `API_KEY_INVESTOR_ADDRESS` 将投资者 API Key 绑定到演示持有人地址。该文件已被 `.gitignore` 排除，不得提交私钥或 API Key。
+把部署输出的三个合约地址写入 `apps/api/.env`，并用 `API_KEY_INVESTOR_ADDRESS` 将投资者 API Key 绑定到演示持有人地址。API 启动时会读取 `FundToken` 的 immutable `fundId` 与 NAVRegistry 地址并校验本地配置，错配时拒绝启动。该文件已被 `.gitignore` 排除，不得提交私钥或 API Key。
+
+`MAX_VALUATION_HAIRCUT_AGE_SEC` 和 `MAX_LIQUIDITY_BUFFER_AGE_SEC` 为可选来源年龄警告阈值；缺省时采用受信 Oracle 最新状态，不擅自设定硬 SLA。配置阈值后，风险响应记录 `fresh`/`stale_warning`，但不会修改评分或拒绝提交。
 
 4. 健康检查：
 
@@ -131,3 +134,6 @@ GitHub Actions 使用 PostgreSQL 16 执行同一入口，并始终上传测试�
 - R0 每 604800 秒周期披露一次，边界按 Unix epoch 对齐，单条记录等待时间在 0–7 天之间；生产制度可替换为自然周或业务日历。
 - 风险提交在一个固定区块读取权重、NAV、流动性、份额和赎回状态；实时端点默认只接受距该区块不超过 300 秒的 `occurredAt`。
 - 链上 `redemptionPressureBps` 按窗口期申请量计算，是前瞻性 RedemptionRequestPressure；申请量与结算量分别导出。
+- 基金成立前使用一次性的初始发行 NAV；后续 NAV、认购份额和赎回现金金额由合约按定点数公式计算。原型不转移现金资产，也不实现完整基金总账。
+- 当前为单基金部署实例，通过 immutable 绑定与 API 启动校验避免 `fundId`/NAVRegistry 错配；不声称实现全局多基金 FundRegistry。
+- API 从同一区块派生六项指标，但链上 `RISK_ORACLE_ROLE` 仍是受信角色；其绕过 API 直接调用合约时，链上保证评分复算和控制规则，不证明指标数据来源。

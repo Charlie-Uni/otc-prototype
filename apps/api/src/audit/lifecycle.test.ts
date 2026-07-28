@@ -48,11 +48,14 @@ test('normalizes NAV business time, chain submission time, payload, and idempote
     defaultFundId: fundId,
     args: {
       fundId,
-      nav: 1_000_000n,
+      nav: 1_000_000_000_000_000_000n,
+      netAssetValue: 10_000n,
+      totalSharesSnapshot: 10_000n,
       asOf: 900n,
       storedAt: 1_100n,
       navAdjustmentBps: 100n,
       payloadHash: hash,
+      isInitial: false,
       by: address,
     },
   });
@@ -62,7 +65,9 @@ test('normalizes NAV business time, chain submission time, payload, and idempote
   assert.equal(event.occurredAt, 900);
   assert.equal(event.submittedAt, 1_100);
   assert.equal(event.fundId, fundId);
-  assert.equal(event.payload.nav, '1000000');
+  assert.equal(event.payload.nav, '1000000000000000000');
+  assert.equal(event.payload.netAssetValue, '10000');
+  assert.equal(event.payload.totalSharesSnapshot, '10000');
 });
 
 test('normalizes subscription request and acceptance as separate lifecycle states', () => {
@@ -77,7 +82,14 @@ test('normalizes subscription request and acceptance as separate lifecycle state
     blockTimestamp: 1_000,
     commitmentHash: hash,
     defaultFundId: fundId,
-    args: { fundId, investor: address, requestId: 0n, amount: 500n, requestedAt: 900n, requestHash: hash },
+    args: {
+      fundId,
+      investor: address,
+      requestId: 0n,
+      subscriptionAmount: 500n,
+      requestedAt: 900n,
+      requestHash: hash,
+    },
   });
   const accepted = normalizeLifecycleEvent({
     chainId: 31_337,
@@ -94,7 +106,10 @@ test('normalizes subscription request and acceptance as separate lifecycle state
       fundId,
       investor: address,
       requestId: 0n,
-      amount: 500n,
+      subscriptionAmount: 500n,
+      mintedShares: 250n,
+      navUsed: 2_000_000_000_000_000_000n,
+      navAsOf: 850n,
       requestedAt: 900n,
       acceptedAt: 1_050n,
       requestHash: hash,
@@ -105,6 +120,41 @@ test('normalizes subscription request and acceptance as separate lifecycle state
   assert.equal(requested.occurredAt, 900);
   assert.equal(accepted.category, 'subscription');
   assert.equal(accepted.occurredAt, 1_050);
+  assert.equal(accepted.payload.mintedShares, '250');
+  assert.equal(accepted.payload.navUsed, '2000000000000000000');
+});
+
+test('retains redeemed shares, settlement NAV, and computed cash amount in redemption evidence', () => {
+  const settled = normalizeLifecycleEvent({
+    chainId: 31_337,
+    contractAddress: address,
+    contractName: 'FundToken',
+    eventName: 'RedemptionSettled',
+    transactionHash: txHash,
+    logIndex: 3,
+    blockNumber: 12,
+    blockTimestamp: 1_200,
+    commitmentHash: hash,
+    defaultFundId: fundId,
+    args: {
+      fundId,
+      investor: address,
+      requestId: 1n,
+      redeemedShares: 250n,
+      redemptionAmount: 500n,
+      settlementNav: 2_000_000_000_000_000_000n,
+      settlementNavAsOf: 850n,
+      requestedAt: 900n,
+      settledAt: 1_150n,
+    },
+  });
+
+  assert.equal(settled.category, 'redemption');
+  assert.equal(settled.occurredAt, 1_150);
+  assert.equal(settled.payload.redeemedShares, '250');
+  assert.equal(settled.payload.redemptionAmount, '500');
+  assert.equal(settled.payload.settlementNav, '2000000000000000000');
+  assert.equal(settled.payload.settlementNavAsOf, '850');
 });
 
 test('normalizes valuation and liquidity Oracle updates before risk scoring', () => {
