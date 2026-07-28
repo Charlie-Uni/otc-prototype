@@ -35,13 +35,13 @@ pnpm test:chapter3
 
 ## 当前验证快照
 
-- Foundry：58 项合约测试通过，其中 Fuzz 每次运行 256 组输入。
-- API：60 项 Node/TypeScript 测试通过。
+- Foundry：71 项合约测试通过（含部署脚本角色分离测试与 fundId 错配边界测试），其中 Fuzz 每次运行 256 组输入（`foundry.toml` 显式锁定）。
+- API：75 项 Node/TypeScript 测试通过（含披露二分检索、INACTIVE_WEIGHTS 重试协议、审计缓冲淘汰策略）。
 - 静态检查：TypeScript `--noEmit` 通过。
 - 端到端：独立部署、链上指标溯源、7702 bps 高风险评分、Gate、R0-R4、审计与仿真全部通过。
-- 合约行覆盖率：FundToken 96.75%、NAVRegistry 100%、RiskRegistry 97.22%；原始输出由统一测试入口生成到 `coverage.log`。部署脚本由端到端 smoke 验证，不计入业务合约覆盖率。
-- 运行时代码：FundToken 19065 B、NAVRegistry 8419 B、RiskRegistry 19095 B，均低于 EIP-170 的 24576 B。
-- 固定摘要见 `docs/evidence/chapter3-summary.json`，来源为 `master@6c08f9f` 的 GitHub Actions 运行 `30277745022`。该次运行启用 PostgreSQL 16，并在 API 进程重启后验证 `GateTriggered` 事件和 `risk.submit` 审计记录仍可读取；完整原始日志保存在对应 artifact。
+- 合约行覆盖率：FundToken 98.37%、NAVRegistry 100%、RiskRegistry 97.30%、总计 98.10%；原始输出由统一测试入口生成到 `coverage.log`。部署脚本另由 `Deploy.t.sol` 与端到端 smoke 验证，不计入业务合约覆盖率报表。
+- 运行时代码：FundToken、NAVRegistry、RiskRegistry 均低于 EIP-170 的 24576 B，具体字节数以 `summary.json` 为准。
+- 固定摘要见 `docs/evidence/chapter3-summary.json`；其证据来源 commit 与 GitHub Actions run id 以该文件的 `source` 字段为准（避免本文档与重锚定后的证据产生引用漂移）。对应 CI 运行启用 PostgreSQL 16，并在 API 进程重启后验证 `GateTriggered` 事件和 `risk.submit` 审计记录仍可读取；完整原始日志保存在对应 artifact。
 - Smoke 是压缩时间的功能验证，生命周期 CSV 中接近零的原始时间差不作为制度效果证据；三类 DetectionLag 均以 `/audit/detection-lags` 的情景输出为准。
 
 ## 时间戳口径

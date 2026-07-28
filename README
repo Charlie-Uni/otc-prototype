@@ -15,7 +15,7 @@
 - `apps/api/src/risk/regimes.ts`：以五维参数包实现 R0-R4。
 - `apps/api/src/audit/`：事件索引、四时间戳、承诺哈希和 CSV/JSON 导出。
 - `apps/api/src/simulation/`：三类 DetectionLag，以及陈旧期限、权重和 κ 的联合敏感性分析。
-- `scenarios/`：链下冲击真值与实验参数，不向业务事件流注入伪造的“冲击事件”。
+- `scenarios/`：DetectionLag 情景的参数口径定义（tau、轮询间隔等）。冲击真值 `shockAt` 只存在于链下情景参数中，不向业务事件流注入伪造的“冲击事件”；端到端 smoke 以运行时时钟实例化同一组参数（文件中的 `shockAt` 为占位示例值）。
 
 更完整的论文映射见 `docs/chapter3-system-implementation.md`，测试与评价维度映射见 `docs/chapter3-test-matrix.md`。
 
@@ -79,7 +79,7 @@ forge script script/Deploy.s.sol:Deploy \
   --broadcast
 ```
 
-部署脚本从环境变量读取管理人、风险 Oracle、监管者、流动性 Oracle 私钥、`FUND_ID_LABEL`、`KAPPA_BPS`、`MAX_STALE_AGE_SEC` 和六项 `RISK_WEIGHT_*_BPS`。未提供研究参数时使用上述基线；合约仍强制权重总和为 10000、κ 位于 0..10000 且陈旧期限为正数。`FundToken`、API 和 RiskRegistry 使用同一 `fundId` 来源，防止 Gate 静默错配。
+部署脚本从环境变量读取管理人、风险 Oracle、监管者、流动性 Oracle 私钥、`FUND_ID_LABEL`、`KAPPA_BPS`、`MAX_STALE_AGE_SEC` 和六项 `RISK_WEIGHT_*_BPS`。未提供研究参数时使用上述基线；合约仍强制权重总和为 10000、κ 位于 0..10000 且陈旧期限为正数。部署脚本和 API 从同一 `FUND_ID_LABEL` 派生 `fundId`，并通过部署脚本测试与端到端 Gate 测试降低配置错配风险；原型未实现 fundId 与合约地址之间的中央链上登记约束（见 `docs/chapter3-system-implementation.md` 第 10 节）。
 
 3. 配置并启动 API：
 

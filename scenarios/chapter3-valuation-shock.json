@@ -10,5 +10,5 @@
     "submit risk metrics",
     "evaluate disclosure under R0-R4"
   ],
-  "note": "shockAt is chain-offline ground truth and is not emitted as a lifecycle event."
+  "note": "shockAt is chain-offline ground truth and is not emitted as a lifecycle event. This file defines the canonical scenario parameters (tau, polling interval); the end-to-end smoke instantiates the same parameters with a runtime shockAt, so the shockAt value here is a placeholder example."
 }
