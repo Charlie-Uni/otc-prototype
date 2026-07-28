@@ -165,6 +165,10 @@ contract RiskRegistry is AccessControl {
     }
 
     function setFundKappa(bytes32 fundId, uint16 kappaBps) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(fundId != bytes32(0), "INVALID_FUND");
+        // Zero is reserved as the "unset" sentinel in effectiveKappaBps; rejecting it
+        // keeps the FundKappaUpdated event consistent with the effective threshold.
+        require(kappaBps > 0, "INVALID_FUND_KAPPA");
         _validateBps(kappaBps);
         fundKappaBps[fundId] = kappaBps;
         emit FundKappaUpdated(fundId, kappaBps, msg.sender);
@@ -215,6 +219,10 @@ contract RiskRegistry is AccessControl {
         bytes32 payloadHash
     ) external onlyRole(LIQUIDITY_ORACLE_ROLE) {
         _validateStateSubmission(fundId, occurredAt, payloadHash);
+        LiquidityBufferSnapshot storage previous = liquidityBuffers[fundId];
+        // Overwrite-style snapshot: keep occurredAt monotone (>= allows same-time corrections),
+        // matching the NAV asOf ordering rule so "latest" can never move backwards in time.
+        require(!previous.exists || occurredAt >= previous.occurredAt, "OCCURRED_AT_BEFORE_LATEST");
         uint64 submittedAt = uint64(block.timestamp);
         liquidityBuffers[fundId] = LiquidityBufferSnapshot({
             liquidityBufferRatioBps: liquidityBufferRatioBps,

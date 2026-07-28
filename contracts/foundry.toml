@@ -7,3 +7,8 @@ remappings = [
   'openzeppelin/=lib/openzeppelin-contracts/contracts/',
   'forge-std/=lib/forge-std/src/'
 ]
+
+# Pin fuzz runs explicitly (matches the "256 runs per fuzz test" claim in the docs)
+# instead of relying on the Foundry default silently staying at 256.
+[fuzz]
+runs = 256

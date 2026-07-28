@@ -88,6 +88,10 @@ contract NAVRegistry is AccessControl {
         require(occurredAt > 0, "INVALID_OCCURRED_AT");
         require(occurredAt <= block.timestamp, "FUTURE_OCCURRED_AT");
         require(payloadHash != bytes32(0), "INVALID_PAYLOAD_HASH");
+        ValuationHaircutSnapshot storage previous = valuationHaircuts[fundId];
+        // Overwrite-style snapshot: keep occurredAt monotone (>= allows same-time corrections),
+        // matching the NAV asOf ordering rule so "latest" can never move backwards in time.
+        require(!previous.exists || occurredAt >= previous.occurredAt, "OCCURRED_AT_BEFORE_LATEST");
 
         uint64 submittedAt = uint64(block.timestamp);
         valuationHaircuts[fundId] = ValuationHaircutSnapshot({
@@ -108,6 +112,7 @@ contract NAVRegistry is AccessControl {
     }
 
     function navAt(bytes32 fundId, uint256 index) external view returns (NavRecord memory) {
+        require(index < histories[fundId].length, "NAV_OUT_OF_RANGE");
         return histories[fundId][index];
     }
 
