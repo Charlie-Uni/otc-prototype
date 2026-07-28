@@ -42,6 +42,8 @@ const EnvSchema = z.object({
   API_KEY_AUDITOR: ApiKeySchema,
   REDEMPTION_PRESSURE_WINDOW_SEC: z.coerce.number().int().positive().default(24 * 60 * 60),
   RISK_INPUT_MAX_AGE_SEC: z.coerce.number().int().positive().default(300),
+  MAX_VALUATION_HAIRCUT_AGE_SEC: z.coerce.number().int().positive().optional(),
+  MAX_LIQUIDITY_BUFFER_AGE_SEC: z.coerce.number().int().positive().optional(),
   PORT: z.coerce.number().default(3001),
   DATABASE_URL: z.string().optional(),
 });

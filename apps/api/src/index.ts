@@ -9,6 +9,7 @@ import risk from './routes/risk';
 import audit from './routes/audit';
 import liquidity from './routes/liquidity';
 import controls from './routes/controls';
+import { validateChainConfiguration } from './chain';
 import { initializeDatabase } from './db/client';
 import { classifyHttpError } from './http/errors';
 
@@ -31,6 +32,7 @@ app.setErrorHandler((error, _request, reply) => {
 });
 
 await initializeDatabase();
+await validateChainConfiguration();
 
 await app.register(health);
 await app.register(kyc);

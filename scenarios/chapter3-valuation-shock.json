@@ -1,5 +1,6 @@
 {
   "scenarioId": "chapter3-valuation-shock",
+  "fundId": "0xac4a93645b61f4f102884f40e6a589263b542e97cda3dd28d1de825f80f90169",
   "shockAt": 1710000000,
   "detectionThresholdBps": 6000,
   "observationStartAt": 1710000000,

@@ -39,6 +39,7 @@ CONTRACT_COVERAGE_STATUS="pending"
 TYPECHECK_STATUS="pending"
 API_TEST_STATUS="pending"
 ROLE_SEPARATION_STATUS="pending"
+FUND_BINDING_STATUS="pending"
 SMOKE_STATUS="pending"
 POSTGRES_STATUS="not_run"
 CURRENT_STEP="initialization"
@@ -77,6 +78,7 @@ write_summary() {
     "typecheck": $(json_status "$TYPECHECK_STATUS"),
     "apiTests": $(json_status "$API_TEST_STATUS"),
     "deploymentRoleSeparation": $(json_status "$ROLE_SEPARATION_STATUS"),
+    "fundBindingValidation": $(json_status "$FUND_BINDING_STATUS"),
     "endToEndSmoke": $(json_status "$SMOKE_STATUS"),
     "postgresRestartPersistence": $(json_status "$POSTGRES_STATUS")
   },
@@ -87,6 +89,7 @@ write_summary() {
     "apiTests": "api-tests.tap",
     "deployment": "deploy.log",
     "deploymentRoleSeparation": "role-separation.log",
+    "fundBindingValidation": "fund-binding.log",
     "endToEndSmoke": "smoke.log",
     "apiServer": "api.log",
     "anvil": "anvil.log",
@@ -197,6 +200,50 @@ start_api() {
   wait_for_api
 }
 
+verify_mismatched_fund_rejected() {
+  local log_file="$1"
+  local mismatch_port="$((API_PORT + 1))"
+  local mismatch_pid
+  (
+    cd "$ROOT_DIR/apps/api"
+    exec env \
+      RPC_URL="$RPC_URL" \
+      PRIVATE_KEY="$PRIVATE_KEY" \
+      ORACLE_PRIVATE_KEY="$ORACLE_PRIVATE_KEY" \
+      REGULATOR_PRIVATE_KEY="$REGULATOR_PRIVATE_KEY" \
+      LIQUIDITY_ORACLE_PRIVATE_KEY="$LIQUIDITY_ORACLE_PRIVATE_KEY" \
+      FUND_TOKEN_ADDRESS="$FUND_TOKEN_ADDRESS" \
+      NAV_REGISTRY_ADDRESS="$NAV_REGISTRY_ADDRESS" \
+      RISK_REGISTRY_ADDRESS="$RISK_REGISTRY_ADDRESS" \
+      FUND_ID_LABEL="WRONG_FUND_ID" \
+      API_KEY_INVESTOR="$API_KEY_INVESTOR" \
+      API_KEY_INVESTOR_ADDRESS="$API_KEY_INVESTOR_ADDRESS" \
+      API_KEY_MANAGER="$API_KEY_MANAGER" \
+      API_KEY_REGISTRAR="$API_KEY_REGISTRAR" \
+      API_KEY_NAV_ORACLE="$API_KEY_NAV_ORACLE" \
+      API_KEY_LIQUIDITY_ORACLE="$API_KEY_LIQUIDITY_ORACLE" \
+      API_KEY_RISK_ORACLE="$API_KEY_RISK_ORACLE" \
+      API_KEY_REGULATOR="$API_KEY_REGULATOR" \
+      API_KEY_AUDITOR="$API_KEY_AUDITOR" \
+      PORT="$mismatch_port" \
+      DATABASE_URL="$DATABASE_URL" \
+      node --import tsx src/index.ts
+  ) > "$log_file" 2>&1 &
+  mismatch_pid="$!"
+
+  for _ in $(seq 1 40); do
+    if ! kill -0 "$mismatch_pid" 2>/dev/null; then
+      wait "$mismatch_pid" 2>/dev/null || true
+      grep -q 'FUND_ID_MISMATCH' "$log_file"
+      return
+    fi
+    sleep 0.1
+  done
+  stop_process "$mismatch_pid"
+  printf 'API unexpectedly started with a mismatched FUND_ID_LABEL.\n' >&2
+  return 1
+}
+
 CURRENT_STEP="contract_tests"
 (
   cd "$ROOT_DIR/contracts"
@@ -221,7 +268,7 @@ TYPECHECK_STATUS="passed"
 CURRENT_STEP="api_unit_tests"
 (
   cd "$ROOT_DIR/apps/api"
-    node --import tsx --test src/risk/*.test.ts src/auth/*.test.ts src/audit/*.test.ts src/http/*.test.ts src/simulation/*.test.ts
+    node --import tsx --test src/*.test.ts src/risk/*.test.ts src/auth/*.test.ts src/audit/*.test.ts src/http/*.test.ts src/simulation/*.test.ts
 ) > "$RESULTS_DIR/api-tests.tap" 2>&1
 API_TEST_STATUS="passed"
 
@@ -247,7 +294,7 @@ CURRENT_STEP="contract_deployment"
     RISK_WEIGHT_4_BPS="$RISK_WEIGHT_4_BPS" \
     RISK_WEIGHT_5_BPS="$RISK_WEIGHT_5_BPS" \
     RISK_WEIGHT_6_BPS="$RISK_WEIGHT_6_BPS" \
-    forge script script/Deploy.s.sol:Deploy --rpc-url "$RPC_URL" --broadcast
+    forge script script/Deploy.s.sol:Deploy --rpc-url "$RPC_URL" --broadcast --slow
 ) > "$RESULTS_DIR/deploy.log" 2>&1
 
 FUND_TOKEN_ADDRESS="$(sed -n 's/.*FundToken: \(0x[0-9A-Fa-f]*\).*/\1/p' "$RESULTS_DIR/deploy.log" | tail -n 1)"
@@ -270,6 +317,10 @@ LIQUIDITY_ORACLE_ADDRESS="$(cast wallet address --private-key "$LIQUIDITY_ORACLE
 } > "$RESULTS_DIR/role-separation.log"
 ROLE_SEPARATION_STATUS="passed"
 
+CURRENT_STEP="fund_binding_validation"
+verify_mismatched_fund_rejected "$RESULTS_DIR/fund-binding.log"
+FUND_BINDING_STATUS="passed"
+
 CURRENT_STEP="api_start"
 start_api "$RESULTS_DIR/api.log"
 
@@ -284,6 +335,8 @@ env \
   API_KEY_RISK_ORACLE="$API_KEY_RISK_ORACLE" \
   API_KEY_REGULATOR="$API_KEY_REGULATOR" \
   API_KEY_AUDITOR="$API_KEY_AUDITOR" \
+  RPC_URL="$RPC_URL" \
+  FUND_ID="$(cast keccak "$FUND_ID_LABEL")" \
   bash "$ROOT_DIR/scripts/smoke-risk-api.sh" > "$RESULTS_DIR/smoke.log" 2>&1
 SMOKE_STATUS="passed"
 

@@ -7,14 +7,18 @@ import {SafeCast} from "openzeppelin/utils/math/SafeCast.sol";
 
 contract NAVRegistry is AccessControl {
     uint256 public constant MAX_BPS = 10_000;
+    uint256 public constant NAV_SCALE = 1e18;
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
 
     struct NavRecord {
         uint256 nav;
+        uint256 netAssetValue;
+        uint256 totalSharesSnapshot;
         uint64 asOf;
         uint64 storedAt;
         int256 navAdjustmentBps;
         bytes32 payloadHash;
+        bool isInitial;
     }
 
     struct ValuationHaircutSnapshot {
@@ -29,10 +33,13 @@ contract NAVRegistry is AccessControl {
     event NAVUpdatedEvent(
         bytes32 indexed fundId,
         uint256 nav,
+        uint256 netAssetValue,
+        uint256 totalSharesSnapshot,
         uint64 asOf,
         uint64 storedAt,
         int256 navAdjustmentBps,
         bytes32 payloadHash,
+        bool isInitial,
         address indexed by
     );
     event ValuationHaircutEvent(
@@ -48,17 +55,54 @@ contract NAVRegistry is AccessControl {
     mapping(bytes32 => ValuationHaircutSnapshot) private valuationHaircuts;
 
     constructor(address admin) {
+        require(admin != address(0), "INVALID_ADMIN");
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(MANAGER_ROLE, admin);
     }
 
-    function postNAV(bytes32 fundId, uint256 nav, uint64 asOf, bytes32 payloadHash) external onlyRole(MANAGER_ROLE) {
-        require(fundId != bytes32(0), "INVALID_FUND_ID");
+    function postInitialNAV(bytes32 fundId, uint256 initialNav, uint64 asOf, bytes32 payloadHash)
+        external
+        onlyRole(MANAGER_ROLE)
+    {
+        _validateNAVSubmission(fundId, asOf, payloadHash);
+        require(initialNav > 0, "INVALID_NAV");
+        require(histories[fundId].length == 0, "NAV_ALREADY_INITIALIZED");
+        _storeNAV(fundId, initialNav, 0, 0, asOf, payloadHash, true);
+    }
+
+    function postNAV(
+        bytes32 fundId,
+        uint256 netAssetValue,
+        uint256 totalSharesSnapshot,
+        uint64 asOf,
+        bytes32 payloadHash
+    ) external onlyRole(MANAGER_ROLE) {
+        _validateNAVSubmission(fundId, asOf, payloadHash);
+        require(histories[fundId].length > 0, "NAV_NOT_INITIALIZED");
+        require(netAssetValue > 0, "INVALID_NET_ASSET_VALUE");
+        require(totalSharesSnapshot > 0, "INVALID_TOTAL_SHARES");
+
+        uint256 nav = Math.mulDiv(netAssetValue, NAV_SCALE, totalSharesSnapshot);
         require(nav > 0, "INVALID_NAV");
+        _storeNAV(fundId, nav, netAssetValue, totalSharesSnapshot, asOf, payloadHash, false);
+    }
+
+    function _validateNAVSubmission(bytes32 fundId, uint64 asOf, bytes32 payloadHash) private view {
+        require(fundId != bytes32(0), "INVALID_FUND_ID");
         require(asOf > 0, "INVALID_AS_OF");
         require(asOf <= block.timestamp, "FUTURE_AS_OF");
         require(payloadHash != bytes32(0), "INVALID_PAYLOAD_HASH");
+    }
 
+    function _storeNAV(
+        bytes32 fundId,
+        uint256 nav,
+        uint256 netAssetValue,
+        uint256 totalSharesSnapshot,
+        uint64 asOf,
+        bytes32 payloadHash,
+        bool isInitial
+    ) private {
         NavRecord[] storage history = histories[fundId];
         if (history.length > 0) {
             require(asOf >= history[history.length - 1].asOf, "AS_OF_BEFORE_LATEST");
@@ -67,10 +111,28 @@ contract NAVRegistry is AccessControl {
         uint64 storedAt = uint64(block.timestamp);
         history.push(
             NavRecord({
-                nav: nav, asOf: asOf, storedAt: storedAt, navAdjustmentBps: adjustmentBps, payloadHash: payloadHash
+                nav: nav,
+                netAssetValue: netAssetValue,
+                totalSharesSnapshot: totalSharesSnapshot,
+                asOf: asOf,
+                storedAt: storedAt,
+                navAdjustmentBps: adjustmentBps,
+                payloadHash: payloadHash,
+                isInitial: isInitial
             })
         );
-        emit NAVUpdatedEvent(fundId, nav, asOf, storedAt, adjustmentBps, payloadHash, msg.sender);
+        emit NAVUpdatedEvent(
+            fundId,
+            nav,
+            netAssetValue,
+            totalSharesSnapshot,
+            asOf,
+            storedAt,
+            adjustmentBps,
+            payloadHash,
+            isInitial,
+            msg.sender
+        );
     }
 
     function latestNAV(bytes32 fundId) external view returns (NavRecord memory) {

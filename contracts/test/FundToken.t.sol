@@ -3,13 +3,16 @@
 pragma solidity ^0.8.30;
 
 import "forge-std/Test.sol";
-import {FundToken} from "src/FundToken.sol";
+import {Math} from "openzeppelin/utils/math/Math.sol";
+import {FundToken, INAVRegistry} from "src/FundToken.sol";
+import {NAVRegistry} from "src/NAVRegistry.sol";
 import {RiskRegistry} from "src/RiskRegistry.sol";
 
 contract FundTokenTest is Test {
     using stdStorage for StdStorage;
 
     FundToken token;
+    NAVRegistry nav;
     RiskRegistry risk;
     address admin = address(this); // <-- test contract is admin
     address alice = address(0xBEEF);
@@ -22,7 +25,7 @@ contract FundTokenTest is Test {
         bytes32 indexed fundId,
         address indexed investor,
         uint256 indexed requestId,
-        uint256 amount,
+        uint256 subscriptionAmount,
         uint64 requestedAt,
         bytes32 requestHash
     );
@@ -30,13 +33,20 @@ contract FundTokenTest is Test {
         bytes32 indexed fundId,
         address indexed investor,
         uint256 indexed requestId,
-        uint256 amount,
+        uint256 subscriptionAmount,
+        uint256 mintedShares,
+        uint256 navUsed,
+        uint64 navAsOf,
         uint64 requestedAt,
         uint64 acceptedAt,
         bytes32 requestHash
     );
     event RedemptionRequested(
-        bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt
+        bytes32 indexed fundId,
+        address indexed investor,
+        uint256 indexed requestId,
+        uint256 redeemedShares,
+        uint64 requestedAt
     );
     event RedemptionQueueUpdated(
         bytes32 indexed fundId,
@@ -49,7 +59,10 @@ contract FundTokenTest is Test {
         bytes32 indexed fundId,
         address indexed investor,
         uint256 indexed requestId,
-        uint256 amount,
+        uint256 redeemedShares,
+        uint256 redemptionAmount,
+        uint256 settlementNav,
+        uint64 settlementNavAsOf,
         uint64 requestedAt,
         uint64 settledAt
     );
@@ -57,7 +70,7 @@ contract FundTokenTest is Test {
         bytes32 indexed fundId,
         address indexed investor,
         uint256 indexed requestId,
-        uint256 amount,
+        uint256 redeemedShares,
         uint64 requestedAt,
         uint64 delayedAt,
         bytes32 reasonHash
@@ -65,7 +78,9 @@ contract FundTokenTest is Test {
 
     function setUp() public {
         risk = new RiskRegistry(admin, _validWeights(), uint64(30 days), 7_000);
-        token = new FundToken(admin, "OTC Fund", "OTCF", fundId);
+        nav = new NAVRegistry(admin);
+        nav.postInitialNAV(fundId, 1e18, uint64(block.timestamp), keccak256("initial nav"));
+        token = new FundToken(admin, "OTC Fund", "OTCF", fundId, address(nav));
         token.setWhitelisted(alice, true, vcHash); // no prank needed
         token.setWhitelisted(admin, true, keccak256("admin eligibility"));
         token.setRiskGate(address(risk));
@@ -94,7 +109,17 @@ contract FundTokenTest is Test {
 
     function testFundIdentityCannotBeZeroAtDeployment() public {
         vm.expectRevert(bytes("INVALID_FUND_ID"));
-        new FundToken(admin, "Invalid Fund", "INVALID", bytes32(0));
+        new FundToken(admin, "Invalid Fund", "INVALID", bytes32(0), address(nav));
+    }
+
+    function testNAVRegistryCannotBeZeroAtDeployment() public {
+        vm.expectRevert(bytes("INVALID_NAV_REGISTRY"));
+        new FundToken(admin, "Invalid Fund", "INVALID", fundId, address(0));
+    }
+
+    function testAdminCannotBeZeroAtDeployment() public {
+        vm.expectRevert(bytes("INVALID_ADMIN"));
+        new FundToken(address(0), "Invalid Fund", "INVALID", fundId, address(nav));
     }
 
     function testSubscriptionRequestRejectsUnwhitelistedInvestor() public {
@@ -130,7 +155,10 @@ contract FundTokenTest is Test {
 
         FundToken.SubscriptionRequest memory pending = token.subscriptionRequestAt(subscriptionId);
         assertEq(pending.investor, alice);
-        assertEq(pending.amount, 1e18);
+        assertEq(pending.subscriptionAmount, 1e18);
+        assertEq(pending.mintedShares, 0);
+        assertEq(pending.navUsed, 0);
+        assertEq(pending.navAsOf, 0);
         assertEq(pending.requestedAt, block.timestamp);
         assertEq(pending.acceptedAt, 0);
         assertEq(pending.requestHash, requestHash);
@@ -139,15 +167,66 @@ contract FundTokenTest is Test {
 
         vm.warp(1_710_000_060);
         vm.expectEmit(true, true, true, true, address(token));
-        emit SubscriptionAccepted(fundId, alice, subscriptionId, 1e18, 1_710_000_000, 1_710_000_060, requestHash);
+        emit SubscriptionAccepted(
+            fundId, alice, subscriptionId, 1e18, 1e18, 1e18, 1, 1_710_000_000, 1_710_000_060, requestHash
+        );
         vm.expectEmit(true, true, false, true, address(token));
         emit ShareBalanceUpdated(alice, 1e18, 1e18, keccak256("SHARE_MINTED"));
         token.acceptSubscription(subscriptionId);
 
         FundToken.SubscriptionRequest memory accepted = token.subscriptionRequestAt(subscriptionId);
         assertEq(accepted.acceptedAt, 1_710_000_060);
+        assertEq(accepted.mintedShares, 1e18);
+        assertEq(accepted.navUsed, 1e18);
+        assertEq(accepted.navAsOf, 1);
         assertTrue(accepted.accepted);
         assertEq(token.balanceOf(alice), 1e18);
+    }
+
+    function testSubscriptionConvertsCashAmountToSharesUsingLatestNAV() public {
+        NAVRegistry conversionNav = new NAVRegistry(admin);
+        conversionNav.postInitialNAV(fundId, 2e18, uint64(block.timestamp), keccak256("two nav"));
+        FundToken conversionToken = new FundToken(admin, "OTC Fund", "OTCF", fundId, address(conversionNav));
+        conversionToken.setWhitelisted(alice, true, vcHash);
+        conversionToken.grantRole(conversionToken.SUBSCRIPTION_ROLE(), admin);
+
+        uint256 requestId = conversionToken.requestSubscriptionFor(alice, 100e18);
+        conversionToken.acceptSubscription(requestId);
+
+        FundToken.SubscriptionRequest memory request = conversionToken.subscriptionRequestAt(requestId);
+        assertEq(request.subscriptionAmount, 100e18);
+        assertEq(request.mintedShares, 50e18);
+        assertEq(request.navUsed, 2e18);
+        assertEq(conversionToken.balanceOf(alice), 50e18);
+    }
+
+    function testSubscriptionRejectsAmountThatRoundsToZeroShares() public {
+        NAVRegistry conversionNav = new NAVRegistry(admin);
+        conversionNav.postInitialNAV(fundId, 2e18, uint64(block.timestamp), keccak256("two nav"));
+        FundToken conversionToken = new FundToken(admin, "OTC Fund", "OTCF", fundId, address(conversionNav));
+        conversionToken.setWhitelisted(alice, true, vcHash);
+        conversionToken.grantRole(conversionToken.SUBSCRIPTION_ROLE(), admin);
+        uint256 requestId = conversionToken.requestSubscriptionFor(alice, 1);
+
+        vm.expectRevert(bytes("SUBSCRIPTION_TOO_SMALL"));
+        conversionToken.acceptSubscription(requestId);
+    }
+
+    function testFuzz_SubscriptionUsesFixedPointNAVFormula(uint128 rawAmount, uint128 rawNav) public {
+        uint256 subscriptionAmount = bound(uint256(rawAmount), 1e12, 1e30);
+        uint256 navUsed = bound(uint256(rawNav), 1e12, 1e24);
+        vm.mockCall(
+            address(nav),
+            abi.encodeWithSelector(INAVRegistry.latestNAV.selector, fundId),
+            abi.encode(navUsed, 0, 0, uint64(1), uint64(1), int256(0), payloadHash, true)
+        );
+
+        uint256 requestId = token.requestSubscriptionFor(alice, subscriptionAmount);
+        token.acceptSubscription(requestId);
+
+        uint256 expectedShares = Math.mulDiv(subscriptionAmount, token.NAV_SCALE(), navUsed);
+        assertEq(token.balanceOf(alice), expectedShares);
+        assertEq(token.subscriptionRequestAt(requestId).mintedShares, expectedShares);
     }
 
     function testSubscriptionCannotBeAcceptedTwice() public {
@@ -242,7 +321,7 @@ contract FundTokenTest is Test {
         vm.expectEmit(true, true, true, true, address(token));
         emit ShareBalanceUpdated(alice, 8e17, 8e17, keccak256("SHARE_BURNED"));
         vm.expectEmit(true, true, true, true, address(token));
-        emit RedemptionSettled(fundId, alice, requestId, 2e17, requestedAt, uint64(block.timestamp));
+        emit RedemptionSettled(fundId, alice, requestId, 2e17, 2e17, 1e18, 1, requestedAt, uint64(block.timestamp));
         vm.expectEmit(true, false, false, true, address(token));
         emit RedemptionQueueUpdated(fundId, 0, 8e17, 0, uint64(block.timestamp));
 
@@ -252,6 +331,56 @@ contract FundTokenTest is Test {
         assertEq(token.queuedRedemptionOf(alice), 0);
         assertEq(token.totalQueuedRedemption(), 0);
         assertEq(token.redemptionQueueRatioBps(), 0);
+        FundToken.RedemptionRequest memory request = token.redemptionRequestAt(requestId);
+        assertEq(request.redeemedShares, 2e17);
+        assertEq(request.redemptionAmount, 2e17);
+        assertEq(request.settlementNav, 1e18);
+        assertEq(request.settlementNavAsOf, 1);
+    }
+
+    function testRedemptionSettlementComputesCashAmountUsingLatestNAV() public {
+        _subscribe(token, alice, 1e18);
+        nav.postNAV(fundId, 1.1e18, 1e18, uint64(block.timestamp), keccak256("adjusted nav"));
+        uint256 requestId = token.requestRedemptionFor(alice, 2e17);
+
+        token.settleRedemption(requestId);
+
+        FundToken.RedemptionRequest memory request = token.redemptionRequestAt(requestId);
+        assertEq(request.redeemedShares, 2e17);
+        assertEq(request.redemptionAmount, 2.2e17);
+        assertEq(request.settlementNav, 1.1e18);
+    }
+
+    function testFuzz_RedemptionUsesFixedPointNAVFormula(uint128 rawShares, uint128 rawNav) public {
+        uint256 redeemedShares = bound(uint256(rawShares), 1e6, 1e24);
+        uint256 settlementNav = bound(uint256(rawNav), 1e12, 1e24);
+        _subscribe(token, alice, redeemedShares);
+        vm.mockCall(
+            address(nav),
+            abi.encodeWithSelector(INAVRegistry.latestNAV.selector, fundId),
+            abi.encode(settlementNav, 0, 0, uint64(2), uint64(2), int256(0), payloadHash, false)
+        );
+        uint256 requestId = token.requestRedemptionFor(alice, redeemedShares);
+
+        token.settleRedemption(requestId);
+
+        FundToken.RedemptionRequest memory request = token.redemptionRequestAt(requestId);
+        assertEq(request.redemptionAmount, Math.mulDiv(redeemedShares, settlementNav, token.NAV_SCALE()));
+        assertEq(request.settlementNav, settlementNav);
+        assertEq(token.balanceOf(alice), 0);
+    }
+
+    function testRedemptionRejectsSettlementThatRoundsToZeroCash() public {
+        _subscribe(token, alice, 1);
+        uint256 requestId = token.requestRedemptionFor(alice, 1);
+        vm.mockCall(
+            address(nav),
+            abi.encodeWithSelector(INAVRegistry.latestNAV.selector, fundId),
+            abi.encode(uint256(1), 0, 0, uint64(2), uint64(2), int256(0), payloadHash, false)
+        );
+
+        vm.expectRevert(bytes("REDEMPTION_TOO_SMALL"));
+        token.settleRedemption(requestId);
     }
 
     function testSettlementDelayCanBeFlaggedForPendingRequest() public {
@@ -380,7 +509,7 @@ contract FundTokenTest is Test {
     }
 
     function _newTokenWithoutRiskGate() private returns (FundToken unconfiguredToken) {
-        unconfiguredToken = new FundToken(admin, "OTC Fund", "OTCF", fundId);
+        unconfiguredToken = new FundToken(admin, "OTC Fund", "OTCF", fundId, address(nav));
         unconfiguredToken.setWhitelisted(alice, true, vcHash);
         unconfiguredToken.grantRole(unconfiguredToken.SUBSCRIPTION_ROLE(), admin);
         unconfiguredToken.grantRole(unconfiguredToken.REDEMPTION_ROLE(), admin);

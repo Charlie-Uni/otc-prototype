@@ -18,6 +18,7 @@ import {
   RiskSnapshotContext,
   validateRiskSnapshotTime,
 } from '../risk/snapshot-context';
+import { SourceFreshness, evaluateSourceFreshness } from '../risk/source-freshness';
 import {
   disclosedControlState,
   latestControlTransition,
@@ -53,7 +54,7 @@ const SubmitRiskSchema = z.object({
 const RiskAuditQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(1_000).default(100),
 });
-const RISK_PAYLOAD_SCHEMA_VERSION = 2;
+const RISK_PAYLOAD_SCHEMA_VERSION = 3;
 const STALE_REFERENCE_USED = 'storedAt' as const;
 
 type WeightsConfig = {
@@ -105,6 +106,8 @@ type ComputedRisk = {
     payloadHash: `0x${string}`;
     submittedBy: `0x${string}`;
   };
+  valuationHaircutFreshness: SourceFreshness;
+  liquidityBufferFreshness: SourceFreshness;
 };
 
 type RiskSnapshot = {
@@ -156,11 +159,15 @@ function normalizeSnapshot(raw: any): RiskSnapshot {
 }
 
 async function captureRiskSnapshotContext(): Promise<RiskSnapshotContext> {
-  const block = await rpc.getBlock({ blockTag: 'latest' });
+  const [block, chainId] = await Promise.all([
+    rpc.getBlock({ blockTag: 'latest' }),
+    rpc.getChainId(),
+  ]);
   if (block.number === null) {
     throw new Error('SNAPSHOT_BLOCK_NUMBER_UNAVAILABLE');
   }
   return {
+    chainId,
     blockNumber: block.number,
     blockTimestamp: Number(block.timestamp),
   };
@@ -226,8 +233,8 @@ async function resolveValuationTiming(
 ) {
   const c = nav as any;
   const raw = await c.read.latestNAV([fundId], { blockNumber: context.blockNumber });
-  const asOf = Number(raw.asOf ?? raw[1]);
-  const storedAt = Number(raw.storedAt ?? raw[2]);
+  const asOf = Number(raw.asOf ?? raw[3]);
+  const storedAt = Number(raw.storedAt ?? raw[4]);
   if (storedAt > body.occurredAt) {
     throw new Error('NAV_STORED_AFTER_OCCURRED_AT');
   }
@@ -268,6 +275,11 @@ async function resolveValuationHaircut(
   return {
     valuationHaircutBps: valuationHaircutSnapshot.valuationHaircutBps,
     valuationHaircutSource: 'chain' as const,
+    valuationHaircutFreshness: evaluateSourceFreshness(
+      body.occurredAt,
+      valuationHaircutSnapshot.occurredAt,
+      ENV.MAX_VALUATION_HAIRCUT_AGE_SEC,
+    ),
     valuationHaircutSnapshot,
   };
 }
@@ -294,6 +306,11 @@ async function resolveLiquidityBuffer(
   return {
     liquidityBufferRatioBps: liquidityBufferSnapshot.liquidityBufferRatioBps,
     liquidityBufferSource: 'chain' as const,
+    liquidityBufferFreshness: evaluateSourceFreshness(
+      body.occurredAt,
+      liquidityBufferSnapshot.occurredAt,
+      ENV.MAX_LIQUIDITY_BUFFER_AGE_SEC,
+    ),
     liquidityBufferSnapshot,
   };
 }
@@ -315,10 +332,15 @@ function payloadHashFor(
   metrics: RiskMetrics,
   config: WeightsConfig,
   context: RiskSnapshotContext,
+  valuationState: Awaited<ReturnType<typeof resolveValuationHaircut>>,
+  liquidityState: Awaited<ReturnType<typeof resolveLiquidityBuffer>>,
 ) {
   return keccak256(encodeAbiParameters(
     [
       { name: 'payloadSchemaVersion', type: 'uint16' },
+      { name: 'chainId', type: 'uint256' },
+      { name: 'riskRegistry', type: 'address' },
+      { name: 'fundId', type: 'bytes32' },
       { name: 'snapshotBlockNumber', type: 'uint256' },
       { name: 'snapshotBlockTimestamp', type: 'uint64' },
       { name: 'occurredAt', type: 'uint64' },
@@ -339,9 +361,22 @@ function payloadHashFor(
       { name: 'weightsConfigId', type: 'uint64' },
       { name: 'maxStaleAgeSec', type: 'uint64' },
       { name: 'weightsHash', type: 'bytes32' },
+      { name: 'valuationHaircutOccurredAt', type: 'uint64' },
+      { name: 'valuationHaircutSubmittedAt', type: 'uint64' },
+      { name: 'valuationHaircutPayloadHash', type: 'bytes32' },
+      { name: 'valuationHaircutAgeSec', type: 'uint64' },
+      { name: 'valuationHaircutFreshnessStatus', type: 'string' },
+      { name: 'liquidityBufferOccurredAt', type: 'uint64' },
+      { name: 'liquidityBufferSubmittedAt', type: 'uint64' },
+      { name: 'liquidityBufferPayloadHash', type: 'bytes32' },
+      { name: 'liquidityBufferAgeSec', type: 'uint64' },
+      { name: 'liquidityBufferFreshnessStatus', type: 'string' },
     ],
     [
       RISK_PAYLOAD_SCHEMA_VERSION,
+      BigInt(context.chainId),
+      ENV.RISK_REGISTRY_ADDRESS,
+      fundId,
       context.blockNumber,
       BigInt(context.blockTimestamp),
       BigInt(body.occurredAt),
@@ -362,6 +397,16 @@ function payloadHashFor(
       BigInt(config.id),
       BigInt(config.maxStaleAgeSec),
       config.weightsHash,
+      BigInt(valuationState.valuationHaircutSnapshot.occurredAt),
+      BigInt(valuationState.valuationHaircutSnapshot.submittedAt),
+      valuationState.valuationHaircutSnapshot.payloadHash,
+      BigInt(valuationState.valuationHaircutFreshness.ageSec),
+      valuationState.valuationHaircutFreshness.status,
+      BigInt(liquidityState.liquidityBufferSnapshot.occurredAt),
+      BigInt(liquidityState.liquidityBufferSnapshot.submittedAt),
+      liquidityState.liquidityBufferSnapshot.payloadHash,
+      BigInt(liquidityState.liquidityBufferFreshness.ageSec),
+      liquidityState.liquidityBufferFreshness.status,
     ],
   ));
 }
@@ -389,7 +434,14 @@ async function computeFromChainConfig(body: z.infer<typeof SubmitRiskSchema>): P
     lastValuationStoredAt: staleState.lastValuationStoredAt,
   };
   const metrics = buildMetrics(resolvedBody, config);
-  const payloadHash = payloadHashFor(resolvedBody, metrics, config, snapshotContext);
+  const payloadHash = payloadHashFor(
+    resolvedBody,
+    metrics,
+    config,
+    snapshotContext,
+    valuationState,
+    liquidityState,
+  );
   return {
     snapshotContext,
     config,
@@ -697,6 +749,8 @@ export default async function (app: FastifyInstance) {
       details: {
         fundId,
         payloadSchemaVersion: RISK_PAYLOAD_SCHEMA_VERSION,
+        chainId: result.snapshotContext.chainId,
+        riskRegistryAddress: ENV.RISK_REGISTRY_ADDRESS,
         payloadHash: result.snapshot.payloadHash,
         snapshotBlockNumber: result.snapshotContext.blockNumber.toString(),
         snapshotBlockTimestamp: result.snapshotContext.blockTimestamp,
@@ -704,6 +758,7 @@ export default async function (app: FastifyInstance) {
         weightsConfigId: result.config.id,
         valuationHaircutSource: result.valuationHaircutSource,
         valuationHaircutSnapshot: result.valuationHaircutSnapshot,
+        valuationHaircutFreshness: result.valuationHaircutFreshness,
         holderSource: result.holderSource,
         holderSnapshot: result.holderSnapshot,
         redemptionPressureSource: result.redemptionPressureSource,
@@ -714,6 +769,7 @@ export default async function (app: FastifyInstance) {
         redemptionQueueSource: result.redemptionQueueSource,
         liquidityBufferSource: result.liquidityBufferSource,
         liquidityBufferSnapshot: result.liquidityBufferSnapshot,
+        liquidityBufferFreshness: result.liquidityBufferFreshness,
         stalePricingSource: result.stalePricingSource,
         lastValuationUpdateAt: result.lastValuationUpdateAt,
         lastValuationAsOf: result.lastValuationAsOf,
@@ -729,6 +785,8 @@ export default async function (app: FastifyInstance) {
       tx: result.tx,
       fundId,
       payloadSchemaVersion: RISK_PAYLOAD_SCHEMA_VERSION,
+      chainId: result.snapshotContext.chainId,
+      riskRegistryAddress: ENV.RISK_REGISTRY_ADDRESS,
       snapshotBlockNumber: result.snapshotContext.blockNumber.toString(),
       snapshotBlockTimestamp: result.snapshotContext.blockTimestamp,
       metrics: result.metrics,
@@ -741,12 +799,14 @@ export default async function (app: FastifyInstance) {
       maxStaleAgeSec: result.config.maxStaleAgeSec,
       valuationHaircutSource: result.valuationHaircutSource,
       valuationHaircutSnapshot: result.valuationHaircutSnapshot,
+      valuationHaircutFreshness: result.valuationHaircutFreshness,
       holderSource: result.holderSource,
       redemptionPressureSource: result.redemptionPressureSource,
       redemptionPressureSnapshot: result.redemptionPressureSnapshot,
       redemptionQueueSource: result.redemptionQueueSource,
       liquidityBufferSource: result.liquidityBufferSource,
       liquidityBufferSnapshot: result.liquidityBufferSnapshot,
+      liquidityBufferFreshness: result.liquidityBufferFreshness,
       stalePricingSource: result.stalePricingSource,
       lastValuationUpdateAt: result.lastValuationUpdateAt,
       lastValuationAsOf: result.lastValuationAsOf,

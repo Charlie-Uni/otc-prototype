@@ -15,8 +15,8 @@ const NonZeroBytes32Schema = z.string()
     .regex(/^0x[0-9a-fA-F]{64}$/, 'Invalid bytes32')
     .refine((value) => !/^0x0{64}$/i.test(value), 'Expected non-zero bytes32');
 const RequestEventsAbi = parseAbi([
-    'event SubscriptionRequested(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt, bytes32 requestHash)',
-    'event RedemptionRequested(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 amount, uint64 requestedAt)',
+    'event SubscriptionRequested(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 subscriptionAmount, uint64 requestedAt, bytes32 requestHash)',
+    'event RedemptionRequested(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 redeemedShares, uint64 requestedAt)',
 ]);
 
 function requestIdFromReceipt(
@@ -43,9 +43,9 @@ function requestIdFromReceipt(
 
 export default async function (app: FastifyInstance) {
     app.post('/token/request-subscription', { preHandler: requireAnyRole(...ACCESS_POLICY.subscriptionWrite) }, async (req) => {
-        const body = z.object({ to: AddressSchema, amount: AmountSchema }).parse(req.body);
+        const body = z.object({ to: AddressSchema, subscriptionAmount: AmountSchema }).strict().parse(req.body);
         const c = token as any;
-        const tx = await c.write.requestSubscriptionFor([body.to as `0x${string}`, body.amount]);
+        const tx = await c.write.requestSubscriptionFor([body.to as `0x${string}`, body.subscriptionAmount]);
         const { receipt, submittedAt } = await waitForTransaction(tx);
         const requestId = requestIdFromReceipt(receipt, 'SubscriptionRequested');
         await recordAudit({
@@ -54,7 +54,11 @@ export default async function (app: FastifyInstance) {
             occurredAt: submittedAt,
             submittedAt,
             transactionHash: tx,
-            details: { requestId: requestId.toString(), investor: body.to, amount: body.amount.toString() },
+            details: {
+                requestId: requestId.toString(),
+                investor: body.to,
+                subscriptionAmount: body.subscriptionAmount.toString(),
+            },
         });
         return { tx, requestId: requestId.toString(), status: 'pending' };
     });
@@ -62,24 +66,28 @@ export default async function (app: FastifyInstance) {
     app.post('/token/accept-subscription', { preHandler: requireAnyRole(...ACCESS_POLICY.subscriptionWrite) }, async (req) => {
         const body = z.object({ requestId: SubscriptionRequestIdSchema }).parse(req.body);
         const c = token as any;
-        const raw = await c.read.subscriptionRequestAt([body.requestId]);
-        const request = raw.request ?? raw;
         const tx = await c.write.acceptSubscription([body.requestId]);
         const submittedAt = await waitForTransactionTimestamp(tx);
+        const raw = await c.read.subscriptionRequestAt([body.requestId]);
+        const request = raw.request ?? raw;
+        const result = {
+            requestId: body.requestId.toString(),
+            investor: request.investor ?? request[0],
+            subscriptionAmount: (request.subscriptionAmount ?? request[1]).toString(),
+            mintedShares: (request.mintedShares ?? request[2]).toString(),
+            navUsed: (request.navUsed ?? request[3]).toString(),
+            navAsOf: Number(request.navAsOf ?? request[4]),
+            requestHash: request.requestHash ?? request[7],
+        };
         await recordAudit({
             actor: auditActorFor(req),
             action: 'subscription.accept',
             occurredAt: submittedAt,
             submittedAt,
             transactionHash: tx,
-            details: {
-                requestId: body.requestId.toString(),
-                investor: request.investor ?? request[0],
-                amount: (request.amount ?? request[1]).toString(),
-                requestHash: request.requestHash ?? request[4],
-            },
+            details: result,
         });
-        return { tx, requestId: body.requestId.toString(), status: 'accepted' };
+        return { tx, ...result, status: 'accepted' };
     });
 
     app.get('/token/subscription-request/:id', { preHandler: requireAnyRole(...ACCESS_POLICY.subscriptionRead) }, async (req) => {
@@ -89,11 +97,14 @@ export default async function (app: FastifyInstance) {
         const request = raw.request ?? raw;
         const result = {
             investor: request.investor ?? request[0],
-            amount: (request.amount ?? request[1]).toString(),
-            requestedAt: Number(request.requestedAt ?? request[2]),
-            acceptedAt: Number(request.acceptedAt ?? request[3]),
-            requestHash: request.requestHash ?? request[4],
-            status: Boolean(request.accepted ?? request[5]) ? 'accepted' : 'pending',
+            subscriptionAmount: (request.subscriptionAmount ?? request[1]).toString(),
+            mintedShares: (request.mintedShares ?? request[2]).toString(),
+            navUsed: (request.navUsed ?? request[3]).toString(),
+            navAsOf: Number(request.navAsOf ?? request[4]),
+            requestedAt: Number(request.requestedAt ?? request[5]),
+            acceptedAt: Number(request.acceptedAt ?? request[6]),
+            requestHash: request.requestHash ?? request[7],
+            status: Boolean(request.accepted ?? request[8]) ? 'accepted' : 'pending',
         };
         await recordAudit({
             actor: auditActorFor(req),
@@ -107,9 +118,9 @@ export default async function (app: FastifyInstance) {
     });
 
     app.post('/token/redeem', { preHandler: requireAnyRole(...ACCESS_POLICY.redemptionWrite) }, async (req) => {
-        const body = z.object({ from: AddressSchema, amount: AmountSchema }).parse(req.body);
+        const body = z.object({ from: AddressSchema, redeemedShares: AmountSchema }).strict().parse(req.body);
         const c = token as any;
-        const tx = await c.write.requestRedemptionFor([body.from as `0x${string}`, body.amount]);
+        const tx = await c.write.requestRedemptionFor([body.from as `0x${string}`, body.redeemedShares]);
         const { receipt, submittedAt } = await waitForTransaction(tx);
         const requestId = requestIdFromReceipt(receipt, 'RedemptionRequested');
         await recordAudit({
@@ -118,7 +129,11 @@ export default async function (app: FastifyInstance) {
             occurredAt: submittedAt,
             submittedAt,
             transactionHash: tx,
-            details: { requestId: requestId.toString(), investor: body.from, amount: body.amount.toString() },
+            details: {
+                requestId: requestId.toString(),
+                investor: body.from,
+                redeemedShares: body.redeemedShares.toString(),
+            },
         });
         return { tx, requestId: requestId.toString(), status: 'queued' };
     });
@@ -128,15 +143,23 @@ export default async function (app: FastifyInstance) {
         const c = token as any;
         const tx = await c.write.settleRedemption([body.requestId]);
         const submittedAt = await waitForTransactionTimestamp(tx);
+        const raw = await c.read.redemptionRequestAt([body.requestId]);
+        const request = raw.request ?? raw;
+        const settlement = {
+            redeemedShares: (request.redeemedShares ?? request[1]).toString(),
+            redemptionAmount: (request.redemptionAmount ?? request[2]).toString(),
+            settlementNav: (request.settlementNav ?? request[3]).toString(),
+            settlementNavAsOf: Number(request.settlementNavAsOf ?? request[4]),
+        };
         await recordAudit({
             actor: auditActorFor(req),
             action: 'redemption.settle',
             occurredAt: submittedAt,
             submittedAt,
             transactionHash: tx,
-            details: { requestId: body.requestId.toString() },
+            details: { requestId: body.requestId.toString(), ...settlement },
         });
-        return { tx, requestId: body.requestId.toString(), status: 'settled' };
+        return { tx, requestId: body.requestId.toString(), ...settlement, status: 'settled' };
     });
 
     app.post('/token/flag-settlement-delayed', { preHandler: requireAnyRole(...ACCESS_POLICY.redemptionWrite) }, async (req) => {
@@ -188,13 +211,16 @@ export default async function (app: FastifyInstance) {
         const request = raw.request ?? raw;
         const result = {
             investor: request.investor ?? request[0],
-            amount: (request.amount ?? request[1]).toString(),
-            requestedAt: Number(request.requestedAt ?? request[2]),
-            settledAt: Number(request.settledAt ?? request[3]),
-            delayedAt: Number(request.delayedAt ?? request[4]),
-            delayReasonHash: request.delayReasonHash ?? request[5],
-            settled: Boolean(request.settled ?? request[6]),
-            delayed: Boolean(request.delayed ?? request[7]),
+            redeemedShares: (request.redeemedShares ?? request[1]).toString(),
+            redemptionAmount: (request.redemptionAmount ?? request[2]).toString(),
+            settlementNav: (request.settlementNav ?? request[3]).toString(),
+            settlementNavAsOf: Number(request.settlementNavAsOf ?? request[4]),
+            requestedAt: Number(request.requestedAt ?? request[5]),
+            settledAt: Number(request.settledAt ?? request[6]),
+            delayedAt: Number(request.delayedAt ?? request[7]),
+            delayReasonHash: request.delayReasonHash ?? request[8],
+            settled: Boolean(request.settled ?? request[9]),
+            delayed: Boolean(request.delayed ?? request[10]),
         };
         await recordAudit({
             actor: auditActorFor(req),

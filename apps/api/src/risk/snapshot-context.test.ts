@@ -3,6 +3,7 @@ import test from 'node:test';
 import { validateRiskSnapshotTime } from './snapshot-context';
 
 const context = {
+  chainId: 31_337,
   blockNumber: 42n,
   blockTimestamp: 1_000,
 };

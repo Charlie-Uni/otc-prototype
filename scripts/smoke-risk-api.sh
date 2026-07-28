@@ -2,6 +2,7 @@
 set -euo pipefail
 
 API_URL="${API_URL:-http://localhost:3001}"
+RPC_URL="${RPC_URL:-http://localhost:8545}"
 INVESTOR_ADDRESS="${INVESTOR_ADDRESS:-0x70997970C51812dc3A010C7d01b50e0d17dc79C8}"
 HOLDER_A="${HOLDER_A:-0x70997970C51812dc3A010C7d01b50e0d17dc79C8}"
 HOLDER_B="${HOLDER_B:-0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC}"
@@ -19,6 +20,7 @@ API_KEY_LIQUIDITY_ORACLE="${API_KEY_LIQUIDITY_ORACLE:-dev-liquidity-oracle-api-k
 API_KEY_RISK_ORACLE="${API_KEY_RISK_ORACLE:-dev-risk-oracle-api-key-change-me}"
 API_KEY_REGULATOR="${API_KEY_REGULATOR:-dev-regulator-api-key-change-me}"
 API_KEY_AUDITOR="${API_KEY_AUDITOR:-dev-auditor-api-key-change-me}"
+FUND_ID="${FUND_ID:-0xac4a93645b61f4f102884f40e6a589263b542e97cda3dd28d1de825f80f90169}"
 REDEEM_AMOUNT="${REDEEM_AMOUNT:-1}"
 QUEUE_AMOUNT="${QUEUE_AMOUNT:-1800}"
 GATE_RELEASE_REASON_HASH="${GATE_RELEASE_REASON_HASH:-0x0000000000000000000000000000000000000000000000000000000000000a11}"
@@ -31,13 +33,15 @@ SIDE_POCKET_ASSET_COMMITMENT="${SIDE_POCKET_ASSET_COMMITMENT:-0x0000000000000000
 request_and_accept_subscription() {
   local investor="$1"
   local amount="$2"
+  local expected_minted_shares="${3:-$amount}"
+  local expected_nav="${4:-1000000000000000000}"
   local request_response request_id accept_response read_response
 
   request_response="$(
     curl -sS -X POST "$API_URL/token/request-subscription" \
       -H "x-api-key: $API_KEY_MANAGER" \
       -H 'content-type: application/json' \
-      -d "{\"to\":\"$investor\",\"amount\":\"$amount\"}"
+      -d "{\"to\":\"$investor\",\"subscriptionAmount\":\"$amount\"}"
   )"
   printf '%s\n' "$request_response"
   request_id="$(printf '%s' "$request_response" | sed -n 's/.*"requestId":"\([0-9][0-9]*\)".*/\1/p')"
@@ -53,7 +57,7 @@ request_and_accept_subscription() {
       -d "{\"requestId\":\"$request_id\"}"
   )"
   printf '%s\n' "$accept_response"
-  if [[ "$accept_response" != *"\"requestId\":\"$request_id\""* || "$accept_response" != *'"status":"accepted"'* ]]; then
+  if [[ "$accept_response" != *"\"requestId\":\"$request_id\""* || "$accept_response" != *'"status":"accepted"'* || "$accept_response" != *"\"mintedShares\":\"$expected_minted_shares\""* || "$accept_response" != *"\"navUsed\":\"$expected_nav\""* ]]; then
     printf 'Expected pending subscription to be accepted before shares are registered.\n' >&2
     exit 1
   fi
@@ -121,6 +125,18 @@ if [[ "$ELIGIBILITY_RESPONSE" != *'"eligible":true'* || "$ELIGIBILITY_RESPONSE" 
   exit 1
 fi
 
+printf '%s\n' '--- initialize the offering NAV before subscriptions ---'
+INITIAL_NAV_AS_OF="$(date +%s)"
+INITIAL_NAV_RESPONSE="$(curl -sS -X POST "$API_URL/nav/initial" \
+  -H "x-api-key: $API_KEY_NAV_ORACLE" \
+  -H 'content-type: application/json' \
+  -d "{\"initialNav\":\"1000000000000000000\",\"asOf\":$INITIAL_NAV_AS_OF}")"
+printf '%s\n' "$INITIAL_NAV_RESPONSE"
+if [[ "$INITIAL_NAV_RESPONSE" != *'"nav":"1000000000000000000"'* || "$INITIAL_NAV_RESPONSE" != *'"isInitial":true'* || "$INITIAL_NAV_RESPONSE" != *'"payloadHash":'* ]]; then
+  printf 'Expected a committed initial offering NAV before cash-to-share conversion.\n' >&2
+  exit 1
+fi
+
 printf '%s\n' '--- request, accept, and register subscriptions ---'
 request_and_accept_subscription "$HOLDER_A" 4000
 request_and_accept_subscription "$HOLDER_B" 3000
@@ -143,30 +159,20 @@ printf '%s\n' '--- request redemption into queue ---'
 curl -sS -X POST "$API_URL/token/redeem" \
   -H "x-api-key: $API_KEY_MANAGER" \
   -H 'content-type: application/json' \
-  -d "{\"from\":\"$HOLDER_A\",\"amount\":\"$QUEUE_AMOUNT\"}"
+  -d "{\"from\":\"$HOLDER_A\",\"redeemedShares\":\"$QUEUE_AMOUNT\"}"
 printf '\n'
 curl -sS "$API_URL/token/redemption-queue" -H "x-api-key: $API_KEY_MANAGER"
 printf '\n'
 
-printf '%s\n' '--- post NAV for chain-derived stale pricing timestamp ---'
+printf '%s\n' '--- compute NAV from net assets and the fixed total-supply snapshot ---'
 NAV_AS_OF="$(date +%s)"
-INITIAL_NAV_RESPONSE="$(curl -sS -X POST "$API_URL/nav/post" \
-  -H "x-api-key: $API_KEY_NAV_ORACLE" \
-  -H 'content-type: application/json' \
-  -d "{\"nav\":\"1000000\",\"asOf\":$NAV_AS_OF}")"
-printf '%s\n' "$INITIAL_NAV_RESPONSE"
-if [[ "$INITIAL_NAV_RESPONSE" != *'"navAdjustmentBps":"0"'* || "$INITIAL_NAV_RESPONSE" != *'"payloadHash":'* ]]; then
-  printf 'Expected the first fund-scoped NAV to have zero adjustment and a commitment hash.\n' >&2
-  exit 1
-fi
-
 ADJUSTED_NAV_RESPONSE="$(curl -sS -X POST "$API_URL/nav/post" \
   -H "x-api-key: $API_KEY_NAV_ORACLE" \
   -H 'content-type: application/json' \
-  -d "{\"nav\":\"1100000\",\"asOf\":$NAV_AS_OF}")"
+  -d "{\"netAssetValue\":\"11000\",\"asOf\":$NAV_AS_OF}")"
 printf '%s\n' "$ADJUSTED_NAV_RESPONSE"
-if [[ "$ADJUSTED_NAV_RESPONSE" != *'"navAdjustmentBps":"1000"'* || "$ADJUSTED_NAV_RESPONSE" != *'"payloadHash":'* ]]; then
-  printf 'Expected the second NAV to derive a positive 1000 bps NAVAdjustment on chain.\n' >&2
+if [[ "$ADJUSTED_NAV_RESPONSE" != *'"nav":"1100000000000000000"'* || "$ADJUSTED_NAV_RESPONSE" != *'"netAssetValue":"11000"'* || "$ADJUSTED_NAV_RESPONSE" != *'"totalSharesSnapshot":"10000"'* || "$ADJUSTED_NAV_RESPONSE" != *'"navAdjustmentBps":"1000"'* || "$ADJUSTED_NAV_RESPONSE" != *'"isInitial":false'* || "$ADJUSTED_NAV_RESPONSE" != *'"payloadHash":'* ]]; then
+  printf 'Expected NAV = NetAssetValue / TotalShares and a positive 1000 bps adjustment on chain.\n' >&2
   exit 1
 fi
 
@@ -277,8 +283,13 @@ if [[ "$RISK_RESPONSE" != *'"liquidityBufferSource":"chain"'* || "$RISK_RESPONSE
   exit 1
 fi
 
-if [[ "$RISK_RESPONSE" != *'"payloadSchemaVersion":2'* || "$RISK_RESPONSE" != *'"snapshotBlockNumber":'* || "$RISK_RESPONSE" != *'"snapshotBlockTimestamp":'* ]]; then
+if [[ "$RISK_RESPONSE" != *'"payloadSchemaVersion":3'* || "$RISK_RESPONSE" != *'"chainId":31337'* || "$RISK_RESPONSE" != *'"riskRegistryAddress":'* || "$RISK_RESPONSE" != *'"snapshotBlockNumber":'* || "$RISK_RESPONSE" != *'"snapshotBlockTimestamp":'* ]]; then
   printf 'Expected risk submission to disclose its fixed chain snapshot context.\n' >&2
+  exit 1
+fi
+
+if [[ "$RISK_RESPONSE" != *'"valuationHaircutFreshness":{"ageSec":'* || "$RISK_RESPONSE" != *'"status":"trusted_latest_unbounded"'* || "$RISK_RESPONSE" != *'"liquidityBufferFreshness":{"ageSec":'* ]]; then
+  printf 'Expected source ages and the explicit trusted-latest freshness boundary.\n' >&2
   exit 1
 fi
 
@@ -342,11 +353,11 @@ fi
 
 printf '\n--- trigger gate ---\n'
 printf '%s\n' '--- increase concentration, redemption pressure, and queue state through lifecycle actions ---'
-request_and_accept_subscription "$HOLDER_A" 90000
+request_and_accept_subscription "$HOLDER_A" 99000 90000 1100000000000000000
 curl -sS -X POST "$API_URL/token/redeem" \
   -H "x-api-key: $API_KEY_MANAGER" \
   -H 'content-type: application/json' \
-  -d "{\"from\":\"$HOLDER_A\",\"amount\":\"90000\"}"
+  -d "{\"from\":\"$HOLDER_A\",\"redeemedShares\":\"90000\"}"
 printf '\n'
 
 GATE_NOW_SEC="$(date +%s)"
@@ -429,7 +440,7 @@ REDEEM_RESPONSE="$(
   curl -sS -w '|%{http_code}' -X POST "$API_URL/token/redeem" \
     -H "x-api-key: $API_KEY_MANAGER" \
     -H 'content-type: application/json' \
-    -d "{\"from\":\"$INVESTOR_ADDRESS\",\"amount\":\"$REDEEM_AMOUNT\"}" || true
+    -d "{\"from\":\"$INVESTOR_ADDRESS\",\"redeemedShares\":\"$REDEEM_AMOUNT\"}" || true
 )"
 printf '%s\n' "$REDEEM_RESPONSE"
 
@@ -498,7 +509,7 @@ POST_RELEASE_REDEMPTION="$(
   curl -sS -X POST "$API_URL/token/redeem" \
     -H "x-api-key: $API_KEY_MANAGER" \
     -H 'content-type: application/json' \
-    -d "{\"from\":\"$INVESTOR_ADDRESS\",\"amount\":\"$REDEEM_AMOUNT\"}"
+    -d "{\"from\":\"$INVESTOR_ADDRESS\",\"redeemedShares\":\"$REDEEM_AMOUNT\"}"
 )"
 printf '%s\n' "$POST_RELEASE_REDEMPTION"
 POST_RELEASE_REQUEST_ID="$(printf '%s' "$POST_RELEASE_REDEMPTION" | sed -n 's/.*"requestId":"\([0-9][0-9]*\)".*/\1/p')"
@@ -547,7 +558,7 @@ SETTLEMENT_RESPONSE="$(
     -d "{\"requestId\":\"$POST_RELEASE_REQUEST_ID\"}"
 )"
 printf '%s\n' "$SETTLEMENT_RESPONSE"
-if [[ "$SETTLEMENT_RESPONSE" != *"\"requestId\":\"$POST_RELEASE_REQUEST_ID\""* || "$SETTLEMENT_RESPONSE" != *'"status":"settled"'* ]]; then
+if [[ "$SETTLEMENT_RESPONSE" != *"\"requestId\":\"$POST_RELEASE_REQUEST_ID\""* || "$SETTLEMENT_RESPONSE" != *'"status":"settled"'* || "$SETTLEMENT_RESPONSE" != *'"redeemedShares":"1"'* || "$SETTLEMENT_RESPONSE" != *'"redemptionAmount":"1"'* || "$SETTLEMENT_RESPONSE" != *'"settlementNav":"1100000000000000000"'* ]]; then
   printf 'Expected the delayed redemption to remain eligible for final settlement after gate release.\n' >&2
   exit 1
 fi
@@ -556,7 +567,7 @@ SETTLED_REQUEST="$(
   curl -sS "$API_URL/token/redemption-request/$POST_RELEASE_REQUEST_ID" \
     -H "x-api-key: $API_KEY_REGULATOR"
 )"
-if [[ "$SETTLED_REQUEST" != *'"settled":true'* || "$SETTLED_REQUEST" != *'"delayed":true'* ]]; then
+if [[ "$SETTLED_REQUEST" != *'"settled":true'* || "$SETTLED_REQUEST" != *'"delayed":true'* || "$SETTLED_REQUEST" != *'"redemptionAmount":"1"'* || "$SETTLED_REQUEST" != *'"settlementNavAsOf":'* ]]; then
   printf 'Expected final redemption state to preserve both settlement and prior delay evidence.\n' >&2
   exit 1
 fi
@@ -589,7 +600,7 @@ printf '\n--- simulation-ready four-timestamp export ---\n'
 AUDIT_SIMULATION="$(curl -sS "$API_URL/audit/simulation?regime=R4&audience=regulator" -H "x-api-key: $API_KEY_AUDITOR")"
 printf '%s\n' "$AUDIT_SIMULATION"
 
-if [[ "$AUDIT_SIMULATION" != *'"eventName":"SubscriptionRequested"'* || "$AUDIT_SIMULATION" != *'"eventName":"SubscriptionAccepted"'* || "$AUDIT_SIMULATION" != *'"eventName":"RedemptionRequested"'* || "$AUDIT_SIMULATION" != *'"eventName":"SettlementDelayed"'* || "$AUDIT_SIMULATION" != *'"eventName":"RedemptionSettled"'* || "$AUDIT_SIMULATION" != *'"eventName":"NAVUpdatedEvent"'* || "$AUDIT_SIMULATION" != *'"eventName":"LiquidityBufferUpdated"'* || "$AUDIT_SIMULATION" != *'"eventName":"ValuationHaircutEvent"'* || "$AUDIT_SIMULATION" != *'"eventName":"SwingPricingApplied"'* || "$AUDIT_SIMULATION" != *'"eventName":"SidePocketCreated"'* || "$AUDIT_SIMULATION" != *'"eventName":"GateTriggered"'* || "$AUDIT_SIMULATION" != *'"disclosedAt":'* || "$AUDIT_SIMULATION" != *'"observedAt":'* || "$AUDIT_SIMULATION" != *'"detectionLagDefinition":"three_measure_model"'* ]]; then
+if [[ "$AUDIT_SIMULATION" != *'"eventName":"SubscriptionRequested"'* || "$AUDIT_SIMULATION" != *'"eventName":"SubscriptionAccepted"'* || "$AUDIT_SIMULATION" != *'"eventName":"RedemptionRequested"'* || "$AUDIT_SIMULATION" != *'"eventName":"SettlementDelayed"'* || "$AUDIT_SIMULATION" != *'"eventName":"RedemptionSettled"'* || "$AUDIT_SIMULATION" != *'"eventName":"NAVUpdatedEvent"'* || "$AUDIT_SIMULATION" != *'"eventName":"LiquidityBufferUpdated"'* || "$AUDIT_SIMULATION" != *'"eventName":"ValuationHaircutEvent"'* || "$AUDIT_SIMULATION" != *'"eventName":"RiskWarningEvent"'* || "$AUDIT_SIMULATION" != *'"eventName":"SwingPricingApplied"'* || "$AUDIT_SIMULATION" != *'"eventName":"SidePocketCreated"'* || "$AUDIT_SIMULATION" != *'"eventName":"GateTriggered"'* || "$AUDIT_SIMULATION" != *'"disclosedAt":'* || "$AUDIT_SIMULATION" != *'"observedAt":'* || "$AUDIT_SIMULATION" != *'"detectionLagDefinition":"three_measure_model"'* ]]; then
   printf 'Expected simulation export to contain all implemented lifecycle signals, controls, and timestamps.\n' >&2
   exit 1
 fi
@@ -600,6 +611,7 @@ DETECTION_ANALYSIS="$(curl -sS -X POST "$API_URL/audit/detection-lags" \
   -H 'content-type: application/json' \
   -d "{
     \"scenarioId\":\"smoke-valuation-shock\",
+    \"fundId\":\"$FUND_ID\",
     \"shockAt\":$GATE_NOW_SEC,
     \"detectionThresholdBps\":6000,
     \"observationStartAt\":$GATE_NOW_SEC,
@@ -686,6 +698,36 @@ fi
 LIMITED_AUDIT="$(curl -sS "$API_URL/risk/audit?limit=2" -H "x-api-key: $API_KEY_AUDITOR")"
 if [[ "$LIMITED_AUDIT" != *'"count":2'* || "$LIMITED_AUDIT" != *'"limit":2'* ]]; then
   printf 'Expected the risk audit endpoint to enforce its bounded query limit.\n' >&2
+  exit 1
+fi
+
+printf '\n--- stale-pricing warning at the configured 30-day normalization boundary ---\n'
+cast rpc evm_increaseTime 2592001 --rpc-url "$RPC_URL" >/dev/null
+cast rpc evm_mine --rpc-url "$RPC_URL" >/dev/null
+STALE_NOW_SEC="$(cast block latest --field timestamp --rpc-url "$RPC_URL")"
+STALE_WARNING_RESPONSE="$(curl -sS -X POST "$API_URL/risk/submit" \
+  -H "x-api-key: $API_KEY_RISK_ORACLE" \
+  -H 'content-type: application/json' \
+  -d "{\"occurredAt\":$STALE_NOW_SEC}")"
+printf '%s\n' "$STALE_WARNING_RESPONSE"
+if [[ "$STALE_WARNING_RESPONSE" != *'"stalePricingRiskBps":10000'* || "$STALE_WARNING_RESPONSE" != *'"maxStaleAgeSec":2592000'* ]]; then
+  printf 'Expected stale-pricing risk to reach 10000 bps at the configured 30-day boundary.\n' >&2
+  exit 1
+fi
+
+curl -sS -X POST "$API_URL/audit/sync" -H "x-api-key: $API_KEY_AUDITOR" >/dev/null
+STALE_WARNING_AUDIT="$(curl -sS "$API_URL/audit/events?eventName=StalePricingWarning" \
+  -H "x-api-key: $API_KEY_AUDITOR")"
+if ! node -e '
+  const result = JSON.parse(process.argv[1]);
+  const warning = result.events?.find((event) => event.eventName === "StalePricingWarning");
+  process.exit(
+    warning && Number(warning.payload.stalePricingRiskBps) === 10_000
+      ? 0
+      : 1,
+  );
+' "$STALE_WARNING_AUDIT"; then
+  printf 'Expected the audit index to retain the StalePricingWarning event and normalized risk value.\n' >&2
   exit 1
 fi
 printf '\n'
