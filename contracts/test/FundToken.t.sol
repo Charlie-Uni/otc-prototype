@@ -359,6 +359,62 @@ contract FundTokenTest is Test {
         assertEq(token.totalQueuedRedemption(), 0);
     }
 
+    function testTransferToUnwhitelistedReceiverIsRejected() public {
+        address outsider = address(0xDEAD);
+        _subscribe(token, alice, 1e18);
+
+        vm.prank(alice);
+        vm.expectRevert(bytes("RECEIVER_NOT_WHITELISTED"));
+        // forge-lint: disable-next-line(erc20-unchecked-transfer)
+        token.transfer(outsider, 1e17);
+    }
+
+    function testGateOnMismatchedFundIdDoesNotBlockRedemption() public {
+        // Known prototype boundary: fundId consistency across FundToken and RiskRegistry
+        // is maintained by deployment configuration, not by an on-chain registry. A gate
+        // stored under a different fundId therefore never reaches this token.
+        bytes32 otherFundId = keccak256("OTC_FUND_MISMATCHED");
+        _subscribe(token, alice, 1e18);
+
+        risk.submitMetrics(otherFundId, _highRiskMetrics(), 1, uint64(block.timestamp), payloadHash);
+        assertTrue(risk.isGated(otherFundId));
+        assertFalse(risk.isGated(fundId));
+
+        uint256 requestId = token.requestRedemptionFor(alice, 5e17);
+        token.settleRedemption(requestId);
+        assertEq(token.balanceOf(alice), 5e17);
+    }
+
+    function testDelayedRequestCanStillSettleAndSettledRequestCannotBeDelayed() public {
+        _subscribe(token, alice, 1e18);
+        uint256 requestId = token.requestRedemptionFor(alice, 2e17);
+
+        token.flagSettlementDelayed(requestId, keccak256("liquidity shortfall"));
+        token.settleRedemption(requestId);
+        assertEq(token.balanceOf(alice), 8e17);
+
+        vm.expectRevert(bytes("REDEMPTION_ALREADY_SETTLED"));
+        token.flagSettlementDelayed(requestId, keccak256("late reason"));
+    }
+
+    function testPauseBlocksSubscriptionAcceptanceAndSettlement() public {
+        _subscribe(token, alice, 1e18);
+        uint256 subscriptionId = token.requestSubscriptionFor(alice, 1e17);
+        uint256 redemptionId = token.requestRedemptionFor(alice, 2e17);
+
+        token.pause();
+
+        vm.expectRevert(bytes("PAUSED"));
+        token.acceptSubscription(subscriptionId);
+        vm.expectRevert(bytes("PAUSED"));
+        token.settleRedemption(redemptionId);
+
+        token.unpause();
+        token.acceptSubscription(subscriptionId);
+        token.settleRedemption(redemptionId);
+        assertEq(token.balanceOf(alice), 9e17);
+    }
+
     function _validWeights() private pure returns (uint16[6] memory weights) {
         weights = [uint16(1_667), 1_667, 1_667, 1_667, 1_666, 1_666];
     }

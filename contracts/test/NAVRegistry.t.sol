@@ -141,4 +141,46 @@ contract NAVRegistryTest is Test {
         vm.expectRevert(bytes("NO_NAV"));
         nav.latestNAV(fundA);
     }
+
+    function testSameAsOfAllowsValuationCorrection() public {
+        // Documented boundary: asOf is monotone but equal asOf stays allowed so a
+        // valuation correction for the same reference time can be recorded.
+        vm.startPrank(admin);
+        nav.postNAV(fundA, 1_000_000, 1_709_999_000, payloadA);
+        nav.postNAV(fundA, 1_010_000, 1_709_999_000, payloadB);
+        vm.stopPrank();
+
+        NAVRegistry.NavRecord memory latest = nav.latestNAV(fundA);
+        assertEq(latest.nav, 1_010_000);
+        assertEq(latest.asOf, 1_709_999_000);
+        assertEq(latest.navAdjustmentBps, 100);
+        assertEq(nav.historyLength(fundA), 2);
+    }
+
+    function testValuationHaircutRejectsOccurredAtRegressionButAllowsCorrection() public {
+        uint64 firstOccurredAt = uint64(block.timestamp);
+        vm.startPrank(admin);
+        nav.postValuationHaircut(fundA, 1_000, firstOccurredAt, payloadA);
+
+        vm.warp(block.timestamp + 100);
+        vm.expectRevert(bytes("OCCURRED_AT_BEFORE_LATEST"));
+        nav.postValuationHaircut(fundA, 900, firstOccurredAt - 1, payloadB);
+
+        // Same occurredAt is a correction and must stay allowed.
+        nav.postValuationHaircut(fundA, 1_100, firstOccurredAt, payloadB);
+        vm.stopPrank();
+
+        NAVRegistry.ValuationHaircutSnapshot memory snapshot = nav.latestValuationHaircut(fundA);
+        assertEq(snapshot.valuationHaircutBps, 1_100);
+        assertEq(snapshot.occurredAt, firstOccurredAt);
+    }
+
+    function testNavAtRejectsOutOfRangeIndex() public {
+        vm.prank(admin);
+        nav.postNAV(fundA, 1_000_000, 1_709_999_000, payloadA);
+
+        assertEq(nav.navAt(fundA, 0).nav, 1_000_000);
+        vm.expectRevert(bytes("NAV_OUT_OF_RANGE"));
+        nav.navAt(fundA, 1);
+    }
 }

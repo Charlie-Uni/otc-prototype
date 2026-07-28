@@ -485,6 +485,71 @@ contract RiskRegistryTest is Test {
         registry.releaseGate(fundId, reasonHash);
     }
 
+    function testGateRetriggersAfterReleaseWhenRiskStaysHigh() public {
+        registry.submitMetrics(fundId, _highRiskMetrics(), 1, uint64(block.timestamp), payloadHash);
+        assertTrue(registry.isGated(fundId));
+
+        registry.releaseGate(fundId, keccak256("risk normalized"));
+        assertFalse(registry.isGated(fundId));
+
+        vm.warp(block.timestamp + 100);
+        uint16 riskScoreBps = _score(_highRiskMetrics());
+        vm.expectEmit(true, true, false, true, address(registry));
+        emit GateTriggered(
+            fundId,
+            1,
+            riskScoreBps,
+            7_000,
+            registry.GATE_RULE_ID(),
+            uint64(block.timestamp),
+            uint64(block.timestamp),
+            keccak256(abi.encode(fundId, _highRiskMetrics(), riskScoreBps, uint64(1), uint64(block.timestamp)))
+        );
+        registry.submitMetrics(fundId, _highRiskMetrics(), 1, uint64(block.timestamp), payloadHash);
+
+        assertTrue(registry.isGated(fundId));
+    }
+
+    function testGateAndHistoryAreIsolatedPerFund() public {
+        bytes32 otherFundId = keccak256("OTC_FUND_2");
+
+        registry.submitMetrics(fundId, _highRiskMetrics(), 1, uint64(block.timestamp), payloadHash);
+        registry.submitMetrics(otherFundId, _lowRiskMetrics(), 1, uint64(block.timestamp), payloadHash);
+
+        assertTrue(registry.isGated(fundId));
+        assertFalse(registry.isGated(otherFundId));
+        assertEq(registry.historyLength(fundId), 1);
+        assertEq(registry.historyLength(otherFundId), 1);
+        assertEq(registry.latestSnapshot(otherFundId).riskScoreBps, _score(_lowRiskMetrics()));
+    }
+
+    function testSetFundKappaRejectsZeroSentinelAndZeroFund() public {
+        vm.expectRevert(bytes("INVALID_FUND_KAPPA"));
+        registry.setFundKappa(fundId, 0);
+
+        vm.expectRevert(bytes("INVALID_FUND"));
+        registry.setFundKappa(bytes32(0), 5_000);
+
+        registry.setFundKappa(fundId, 5_000);
+        assertEq(registry.effectiveKappaBps(fundId), 5_000);
+    }
+
+    function testLiquidityBufferRejectsOccurredAtRegressionButAllowsCorrection() public {
+        vm.warp(1_710_000_000);
+        uint64 firstOccurredAt = uint64(block.timestamp);
+        registry.submitLiquidityBuffer(fundId, 12_000, firstOccurredAt, payloadHash);
+
+        vm.warp(block.timestamp + 100);
+        vm.expectRevert(bytes("OCCURRED_AT_BEFORE_LATEST"));
+        registry.submitLiquidityBuffer(fundId, 11_000, firstOccurredAt - 1, payloadHash);
+
+        // Same occurredAt is a correction and must stay allowed.
+        registry.submitLiquidityBuffer(fundId, 11_500, firstOccurredAt, keccak256("corrected payload"));
+        RiskRegistry.LiquidityBufferSnapshot memory snapshot = registry.latestLiquidityBuffer(fundId);
+        assertEq(snapshot.liquidityBufferRatioBps, 11_500);
+        assertEq(snapshot.occurredAt, firstOccurredAt);
+    }
+
     function _validWeights() private pure returns (uint16[6] memory weights) {
         weights = [uint16(1_667), 1_667, 1_667, 1_667, 1_666, 1_666];
     }
