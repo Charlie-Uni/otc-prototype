@@ -23,7 +23,7 @@
 
 - Solidity `^0.8.30`（Foundry 工具链锁定 solc 0.8.30）、Foundry、Anvil
 - OpenZeppelin Contracts 5.4.0
-- Node.js 20、TypeScript strict mode、Fastify、Viem、Zod
+- Node.js 22、TypeScript strict mode、Fastify、Viem、Zod
 - PostgreSQL 16（可选持久化；CI 强制验证）
 - pnpm 9.6 workspace
 - GitHub Actions
@@ -44,7 +44,7 @@
 
 前置环境：
 
-- Node.js 20+
+- Node.js 22+
 - pnpm 9.6
 - Foundry（`forge`、`anvil`）
 
