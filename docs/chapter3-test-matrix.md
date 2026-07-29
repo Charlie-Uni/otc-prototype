@@ -29,15 +29,15 @@ pnpm test:chapter3
 | --- | --- | --- | --- |
 | 合约单元、Fuzz 与覆盖率 | Foundry、Solidity、256 组 Fuzz、forge coverage | 权限、现金-份额-NAV 公式、认购/赎回状态机、基金化 NAV、NAVAdjustment、Oracle 状态、评分不变量、阈值、Gate、扩展控制、赎回队列、事件 | `contracts.log`、`coverage.log` |
 | API 单元 | Node test runner、TypeScript、纯函数测试 | 指标计算、来源年龄状态、固定快照时间、启动绑定、最大余数法、制度引擎、RBAC/资源授权、错误映射、控制事件时间、DetectionLag、敏感性 | `api-tests.tap` |
-| 静态检查 | TypeScript strict mode | 类型边界、ABI 调用和路由组合 | `typecheck.log` |
+| 静态检查 | TypeScript strict mode、ShellCheck、Slither | 类型边界、ABI 调用、路由组合、Shell 脚本质量和 Solidity 常见缺陷扫描 | `typecheck.log`、`shellcheck.log`、`slither.json`、`slither.log` |
 | 端到端 | Anvil、Foundry Script、Cast、Fastify、curl | 部署角色分离、fundId/NAV 绑定、准入、现金认购、公式 NAV、赎回现金结算、评分、风险/陈旧警告、Gate、扩展控制、披露、审计 | `role-separation.log`、`fund-binding.log`、`smoke.log` |
 | 持久化集成 | PostgreSQL、API 重启验证 | 建表、upsert、重启后事件和 API 审计仍可读取 | `postgres-persistence.json`、`postgres-audit-persistence.json` |
 
 ## 当前验证快照
 
 - Foundry：83 项合约测试通过（含部署脚本角色分离测试与 fundId 错配边界测试）；六指标评分、净资产/NAV、现金认购/份额和份额/赎回金额四组 Fuzz 各运行 256 组输入（`foundry.toml` 显式锁定）。
-- API：84 项 Node/TypeScript 测试通过（含披露二分检索、INACTIVE_WEIGHTS 重试协议、审计缓冲淘汰策略、来源新鲜度、基金绑定校验）。
-- 静态检查：TypeScript `--noEmit` 通过。
+- API：85 项 Node/TypeScript 测试通过（含 payload v3 golden hash、披露二分检索、INACTIVE_WEIGHTS 重试协议、审计缓冲淘汰策略、来源新鲜度、基金绑定校验）。
+- 静态检查：TypeScript `--noEmit` 与 ShellCheck 通过；Slither 扫描 20 个合约、101 个 detector，第二轮 21 项结果已在 `docs/chapter3-static-analysis.md` 中逐项分级，未将静态分析表述为生产安全审计。
 - 端到端：初始 NAV、现金认购换份额、净资产计算 NAV、赎回现金金额、链上指标溯源、高风险评分、30 天陈旧警告、Gate、R0-R4、基金绑定错配拒绝启动、审计与仿真全部通过。
 - 合约行覆盖率与运行时字节数以 `coverage.log` 与 `summary.json` 为准；三份业务合约均低于 EIP-170 的 24576 B。部署脚本另由 `Deploy.t.sol` 与端到端 smoke 验证，不计入业务合约覆盖率报表。
 - 固定摘要见 `docs/evidence/chapter3-summary.json`；其证据来源 commit 与 GitHub Actions run id 以该文件的 `source` 字段为准（避免本文档与重锚定后的证据产生引用漂移）。当前摘要已锚定到依赖加固合并后 master 的 CI 运行（Node 22、PostgreSQL 16），并附合并前同代码树的本地独立复现记录；本地未配置 PostgreSQL，持久化路径由 master CI 独立验证。
