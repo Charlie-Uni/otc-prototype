@@ -3,15 +3,17 @@
     "kind": "github_actions_artifact",
     "repository": "Charlie-Uni/otc-prototype",
     "branch": "master",
-    "commitSha": "34883d0",
+    "commitSha": "d7b6e47",
     "workflow": "Chapter 3 Artifact Tests",
-    "workflowRunId": 30416449429,
-    "workflowRunUrl": "https://github.com/Charlie-Uni/otc-prototype/actions/runs/30416449429",
+    "workflowRunId": 30431706179,
+    "workflowRunUrl": "https://github.com/Charlie-Uni/otc-prototype/actions/runs/30431706179",
     "artifactName": "chapter3-test-evidence",
-    "artifactRunId": "20260729T021835Z"
+    "artifactRunId": "20260729T072758Z"
   },
   "status": "passed",
   "environment": {
+    "nodeVersion": 22,
+    "postgresqlVersion": 16,
     "postgresqlEnabled": true
   },
   "checks": {
@@ -26,7 +28,24 @@
     "fundBindingValidation": "passed",
     "endToEndSmoke": "passed",
     "postgresRestartPersistence": "passed",
+    "postgresAuditRestartRead": "passed",
+    "productionDependencyAudit": "passed",
     "contractCoverage": "passed"
+  },
+  "productionDependencyAudit": {
+    "before": {
+      "low": 1,
+      "moderate": 3,
+      "high": 11,
+      "critical": 0
+    },
+    "after": {
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0
+    },
+    "ciGate": "pnpm audit --prod --audit-level=high"
   },
   "contractLineCoveragePercent": {
     "FundToken": 99.27,
@@ -69,12 +88,14 @@
     "aggregateThresholdCensoring": "tau=6000 equals the public red band boundary, so no rows are censored in the baseline scenario; non-boundary thresholds yield censored(threshold_not_identifiable) for aggregate-granularity public views"
   },
   "independentReproduction": {
-    "environment": "isolated cloud sandbox (Ubuntu 24.04, Node 22, forge 1.5.1, solc 0.8.30, PostgreSQL 16)",
-    "commitSha": "34883d0",
-    "artifactRunId": "20260729T022159Z",
-    "result": "all checks passed; test counts, coverage percentages, runtime code sizes, gate/stale scores, postgres persistence counts identical to the CI run; R0 lag differs only by run clock as documented"
+    "environment": "local macOS, Node 22.14.0, PostgreSQL disabled",
+    "commitSha": "2078bbf",
+    "artifactRunId": "20260729T071153Z",
+    "result": "all non-PostgreSQL checks passed with 83 contract tests, 84 API tests and 98.55% contract line coverage; PostgreSQL 16 persistence was independently exercised by the master CI run"
   },
   "notes": [
+    "The dependency-hardening release upgrades Fastify to 5.10.0, viem to 2.55.10, the application baseline to Node 22, and GitHub Actions to Node-24-based major releases without changing Chapter 3 business semantics.",
+    "Production dependency audit findings were reduced from 11 high, 3 moderate and 1 low to zero; CI now rejects future high-or-critical production findings.",
     "Risk inputs were read at one fixed block and committed with payload schema version 3 (chainId + registry address + fundId + snapshot block domain binding).",
     "Subscription mints shares as SubscriptionAmount*1e18/NAV on-chain; post-initial NAV is computed on-chain as NetAssetValue*1e18/TotalSharesSnapshot with the share snapshot read from the token at a fixed block; redemption records the settlement-time NAV and cash amount. Math.mulDiv floors in the fund-favorable (anti-dilutive) direction.",
     "FundToken is immutably bound to its NAVRegistry; the API validates fundId and registry binding at startup and refuses to start on mismatch (asserted end-to-end).",
