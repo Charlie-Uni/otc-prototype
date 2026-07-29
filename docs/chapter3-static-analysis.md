@@ -6,15 +6,15 @@
 
 当前静态分析基线：
 
-- 源码提交：`c109474607a80adb479baa41bb0b2d4383d1efce`
-- GitHub Actions：`30436859951`
+- 源码提交：`c09198b0d0c64523926cf6e58d1e509049619c6d`
+- GitHub Actions：`30439686154`
 - Slither：`0.11.5`
 - crytic-compile：`0.3.11`
 - ShellCheck：`0.11.0`
 - Slither 范围：20 个合约、101 个 detector；排除 `lib/`、`test/` 和 `script/`
-- ShellCheck 范围：`scripts/test-chapter3.sh` 与 `scripts/smoke-risk-api.sh`，共 1101 行
+- ShellCheck 范围：`scripts/test-chapter3.sh` 与 `scripts/smoke-risk-api.sh`，共 1128 行
 
-原始 `slither.json`、`slither.log`、`slither-versions.txt` 和 `shellcheck.log` 由 CI 作为 artifact 保存。Slither 在存在任何 finding 时返回非零退出码，因此初始分级阶段保留非阻断运行，但原始结果始终上传，不能被静默忽略。
+原始 `slither.json`、`slither.log`、`slither-versions.txt` 和 `shellcheck.log` 由 CI 作为 artifact 保存，文件摘要见 `docs/evidence/chapter3-static-analysis-sha256.txt`。Slither 在存在任何 finding 时返回非零退出码，因此初始分级阶段保留非阻断运行，但原始结果始终上传，不能被静默忽略。
 
 ## 自动检查结果
 

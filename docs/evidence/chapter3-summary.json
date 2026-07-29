@@ -3,12 +3,12 @@
     "kind": "github_actions_artifact",
     "repository": "Charlie-Uni/otc-prototype",
     "branch": "master",
-    "commitSha": "d7b6e47",
+    "commitSha": "c09198b0d0c64523926cf6e58d1e509049619c6d",
     "workflow": "Chapter 3 Artifact Tests",
-    "workflowRunId": 30431706179,
-    "workflowRunUrl": "https://github.com/Charlie-Uni/otc-prototype/actions/runs/30431706179",
+    "workflowRunId": 30439686672,
+    "workflowRunUrl": "https://github.com/Charlie-Uni/otc-prototype/actions/runs/30439686672",
     "artifactName": "chapter3-test-evidence",
-    "artifactRunId": "20260729T072758Z"
+    "artifactRunId": "20260729T092746Z"
   },
   "status": "passed",
   "environment": {
@@ -22,7 +22,7 @@
     "fuzzTestCount": 4,
     "fuzzRunsPerFuzzTest": 256,
     "apiTests": "passed",
-    "apiTestCount": 84,
+    "apiTestCount": 87,
     "typecheck": "passed",
     "deploymentRoleSeparation": "passed",
     "fundBindingValidation": "passed",
@@ -30,7 +30,9 @@
     "postgresRestartPersistence": "passed",
     "postgresAuditRestartRead": "passed",
     "productionDependencyAudit": "passed",
-    "contractCoverage": "passed"
+    "contractCoverage": "passed",
+    "shellcheck": "passed",
+    "slitherTriage": "passed"
   },
   "productionDependencyAudit": {
     "before": {
@@ -56,7 +58,7 @@
   "runtimeCodeSizeBytes": {
     "FundToken": 21671,
     "NAVRegistry": 10302,
-    "RiskRegistry": 19598,
+    "RiskRegistry": 19601,
     "eip170Limit": 24576
   },
   "endToEndAssertions": {
@@ -68,9 +70,12 @@
     "stalePricingWarningAtMaxAge": true,
     "riskWarningEventAsserted": true,
     "fundBindingMismatchRejectedAtStartup": true,
-    "postgresGateTriggeredEventCountAfterRestart": 5,
-    "postgresAuditEntryCountAfterRestart": 179,
-    "postgresRiskSubmitCountAfterRestart": 8
+    "postgresGateTriggeredEventCountAfterRestart": 2,
+    "postgresAuditEntryCountAfterRestart": 60,
+    "postgresRiskSubmitCountAfterRestart": 3,
+    "causalObservationTimeAsserted": true,
+    "postgresLifecycleCausalInvalidCount": 0,
+    "postgresAuditCausalInvalidCount": 0
   },
   "detectionScenario": {
     "scenarioId": "smoke-valuation-shock",
@@ -87,11 +92,34 @@
     },
     "aggregateThresholdCensoring": "tau=6000 equals the public red band boundary, so no rows are censored in the baseline scenario; non-boundary thresholds yield censored(threshold_not_identifiable) for aggregate-granularity public views"
   },
+  "staticAnalysis": {
+    "workflow": "Static Analysis",
+    "workflowRunId": 30439686154,
+    "workflowRunUrl": "https://github.com/Charlie-Uni/otc-prototype/actions/runs/30439686154",
+    "shellcheck": {
+      "version": "0.11.0",
+      "scriptLineCount": 1128,
+      "warningOrHigherCount": 0
+    },
+    "slither": {
+      "version": "0.11.5",
+      "cryticCompileVersion": "0.3.11",
+      "contractsAnalyzed": 20,
+      "detectorsRun": 101,
+      "findings": {
+        "high": 1,
+        "medium": 1,
+        "low": 17,
+        "informational": 2
+      },
+      "triage": "one mapping-default-initialization false positive, one intentional zero-supply division guard, timestamp findings accepted for four-timestamp ordering/audit semantics, and two consumer-interface inheritance suggestions; no finding is represented as a production security certification"
+    }
+  },
   "independentReproduction": {
     "environment": "local macOS, Node 22.14.0, PostgreSQL disabled",
-    "commitSha": "2078bbf",
-    "artifactRunId": "20260729T071153Z",
-    "result": "all non-PostgreSQL checks passed with 83 contract tests, 84 API tests and 98.55% contract line coverage; PostgreSQL 16 persistence was independently exercised by the master CI run"
+    "commitSha": "dbbad10",
+    "artifactRunId": "20260729T091913Z",
+    "result": "all non-PostgreSQL checks passed with 83 contract tests, 87 API tests and 98.55% contract line coverage; PostgreSQL 16 persistence and causal timestamp invariants were independently exercised by the master CI run"
   },
   "notes": [
     "The dependency-hardening release upgrades Fastify to 5.10.0, viem to 2.55.10, the application baseline to Node 22, and GitHub Actions to Node-24-based major releases without changing Chapter 3 business semantics.",
@@ -100,7 +128,10 @@
     "Subscription mints shares as SubscriptionAmount*1e18/NAV on-chain; post-initial NAV is computed on-chain as NetAssetValue*1e18/TotalSharesSnapshot with the share snapshot read from the token at a fixed block; redemption records the settlement-time NAV and cash amount. Math.mulDiv floors in the fund-favorable (anti-dilutive) direction.",
     "FundToken is immutably bound to its NAVRegistry; the API validates fundId and registry binding at startup and refuses to start on mismatch (asserted end-to-end).",
     "Risk submission, liquidity submission, and gate release roles were assigned to separate accounts and removed from admin after deployment (Deploy.t.sol + on-chain cast checks).",
+    "Risk API payload schema version 3 has a golden-hash regression test; risk submission, chain readers, disclosure views, and route registration are separated into focused modules with no TypeScript `as any` assertions.",
+    "Observed timestamps use the API access time with the latest chain block and observed record as causal lower bounds; smoke and PostgreSQL restart evidence reject negative observation lag.",
+    "ShellCheck and Slither evidence is retained separately; all 21 Slither findings are manually classified in docs/chapter3-static-analysis.md and are not represented as a production security audit.",
     "Smoke is a compressed functional test; the dedicated scenario output is the evidence source for all three DetectionLag measures.",
-    "Complete raw logs and evidence files are retained in the GitHub Actions artifact referenced above; SHA-256 digests for all 14 artifact files are recorded in docs/evidence/chapter3-artifact-sha256.txt."
+    "Complete raw logs and evidence files are retained in the GitHub Actions artifacts referenced above; SHA-256 digests for all 14 functional evidence files and 4 static-analysis files are recorded in docs/evidence/chapter3-artifact-sha256.txt and docs/evidence/chapter3-static-analysis-sha256.txt."
   ]
 }

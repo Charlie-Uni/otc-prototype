@@ -40,7 +40,7 @@ pnpm test:chapter3
 - 静态检查：TypeScript `--noEmit` 与 ShellCheck 通过；Slither 扫描 20 个合约、101 个 detector，第二轮 21 项结果已在 `docs/chapter3-static-analysis.md` 中逐项分级，未将静态分析表述为生产安全审计。
 - 端到端：初始 NAV、现金认购换份额、净资产计算 NAV、赎回现金金额、链上指标溯源、高风险评分、30 天陈旧警告、Gate、R0-R4、基金绑定错配拒绝启动、审计与仿真全部通过。
 - 合约行覆盖率与运行时字节数以 `coverage.log` 与 `summary.json` 为准；三份业务合约均低于 EIP-170 的 24576 B。部署脚本另由 `Deploy.t.sol` 与端到端 smoke 验证，不计入业务合约覆盖率报表。
-- 固定摘要见 `docs/evidence/chapter3-summary.json`；其证据来源 commit 与 GitHub Actions run id 以该文件的 `source` 字段为准（避免本文档与重锚定后的证据产生引用漂移）。当前摘要已锚定到依赖加固合并后 master 的 CI 运行（Node 22、PostgreSQL 16），并附合并前同代码树的本地独立复现记录；本地未配置 PostgreSQL，持久化路径由 master CI 独立验证。
+- 固定摘要见 `docs/evidence/chapter3-summary.json`；其证据来源 commit 与 GitHub Actions run id 以该文件的 `source` 字段为准（避免本文档与重锚定后的证据产生引用漂移）。当前摘要已锚定到最终 master 的 CI 运行（Node 22、PostgreSQL 16），包含因果观察时钟与静态分析结果，并附合并前同代码树的本地独立复现记录；本地未配置 PostgreSQL，持久化路径由 master CI 独立验证。
 - Smoke 是压缩时间的功能验证，生命周期 CSV 中接近零的原始时间差不作为制度效果证据；三类 DetectionLag 均以 `/audit/detection-lags` 的情景输出为准。
 
 ## 时间戳口径
