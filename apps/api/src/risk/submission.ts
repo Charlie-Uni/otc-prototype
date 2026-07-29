@@ -10,7 +10,7 @@ import {
 import {
   captureRiskSnapshotContext,
   readActiveWeightsConfig,
-  readLatestRiskSnapshot,
+  readRiskSnapshotAt,
   resolveRiskStates,
   type HolderState,
   type LiquidityBufferState,
@@ -24,6 +24,7 @@ import {
   type WeightsConfig,
 } from './chain-readers';
 import { riskPayloadHashV3 } from './payload-commitment';
+import { riskSnapshotIdFromReceipt } from './receipt-confirmation';
 import { validateRiskSnapshotTime, type RiskSnapshotContext } from './snapshot-context';
 import { submitRiskWithOneConfigRetry } from './submit-retry';
 
@@ -128,16 +129,22 @@ export async function submitRisk(input: RiskSubmitInput): Promise<SubmittedRisk>
         await rpc.waitForTransactionReceipt({ hash });
         return hash;
       },
-      confirm: async (batch) => {
-        const latest = await readLatestRiskSnapshot();
+      confirm: async (batch, txHash) => {
+        const receipt = await rpc.getTransactionReceipt({ hash: txHash });
+        const snapshotId = riskSnapshotIdFromReceipt({
+          receipt,
+          riskRegistryAddress: ENV.RISK_REGISTRY_ADDRESS,
+          fundId,
+          payloadHash: batch.payloadHash,
+        });
+        const stored = await readRiskSnapshotAt(snapshotId);
         if (
-          !latest
-          || latest.payloadHash !== batch.payloadHash
-          || latest.weightsConfigId !== batch.config.id
+          stored.payloadHash !== batch.payloadHash
+          || stored.weightsConfigId !== batch.config.id
         ) {
           throw new Error('RISK_SNAPSHOT_CONFIRMATION_FAILED');
         }
-        return latest;
+        return stored;
       },
     });
 
