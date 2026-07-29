@@ -33,4 +33,4 @@
 - PostgreSQL 16 事件与 API 审计重启持久化：master CI 通过。
 - 生产依赖审计：0 项 low/moderate/high/critical。
 
-完整机器可读摘要见 `chapter3-summary.json`，14 个 CI artifact 文件的 SHA-256 见 `chapter3-artifact-sha256.txt`。
+以上数字是依赖加固阶段的历史快照；当前冻结基线、CI 来源和逐文件 SHA-256 以 `chapter3-summary.json`、`chapter3-artifact-sha256.txt` 为准。

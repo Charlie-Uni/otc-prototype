@@ -1,5 +1,5 @@
 # chapter3-static-analysis SHA-256 manifest
-# commitSha=c09198b0d0c64523926cf6e58d1e509049619c6d workflowRunId=30439686154
+# commitSha=4213428c77ea5ad00032ca4db8f0ccbb07eb3cac workflowRunId=30450820225
 fc9eec16b4191d058a295813ca9afbe9d2b37b59975da860170726be162a3924  shellcheck.log
 e423d9aca0a4e11eefb96c774802f2f74dc0bcf5444cdde71d5534e56e455f8b  slither.json
 fa36cf840aa123bd74c94a809f3bf157f3406f8526f6e9f0616b0c3eb02ce0e5  slither.log
