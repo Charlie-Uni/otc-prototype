@@ -80,6 +80,6 @@
     "FundToken is immutably bound to its NAVRegistry; the API validates fundId and registry binding at startup and refuses to start on mismatch (asserted end-to-end).",
     "Risk submission, liquidity submission, and gate release roles were assigned to separate accounts and removed from admin after deployment (Deploy.t.sol + on-chain cast checks).",
     "Smoke is a compressed functional test; the dedicated scenario output is the evidence source for all three DetectionLag measures.",
-    "Complete raw logs and evidence files are retained in the GitHub Actions artifact referenced above; per-file SHA-256 digests can be verified by downloading that artifact."
+    "Complete raw logs and evidence files are retained in the GitHub Actions artifact referenced above; SHA-256 digests for all 14 artifact files are recorded in docs/evidence/chapter3-artifact-sha256.txt."
   ]
 }
