@@ -165,7 +165,7 @@ Visibility 是双层实现：端点 RBAC 决定谁能调用；披露引擎决定
 - `occurredAt`：链下业务事实发生时间；NAV 使用 asOf。
 - `submittedAt`：交易所在区块时间；NAV 使用 storedAt。
 - `disclosedAt`：制度和受众共同决定的首次可见时间。
-- `observedAt`：API 被实际查询的时间。
+- `observedAt`：API 被实际查询的时间。为避免 Anvil 时间推进或分布式时钟微小偏差造成“先观察、后上链”的因果倒置，API 以最新链上区块时间和被观察记录时间作为下界进行归一化；正常运行时仍等于实际访问时间。
 
 事件索引幂等键为 `chainId:txHash:logIndex`。`commitmentHash = keccak(topics || data)`，用于验证索引记录对应的原始日志未被替换。数据库路径使用 `ON CONFLICT DO NOTHING`；API 审计查询采用 PostgreSQL 优先和有界 limit，CSV 导出在数据库模式下受 `AUDIT_EXPORT_MAX_ROWS`（默认 50000）约束。无数据库时使用最多 5000 条的内存缓冲，且淘汰策略优先移除最旧的匿名公共观察条目——匿名请求无法把特权操作（risk.submit、准入登记、Gate 解除等）的审计证据挤出缓冲。控制事件日志扫描按事件主题过滤，起始区块可由 `CHAIN_LOG_START_BLOCK` 配置为部署区块；披露快照查找按披露时间单调性做二分检索，公共视图查询成本为 O(log n)。
 

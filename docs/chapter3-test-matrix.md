@@ -36,7 +36,7 @@ pnpm test:chapter3
 ## 当前验证快照
 
 - Foundry：83 项合约测试通过（含部署脚本角色分离测试与 fundId 错配边界测试）；六指标评分、净资产/NAV、现金认购/份额和份额/赎回金额四组 Fuzz 各运行 256 组输入（`foundry.toml` 显式锁定）。
-- API：85 项 Node/TypeScript 测试通过（含 payload v3 golden hash、披露二分检索、INACTIVE_WEIGHTS 重试协议、审计缓冲淘汰策略、来源新鲜度、基金绑定校验）。
+- API：87 项 Node/TypeScript 测试通过（含 payload v3 golden hash、因果观察时钟、披露二分检索、INACTIVE_WEIGHTS 重试协议、审计缓冲淘汰策略、来源新鲜度、基金绑定校验）。
 - 静态检查：TypeScript `--noEmit` 与 ShellCheck 通过；Slither 扫描 20 个合约、101 个 detector，第二轮 21 项结果已在 `docs/chapter3-static-analysis.md` 中逐项分级，未将静态分析表述为生产安全审计。
 - 端到端：初始 NAV、现金认购换份额、净资产计算 NAV、赎回现金金额、链上指标溯源、高风险评分、30 天陈旧警告、Gate、R0-R4、基金绑定错配拒绝启动、审计与仿真全部通过。
 - 合约行覆盖率与运行时字节数以 `coverage.log` 与 `summary.json` 为准；三份业务合约均低于 EIP-170 的 24576 B。部署脚本另由 `Deploy.t.sol` 与端到端 smoke 验证，不计入业务合约覆盖率报表。
@@ -48,7 +48,7 @@ pnpm test:chapter3
 - `occurredAt`：链下业务事实发生时间；`NAVUpdatedEvent` 使用 `asOf`。实验冲击真值另存于链下 scenario 的 `shockAt`，不混入业务事件流。
 - `submittedAt`：状态写入链上的时间；`NAVUpdatedEvent` 使用 `storedAt`。
 - `disclosedAt`：R0-R4 制度与受众共同决定的可见时间。
-- `observedAt`：投资者、监管者或审计者实际调用 API 的时间。
+- `observedAt`：投资者、监管者或审计者实际调用 API 的时间；在模拟链时间推进或分布式时钟偏差下，以最新链上区块和被观察记录的时间为因果下界，禁止出现负观察滞后。
 - `GateTriggered.occurredAt`：继承风险冲击的发生时间，而不是 Gate 交易执行时间；执行时间记录在 `submittedAt`。
 
 ## DetectionLag 口径

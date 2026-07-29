@@ -351,10 +351,34 @@ if [[ -n "$DATABASE_URL" ]]; then
     printf 'GateTriggered was not available after the API restart.\n' >&2
     exit 1
   fi
+  if ! node -e '
+    const fs = require("node:fs");
+    const result = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+    const valid = result.events?.every((event) =>
+      event.observedAt >= event.submittedAt && event.observationLagSec >= 0,
+    );
+    process.exit(valid ? 0 : 1);
+  ' "$RESULTS_DIR/postgres-persistence.json"; then
+    printf 'Persisted lifecycle events contained a causally invalid observation time.\n' >&2
+    exit 1
+  fi
   curl -fsS "$API_URL/risk/audit?limit=1000" \
     -H "x-api-key: $API_KEY_AUDITOR" > "$RESULTS_DIR/postgres-audit-persistence.json"
   if ! grep -q '"action":"risk.submit"' "$RESULTS_DIR/postgres-audit-persistence.json"; then
     printf 'Risk API audit entries were not available after the API restart.\n' >&2
+    exit 1
+  fi
+  if ! node -e '
+    const fs = require("node:fs");
+    const result = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+    const valid = result.entries?.every((entry) =>
+      [entry.occurredAt, entry.submittedAt, entry.disclosedAt]
+        .filter((value) => value !== null)
+        .every((value) => entry.observedAt >= value),
+    );
+    process.exit(valid ? 0 : 1);
+  ' "$RESULTS_DIR/postgres-audit-persistence.json"; then
+    printf 'Persisted API audit entries contained a causally invalid observation time.\n' >&2
     exit 1
   fi
   POSTGRES_STATUS="passed"

@@ -726,12 +726,15 @@ if ! node -e '
   const result = JSON.parse(process.argv[1]);
   const warning = result.events?.find((event) => event.eventName === "StalePricingWarning");
   process.exit(
-    warning && Number(warning.payload.stalePricingRiskBps) === 10_000
+    warning
+      && Number(warning.payload.stalePricingRiskBps) === 10_000
+      && warning.observedAt >= warning.submittedAt
+      && warning.observationLagSec >= 0
       ? 0
       : 1,
   );
 ' "$STALE_WARNING_AUDIT"; then
-  printf 'Expected the audit index to retain the StalePricingWarning event and normalized risk value.\n' >&2
+  printf 'Expected the audit index to retain the StalePricingWarning event with a causal observation time.\n' >&2
   exit 1
 fi
 printf '\n'

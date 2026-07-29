@@ -1,6 +1,7 @@
 import { db } from '../db/client';
 import { ENV } from '../env';
 import { csvEscape, pushBoundedAuditEntry } from './retention';
+import { causalObservationTime } from './time';
 
 export type AuditEntry = {
   actor: string;
@@ -32,13 +33,19 @@ function nowSec(): number {
 }
 
 export async function recordAudit(input: RecordAuditInput): Promise<AuditEntry> {
+  const occurredAt = input.occurredAt ?? null;
+  const submittedAt = input.submittedAt ?? null;
+  const disclosedAt = input.disclosedAt ?? null;
   const entry: AuditEntry = {
     actor: input.actor,
     action: input.action,
-    occurredAt: input.occurredAt ?? null,
-    submittedAt: input.submittedAt ?? null,
-    disclosedAt: input.disclosedAt ?? null,
-    observedAt: input.observedAt ?? nowSec(),
+    occurredAt,
+    submittedAt,
+    disclosedAt,
+    observedAt: causalObservationTime(
+      input.observedAt ?? nowSec(),
+      [occurredAt, submittedAt, disclosedAt],
+    ),
     transactionHash: input.transactionHash ?? null,
     details: input.details ?? {},
   };
