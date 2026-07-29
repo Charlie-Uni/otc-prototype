@@ -36,11 +36,13 @@ API_KEY_AUDITOR="chapter3-auditor-api-key"
 
 CONTRACT_STATUS="pending"
 CONTRACT_COVERAGE_STATUS="pending"
+GAS_SNAPSHOT_STATUS="pending"
 TYPECHECK_STATUS="pending"
 API_TEST_STATUS="pending"
 ROLE_SEPARATION_STATUS="pending"
 FUND_BINDING_STATUS="pending"
 SMOKE_STATUS="pending"
+SMOKE_GAS_STATUS="pending"
 POSTGRES_STATUS="not_run"
 CURRENT_STEP="initialization"
 ANVIL_PID=""
@@ -75,22 +77,27 @@ write_summary() {
   "checks": {
     "contractTests": $(json_status "$CONTRACT_STATUS"),
     "contractCoverage": $(json_status "$CONTRACT_COVERAGE_STATUS"),
+    "gasSnapshot": $(json_status "$GAS_SNAPSHOT_STATUS"),
     "typecheck": $(json_status "$TYPECHECK_STATUS"),
     "apiTests": $(json_status "$API_TEST_STATUS"),
     "deploymentRoleSeparation": $(json_status "$ROLE_SEPARATION_STATUS"),
     "fundBindingValidation": $(json_status "$FUND_BINDING_STATUS"),
     "endToEndSmoke": $(json_status "$SMOKE_STATUS"),
+    "smokeReceiptGas": $(json_status "$SMOKE_GAS_STATUS"),
     "postgresRestartPersistence": $(json_status "$POSTGRES_STATUS")
   },
   "evidence": {
     "contractTests": "contracts.log",
     "contractCoverage": "coverage.log",
+    "gasSnapshot": "gas-snapshot.txt",
+    "gasSnapshotCheck": "gas-snapshot.log",
     "typecheck": "typecheck.log",
     "apiTests": "api-tests.tap",
     "deployment": "deploy.log",
     "deploymentRoleSeparation": "role-separation.log",
     "fundBindingValidation": "fund-binding.log",
     "endToEndSmoke": "smoke.log",
+    "smokeReceiptGas": "smoke-gas.csv",
     "apiServer": "api.log",
     "anvil": "anvil.log",
     "postgresRestartServer": "api-restart.log",
@@ -251,10 +258,18 @@ CURRENT_STEP="contract_tests"
 ) > "$RESULTS_DIR/contracts.log" 2>&1
 CONTRACT_STATUS="passed"
 
+CURRENT_STEP="gas_snapshot"
+(
+  cd "$ROOT_DIR/contracts"
+  forge snapshot --check .gas-snapshot --tolerance 5 --no-match-test '^invariant_'
+) > "$RESULTS_DIR/gas-snapshot.log" 2>&1
+cp "$ROOT_DIR/contracts/.gas-snapshot" "$RESULTS_DIR/gas-snapshot.txt"
+GAS_SNAPSHOT_STATUS="passed"
+
 CURRENT_STEP="contract_coverage"
 (
   cd "$ROOT_DIR/contracts"
-  forge coverage --report summary --skip script
+  forge coverage --report summary --skip script --no-match-test '^invariant_' --no-match-coverage 'test/'
 ) > "$RESULTS_DIR/coverage.log" 2>&1
 CONTRACT_COVERAGE_STATUS="passed"
 
@@ -337,8 +352,46 @@ env \
   API_KEY_AUDITOR="$API_KEY_AUDITOR" \
   RPC_URL="$RPC_URL" \
   FUND_ID="$(cast keccak "$FUND_ID_LABEL")" \
+  GAS_REPORT_PATH="$RESULTS_DIR/smoke-gas.csv" \
   bash "$ROOT_DIR/scripts/smoke-risk-api.sh" > "$RESULTS_DIR/smoke.log" 2>&1
 SMOKE_STATUS="passed"
+
+if ! node -e '
+  const fs = require("node:fs");
+  const lines = fs.readFileSync(process.argv[1], "utf8").trim().split(/\r?\n/);
+  const header = lines.shift();
+  const rows = lines.map((line) => {
+    const [operation, context, transactionHash, gasUsed, blockNumber] = line.split(",");
+    return { operation, context, transactionHash, gasUsed: Number(gasUsed), blockNumber: Number(blockNumber) };
+  });
+  const required = [
+    "subscription_request",
+    "subscription_accept",
+    "redemption_request",
+    "redemption_settlement",
+    "nav_update",
+    "risk_submit",
+    "risk_submit_gate_trigger",
+    "gate_release",
+  ];
+  const valid =
+    header === "operation,context,transactionHash,gasUsed,blockNumber"
+    && required.every((operation) => rows.some((row) => row.operation === operation))
+    && rows.every((row) =>
+      row.context
+      && /^0x[0-9a-f]{64}$/i.test(row.transactionHash)
+      && Number.isSafeInteger(row.gasUsed)
+      && row.gasUsed > 0
+      && Number.isSafeInteger(row.blockNumber)
+      && row.blockNumber >= 0
+    )
+    && new Set(rows.map((row) => row.transactionHash)).size === rows.length;
+  process.exit(valid ? 0 : 1);
+' "$RESULTS_DIR/smoke-gas.csv"; then
+  printf 'Smoke transaction gas evidence was incomplete or invalid.\n' >&2
+  exit 1
+fi
+SMOKE_GAS_STATUS="passed"
 
 if [[ -n "$DATABASE_URL" ]]; then
   CURRENT_STEP="postgres_restart_persistence"

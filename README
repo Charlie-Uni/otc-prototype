@@ -110,12 +110,13 @@ pnpm test:chapter3
 该命令依次执行：
 
 1. Foundry 合约单元测试与 Fuzz。
-2. Foundry 行覆盖率并保存原始 `coverage.log`。
-3. TypeScript 静态检查。
-4. API、制度引擎、审计和仿真单元测试。
-5. 独立 Anvil 部署。
-6. 生命周期、评分、控制、R0-R4 和审计端到端 smoke。
-7. 提供 `CHAPTER3_DATABASE_URL` 时，重启 API 验证 PostgreSQL 持久化。
+2. Foundry 有界 Handler 状态不变量测试。
+3. gas snapshot 检查与生产合约行覆盖率。
+4. TypeScript 静态检查。
+5. API、制度引擎、审计和仿真单元测试。
+6. 独立 Anvil 部署。
+7. 生命周期、评分、控制、R0-R4、审计和 receipt gas 端到端 smoke。
+8. 提供 `CHAPTER3_DATABASE_URL` 时，重启 API 验证 PostgreSQL 持久化。
 
 机器可读证据写入：
 
@@ -137,3 +138,4 @@ GitHub Actions 使用 PostgreSQL 16 执行同一入口，并始终上传测试�
 - 基金成立前使用一次性的初始发行 NAV；后续 NAV、认购份额和赎回现金金额由合约按定点数公式计算。原型不转移现金资产，也不实现完整基金总账。
 - 当前为单基金部署实例，通过 immutable 绑定与 API 启动校验避免 `fundId`/NAVRegistry 错配；不声称实现全局多基金 FundRegistry。
 - API 从同一区块派生六项指标，但链上 `RISK_ORACLE_ROLE` 仍是受信角色；其绕过 API 直接调用合约时，链上保证评分复算和控制规则，不证明指标数据来源。
+- 审计索引依赖许可链稳定最终性假设；原型不实现确认区块深度和链重组回滚，生产部署需在确认后固化索引并支持孤块撤销与重放。

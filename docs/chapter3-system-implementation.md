@@ -167,7 +167,7 @@ Visibility 是双层实现：端点 RBAC 决定谁能调用；披露引擎决定
 - `disclosedAt`：制度和受众共同决定的首次可见时间。
 - `observedAt`：API 被实际查询的时间。为避免 Anvil 时间推进或分布式时钟微小偏差造成“先观察、后上链”的因果倒置，API 以最新链上区块时间和被观察记录时间作为下界进行归一化；正常运行时仍等于实际访问时间。
 
-事件索引幂等键为 `chainId:txHash:logIndex`。`commitmentHash = keccak(topics || data)`，用于验证索引记录对应的原始日志未被替换。数据库路径使用 `ON CONFLICT DO NOTHING`；API 审计查询采用 PostgreSQL 优先和有界 limit，CSV 导出在数据库模式下受 `AUDIT_EXPORT_MAX_ROWS`（默认 50000）约束。无数据库时使用最多 5000 条的内存缓冲，且淘汰策略优先移除最旧的匿名公共观察条目——匿名请求无法把特权操作（risk.submit、准入登记、Gate 解除等）的审计证据挤出缓冲。控制事件日志扫描按事件主题过滤，起始区块可由 `CHAIN_LOG_START_BLOCK` 配置为部署区块；披露快照查找按披露时间单调性做二分检索，公共视图查询成本为 O(log n)。
+事件索引幂等键为 `chainId:txHash:logIndex`。`commitmentHash = keccak(topics || data)`，用于验证索引记录对应的原始日志未被替换；测试通过分别修改 topic 和 data，确认复算摘要与原承诺不一致。该能力支持事后发现和归因，不等同链上自动拒绝被修改的链下索引记录。数据库路径使用 `ON CONFLICT DO NOTHING`；API 审计查询采用 PostgreSQL 优先和有界 limit，CSV 导出在数据库模式下受 `AUDIT_EXPORT_MAX_ROWS`（默认 50000）约束。无数据库时使用最多 5000 条的内存缓冲，且淘汰策略优先移除最旧的匿名公共观察条目——匿名请求无法把特权操作（risk.submit、准入登记、Gate 解除等）的审计证据挤出缓冲。控制事件日志扫描按事件主题过滤，起始区块可由 `CHAIN_LOG_START_BLOCK` 配置为部署区块；披露快照查找按披露时间单调性做二分检索，公共视图查询成本为 O(log n)。
 
 ## 8. DetectionLag 方法
 
@@ -189,9 +189,11 @@ ObservationDetectionLag = firstPollingObservationAt - shockAt
 
 - Foundry 单元测试：状态机、权限、事件、配置版本、边界和 revert；含部署脚本测试（角色分离矩阵、fundId 单一来源、账户碰撞拒绝）与 fundId 错配边界固化测试。
 - Foundry Fuzz：六指标评分、净资产/NAV、现金认购/份额和份额/赎回金额四组性质测试，每组运行 256 个随机输入（`foundry.toml` 显式锁定 runs=256）。
-- Foundry Coverage：独立生成原始 coverage 日志，避免只引用无来源的覆盖率百分比。
-- TypeScript 纯函数测试：HHI、最大余数法、流动性截断、陈旧归一化、R0-R4、RBAC、DetectionLag、敏感性、披露二分检索（含 R0 epoch 边界零等待）、INACTIVE_WEIGHTS 整批废弃重算协议、审计缓冲淘汰策略、来源新鲜度评估、基金绑定校验。
+- Foundry Invariant：四个有界投资者和十类合法 Handler 操作组成随机生命周期序列；每项运行 128 轮、每轮深度 64，验证持仓/总供应量、队列/锁定份额、认购 mint/赎回 burn、NAV 公式、评分范围和 Gate 转移等跨操作不变量。
+- Foundry Coverage：独立生成原始 coverage 日志，分母只包含 `contracts/src/` 生产合约，避免测试 Handler 稀释业务覆盖率。
+- TypeScript 纯函数测试：HHI、最大余数法、流动性截断、陈旧归一化、R0-R4、RBAC、DetectionLag、敏感性、披露二分检索（含 R0 epoch 边界零等待）、INACTIVE_WEIGHTS 整批废弃重算协议、审计缓冲淘汰策略、来源新鲜度评估、基金绑定校验和事件承诺篡改检测。
 - 端到端 smoke：独立 Anvil、顺序广播重新部署、角色签名、基金绑定启动校验（含错配拒绝启动）、现金/份额/NAV 公式、完整生命周期、风险与陈旧警告、Gate 拦截/解除、披露差异、审计同步和导出。
+- 描述性 gas 证据：`.gas-snapshot` 用于版本 diff；smoke 根据 API 返回的交易哈希读取 receipt `gasUsed`，记录完整状态序列下认购、赎回、NAV、风险和控制操作成本。该数据不构成吞吐量或生产性能主张。
 - PostgreSQL 集成：CI 中初始化数据库、API 重启、验证事件仍可查询。
 
 Smoke 在压缩时间内验证链路与时间戳字段，所得生命周期滞后通常接近零，不作为制度滞后的实证结果；非零制度滞后由带外生 `shockAt` 的 DetectionLag 情景输出提供。
@@ -218,3 +220,4 @@ Smoke 在压缩时间内验证链路与时间戳字段，所得生命周期滞�
 - 估值折价与流动性缓冲为覆盖式单快照且 `occurredAt` 单调不回退（允许同时点修正），与 NAV `asOf` 口径一致。
 - 赎回结算金额向下取整后若为 0（`REDEMPTION_TOO_SMALL`），该笔请求将持续留在队列中：原型不提供请求取消流程，需等待 NAV 上行后重试结算。
 - 初始发行 NAV 记录的 `netAssetValue` 与 `totalSharesSnapshot` 为 0，消费方必须依据 `isInitial` 标志区分一次性发行定价与公式计算 NAV；API 层已按此处理。
+- 审计索引假设许可链已提供稳定最终性；原型未实现确认区块深度、链重组检测或从共同祖先回滚重放。生产部署应在达到配置确认数后再固化索引，并在检测到重组时撤销孤块记录后重新同步。

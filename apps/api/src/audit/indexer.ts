@@ -1,7 +1,8 @@
-import { concatHex, decodeEventLog, keccak256 } from 'viem';
+import { decodeEventLog } from 'viem';
 import { fundId, rpc } from '../chain';
 import { db } from '../db/client';
 import { ENV } from '../env';
+import { lifecycleLogCommitmentHash } from './commitment';
 import {
   FUND_TOKEN_EVENT_ABI,
   LifecycleContractName,
@@ -80,7 +81,7 @@ async function readSourceEvents(source: Source, chainId: number) {
       logIndex: log.logIndex,
       blockNumber: Number(log.blockNumber),
       blockTimestamp,
-      commitmentHash: keccak256(concatHex([...log.topics, log.data])),
+      commitmentHash: lifecycleLogCommitmentHash(log.topics, log.data),
       defaultFundId: fundId,
       args: (decoded.args ?? {}) as Record<string, unknown>,
     }));
