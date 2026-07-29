@@ -12,3 +12,10 @@ remappings = [
 # instead of relying on the Foundry default silently staying at 256.
 [fuzz]
 runs = 256
+
+# Keep stateful verification reproducible across Foundry upgrades. The handler
+# constrains calls to valid lifecycle transitions and handles expected reverts.
+[invariant]
+runs = 128
+depth = 64
+fail_on_revert = true

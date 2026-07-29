@@ -29,12 +29,45 @@ ZERO_HASH="0x0000000000000000000000000000000000000000000000000000000000000000"
 SWING_RULE_ID="${SWING_RULE_ID:-0x0000000000000000000000000000000000000000000000000000000000000051}"
 SIDE_POCKET_RULE_ID="${SIDE_POCKET_RULE_ID:-0x0000000000000000000000000000000000000000000000000000000000000052}"
 SIDE_POCKET_ASSET_COMMITMENT="${SIDE_POCKET_ASSET_COMMITMENT:-0x0000000000000000000000000000000000000000000000000000000000000a55}"
+GAS_REPORT_PATH="${GAS_REPORT_PATH:-}"
+
+if [[ -n "$GAS_REPORT_PATH" ]]; then
+  mkdir -p "$(dirname "$GAS_REPORT_PATH")"
+  printf 'operation,context,transactionHash,gasUsed,blockNumber\n' > "$GAS_REPORT_PATH"
+fi
+
+record_transaction_gas() {
+  local operation="$1"
+  local context="$2"
+  local response="$3"
+  local transaction_hash gas_used block_number
+
+  if [[ -z "$GAS_REPORT_PATH" ]]; then
+    return
+  fi
+  transaction_hash="$(printf '%s' "$response" | sed -n 's/.*"tx":"\(0x[0-9A-Fa-f]\{64\}\)".*/\1/p')"
+  if [[ -z "$transaction_hash" ]]; then
+    printf 'Unable to extract transaction hash for gas evidence: %s (%s).\n' "$operation" "$context" >&2
+    exit 1
+  fi
+  gas_used="$(cast receipt "$transaction_hash" gasUsed --rpc-url "$RPC_URL")"
+  block_number="$(cast receipt "$transaction_hash" blockNumber --rpc-url "$RPC_URL")"
+  gas_used="$(cast to-dec "$gas_used")"
+  block_number="$(cast to-dec "$block_number")"
+  if [[ ! "$gas_used" =~ ^[1-9][0-9]*$ || ! "$block_number" =~ ^[0-9]+$ ]]; then
+    printf 'Invalid receipt gas evidence for %s (%s).\n' "$operation" "$context" >&2
+    exit 1
+  fi
+  printf '%s,%s,%s,%s,%s\n' \
+    "$operation" "$context" "$transaction_hash" "$gas_used" "$block_number" >> "$GAS_REPORT_PATH"
+}
 
 request_and_accept_subscription() {
   local investor="$1"
   local amount="$2"
   local expected_minted_shares="${3:-$amount}"
   local expected_nav="${4:-1000000000000000000}"
+  local context="${5:-seed_holders}"
   local request_response request_id accept_response read_response
 
   request_response="$(
@@ -49,6 +82,7 @@ request_and_accept_subscription() {
     printf 'Expected subscription request to enter pending state.\n' >&2
     exit 1
   fi
+  record_transaction_gas "subscription_request" "$context" "$request_response"
 
   accept_response="$(
     curl -sS -X POST "$API_URL/token/accept-subscription" \
@@ -61,6 +95,7 @@ request_and_accept_subscription() {
     printf 'Expected pending subscription to be accepted before shares are registered.\n' >&2
     exit 1
   fi
+  record_transaction_gas "subscription_accept" "$context" "$accept_response"
 
   read_response="$(
     curl -sS "$API_URL/token/subscription-request/$request_id" \
@@ -136,6 +171,7 @@ if [[ "$INITIAL_NAV_RESPONSE" != *'"nav":"1000000000000000000"'* || "$INITIAL_NA
   printf 'Expected a committed initial offering NAV before cash-to-share conversion.\n' >&2
   exit 1
 fi
+record_transaction_gas "nav_initial" "offering_price" "$INITIAL_NAV_RESPONSE"
 
 printf '%s\n' '--- request, accept, and register subscriptions ---'
 request_and_accept_subscription "$HOLDER_A" 4000
@@ -156,10 +192,12 @@ if [[ "$OTHER_BALANCE" != *'"error":"HOLDER_ADDRESS_FORBIDDEN"'* || "$OTHER_BALA
 fi
 
 printf '%s\n' '--- request redemption into queue ---'
-curl -sS -X POST "$API_URL/token/redeem" \
+QUEUE_RESPONSE="$(curl -sS -X POST "$API_URL/token/redeem" \
   -H "x-api-key: $API_KEY_MANAGER" \
   -H 'content-type: application/json' \
-  -d "{\"from\":\"$HOLDER_A\",\"redeemedShares\":\"$QUEUE_AMOUNT\"}"
+  -d "{\"from\":\"$HOLDER_A\",\"redeemedShares\":\"$QUEUE_AMOUNT\"}")"
+printf '%s' "$QUEUE_RESPONSE"
+record_transaction_gas "redemption_request" "baseline_queue" "$QUEUE_RESPONSE"
 printf '\n'
 curl -sS "$API_URL/token/redemption-queue" -H "x-api-key: $API_KEY_MANAGER"
 printf '\n'
@@ -175,6 +213,7 @@ if [[ "$ADJUSTED_NAV_RESPONSE" != *'"nav":"1100000000000000000"'* || "$ADJUSTED_
   printf 'Expected NAV = NetAssetValue / TotalShares and a positive 1000 bps adjustment on chain.\n' >&2
   exit 1
 fi
+record_transaction_gas "nav_update" "formula_pricing" "$ADJUSTED_NAV_RESPONSE"
 
 NOW_SEC="$(date +%s)"
 VALUATION_HAIRCUT_RESPONSE="$(curl -sS -X POST "$API_URL/nav/valuation-haircut" \
@@ -186,6 +225,7 @@ if [[ "$VALUATION_HAIRCUT_RESPONSE" != *'"valuationHaircutBps":1200'* || "$VALUA
   printf 'Expected valuation Oracle to record haircut state and commitment before risk scoring.\n' >&2
   exit 1
 fi
+record_transaction_gas "valuation_haircut_update" "baseline" "$VALUATION_HAIRCUT_RESPONSE"
 
 printf '%s\n' '--- liquidity oracle records the scoring input on chain ---'
 FORBIDDEN_LIQUIDITY_UPDATE="$(
@@ -208,6 +248,7 @@ if [[ "$LIQUIDITY_RESPONSE" != *'"liquidityBufferRatioBps":6500'* || "$LIQUIDITY
   printf 'Expected liquidity Oracle update with a state commitment.\n' >&2
   exit 1
 fi
+record_transaction_gas "liquidity_buffer_update" "baseline" "$LIQUIDITY_RESPONSE"
 
 STALE_RISK_INPUT="$(curl -sS -w '|%{http_code}' -X POST "$API_URL/risk/submit" \
   -H "x-api-key: $API_KEY_RISK_ORACLE" \
@@ -302,6 +343,7 @@ if [[ "$RISK_RESPONSE" != *'"staleReferenceUsed":"storedAt"'* || "$RISK_RESPONSE
   printf 'Expected both raw stale-age definitions and the scoring reference to be exported.\n' >&2
   exit 1
 fi
+record_transaction_gas "risk_submit" "baseline_non_gated" "$RISK_RESPONSE"
 
 printf '\n--- regulator view ---\n'
 curl -sS "$API_URL/risk/regulator" -H "x-api-key: $API_KEY_REGULATOR"
@@ -353,23 +395,29 @@ fi
 
 printf '\n--- trigger gate ---\n'
 printf '%s\n' '--- increase concentration, redemption pressure, and queue state through lifecycle actions ---'
-request_and_accept_subscription "$HOLDER_A" 99000 90000 1100000000000000000
-curl -sS -X POST "$API_URL/token/redeem" \
+request_and_accept_subscription "$HOLDER_A" 99000 90000 1100000000000000000 "concentration_shift"
+HIGH_QUEUE_RESPONSE="$(curl -sS -X POST "$API_URL/token/redeem" \
   -H "x-api-key: $API_KEY_MANAGER" \
   -H 'content-type: application/json' \
-  -d "{\"from\":\"$HOLDER_A\",\"redeemedShares\":\"90000\"}"
+  -d "{\"from\":\"$HOLDER_A\",\"redeemedShares\":\"90000\"}")"
+printf '%s' "$HIGH_QUEUE_RESPONSE"
+record_transaction_gas "redemption_request" "gate_pressure_queue" "$HIGH_QUEUE_RESPONSE"
 printf '\n'
 
 GATE_NOW_SEC="$(date +%s)"
-curl -sS -X POST "$API_URL/nav/valuation-haircut" \
+GATE_HAIRCUT_RESPONSE="$(curl -sS -X POST "$API_URL/nav/valuation-haircut" \
   -H "x-api-key: $API_KEY_NAV_ORACLE" \
   -H 'content-type: application/json' \
-  -d "{\"valuationHaircutBps\":9000,\"occurredAt\":$GATE_NOW_SEC}"
+  -d "{\"valuationHaircutBps\":9000,\"occurredAt\":$GATE_NOW_SEC}")"
+printf '%s' "$GATE_HAIRCUT_RESPONSE"
+record_transaction_gas "valuation_haircut_update" "gate_scenario" "$GATE_HAIRCUT_RESPONSE"
 printf '\n'
-curl -sS -X POST "$API_URL/liquidity/update" \
+GATE_LIQUIDITY_RESPONSE="$(curl -sS -X POST "$API_URL/liquidity/update" \
   -H "x-api-key: $API_KEY_LIQUIDITY_ORACLE" \
   -H 'content-type: application/json' \
-  -d "{\"liquidityBufferRatioBps\":0,\"occurredAt\":$GATE_NOW_SEC}"
+  -d "{\"liquidityBufferRatioBps\":0,\"occurredAt\":$GATE_NOW_SEC}")"
+printf '%s' "$GATE_LIQUIDITY_RESPONSE"
+record_transaction_gas "liquidity_buffer_update" "gate_scenario" "$GATE_LIQUIDITY_RESPONSE"
 printf '\n'
 
 FORBIDDEN_RISK_OVERRIDE="$(
@@ -396,6 +444,7 @@ if [[ "$HIGH_RISK_RESPONSE" != *'"riskScoreBps":7702'* ]]; then
   printf 'Expected equal-weight chain-derived high-risk score to be 7702 bps.\n' >&2
   exit 1
 fi
+record_transaction_gas "risk_submit_gate_trigger" "high_risk_control" "$HIGH_RISK_RESPONSE"
 
 printf '\n--- record extended control evidence without simulating full fund accounting ---\n'
 INVALID_SWING_RULE="$(
@@ -418,6 +467,7 @@ if [[ "$SWING_RESPONSE" != *'"adjustmentBps":350'* || "$SWING_RESPONSE" != *'"pa
   printf 'Expected swing pricing state, trigger rule, and commitment evidence.\n' >&2
   exit 1
 fi
+record_transaction_gas "swing_pricing_apply" "extended_control" "$SWING_RESPONSE"
 
 SIDE_POCKET_RESPONSE="$(curl -sS -X POST "$API_URL/controls/side-pocket" \
   -H "x-api-key: $API_KEY_MANAGER" \
@@ -428,6 +478,7 @@ if [[ "$SIDE_POCKET_RESPONSE" != *"\"assetCommitmentHash\":\"$SIDE_POCKET_ASSET_
   printf 'Expected side-pocket state, trigger rule, and asset commitment evidence.\n' >&2
   exit 1
 fi
+record_transaction_gas "side_pocket_create" "extended_control" "$SIDE_POCKET_RESPONSE"
 
 CONTROL_STATE="$(curl -sS "$API_URL/controls/state" -H "x-api-key: $API_KEY_REGULATOR")"
 if [[ "$CONTROL_STATE" != *'"swingPricingActive":true'* || "$CONTROL_STATE" != *'"sidePocketActive":true'* || "$CONTROL_STATE" != *'"swingPricingAdjustmentBps":350'* ]]; then
@@ -492,6 +543,7 @@ if [[ "$GATE_RELEASE" != *'"gated":false'* || "$GATE_RELEASE" != *"\"reasonHash\
   printf 'Expected regulator to release gate with an auditable reason hash.\n' >&2
   exit 1
 fi
+record_transaction_gas "gate_release" "regulator_reason" "$GATE_RELEASE"
 
 REPEATED_GATE_RELEASE="$(
   curl -sS -w '|%{http_code}' -X POST "$API_URL/risk/release-gate" \
@@ -517,6 +569,7 @@ if [[ -z "$POST_RELEASE_REQUEST_ID" || "$POST_RELEASE_REDEMPTION" != *'"status":
   printf 'Expected redemption requests to resume after regulator gate release.\n' >&2
   exit 1
 fi
+record_transaction_gas "redemption_request" "post_gate_release" "$POST_RELEASE_REDEMPTION"
 
 printf '\n--- flag and settle the queued redemption lifecycle ---\n'
 INVALID_DELAY_REASON="$(
@@ -541,6 +594,7 @@ if [[ "$DELAY_RESPONSE" != *"\"requestId\":\"$POST_RELEASE_REQUEST_ID\""* || "$D
   printf 'Expected a pending redemption to record an auditable settlement delay.\n' >&2
   exit 1
 fi
+record_transaction_gas "settlement_delay_flag" "post_gate_release" "$DELAY_RESPONSE"
 
 DELAYED_REQUEST="$(
   curl -sS "$API_URL/token/redemption-request/$POST_RELEASE_REQUEST_ID" \
@@ -562,6 +616,7 @@ if [[ "$SETTLEMENT_RESPONSE" != *"\"requestId\":\"$POST_RELEASE_REQUEST_ID\""* |
   printf 'Expected the delayed redemption to remain eligible for final settlement after gate release.\n' >&2
   exit 1
 fi
+record_transaction_gas "redemption_settlement" "post_gate_release" "$SETTLEMENT_RESPONSE"
 
 SETTLED_REQUEST="$(
   curl -sS "$API_URL/token/redemption-request/$POST_RELEASE_REQUEST_ID" \
@@ -718,6 +773,7 @@ if [[ "$STALE_WARNING_RESPONSE" != *'"stalePricingRiskBps":10000'* || "$STALE_WA
   printf 'Expected stale-pricing risk to reach 10000 bps at the configured 30-day boundary.\n' >&2
   exit 1
 fi
+record_transaction_gas "risk_submit" "stale_pricing_boundary" "$STALE_WARNING_RESPONSE"
 
 curl -sS -X POST "$API_URL/audit/sync" -H "x-api-key: $API_KEY_AUDITOR" >/dev/null
 STALE_WARNING_AUDIT="$(curl -sS "$API_URL/audit/events?eventName=StalePricingWarning" \
