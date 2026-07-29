@@ -287,6 +287,13 @@ test('exports four timestamp dimensions and raw candidate lags without assigning
   assert.match(csv, /GateTriggered/);
 });
 
+test('prevents a simulated chain clock from producing negative observation lag', () => {
+  const entry = lifecycleTimelineEntry(lifecycleEvent(), TRANSPARENCY_REGIMES.R1, 'regulator', 1_050);
+
+  assert.equal(entry.observedAt, 1_100);
+  assert.equal(entry.observationLagSec, 100);
+});
+
 test('rejects unsupported event names instead of silently misclassifying them', () => {
   assert.throws(() => normalizeLifecycleEvent({
     chainId: 31_337,

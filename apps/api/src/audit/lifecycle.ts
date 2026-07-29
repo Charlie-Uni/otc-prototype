@@ -5,6 +5,7 @@ import {
   controlDisclosureAllowedFor,
   disclosureTimeFor,
 } from '../risk/regimes';
+import { causalObservationTime } from './time';
 
 export const FUND_TOKEN_EVENT_ABI = parseAbi([
   'event RiskGateConfigured(address indexed riskGate, bytes32 indexed fundId)',
@@ -229,14 +230,15 @@ export function lifecycleTimelineEntry(
   observedAt: number,
 ): LifecycleTimelineEntry {
   const disclosedAt = eventDisclosureTimeFor(event, regime, audience);
+  const causalObservedAt = causalObservationTime(observedAt, [event.occurredAt, event.submittedAt]);
   return {
     ...event,
     regime: regime.id,
     audience,
     disclosedAt,
-    observedAt,
+    observedAt: causalObservedAt,
     recordingLagSec: event.submittedAt - event.occurredAt,
     disclosureLagSec: disclosedAt === null ? null : disclosedAt - event.occurredAt,
-    observationLagSec: observedAt - event.occurredAt,
+    observationLagSec: causalObservedAt - event.occurredAt,
   };
 }

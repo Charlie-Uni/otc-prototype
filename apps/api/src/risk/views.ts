@@ -1,5 +1,6 @@
 import { recordAudit } from '../audit/log';
 import { fundId } from '../chain';
+import { currentObservationTime } from '../observation-clock';
 import {
   readCurrentGateState,
   readLatestRiskSnapshot,
@@ -23,10 +24,6 @@ import {
   type TransparencyRegime,
   type TransparencyRegimeId,
 } from './regimes';
-
-function nowSec(): number {
-  return Math.floor(Date.now() / 1_000);
-}
 
 async function findLatestDisclosedSnapshot(
   regime: TransparencyRegime,
@@ -52,7 +49,7 @@ export async function buildPublicRiskView(
   actor: string,
 ) {
   const regime = getTransparencyRegime(regimeId);
-  const observedAt = nowSec();
+  const observedAt = await currentObservationTime();
   const { snapshot, disclosedAt, nextDisclosedAt } =
     await findLatestDisclosedSnapshot(regime, observedAt);
 
@@ -120,7 +117,7 @@ export async function buildRegulatorRiskView(
   actor: string,
 ) {
   const regime = getTransparencyRegime(regimeId);
-  const observedAt = nowSec();
+  const observedAt = await currentObservationTime();
 
   if (regulatorUsesDisclosureBoundary(regime)) {
     const { snapshot, disclosedAt, nextDisclosedAt } =

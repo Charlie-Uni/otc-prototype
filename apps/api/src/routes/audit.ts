@@ -9,6 +9,7 @@ import {
 import { exportAuditCsv, recordAudit } from '../audit/log';
 import { ACCESS_POLICY, auditActorFor, requireAnyRole } from '../auth';
 import { ENV } from '../env';
+import { currentObservationTime } from '../observation-clock';
 import { DisclosureAudience, TRANSPARENCY_REGIME_IDS, getTransparencyRegime } from '../risk/regimes';
 import { MAX_BPS } from '../risk/calc';
 import { analyzeDetectionLags } from '../simulation/detection';
@@ -60,17 +61,13 @@ const SensitivitySchema = z.object({
         .default([...CHAPTER3_KAPPA_BPS_VALUES]),
 });
 
-function nowSec(): number {
-    return Math.floor(Date.now() / 1_000);
-}
-
 async function readTimeline(rawQuery: unknown) {
     const parsed = TimelineQuerySchema.safeParse(rawQuery);
     if (!parsed.success) {
         throw Object.assign(new Error('INVALID_AUDIT_QUERY'), { statusCode: 400 });
     }
     const query = parsed.data;
-    const observedAt = nowSec();
+    const observedAt = await currentObservationTime();
     const regime = getTransparencyRegime(query.regime);
     const allEvents = await listLifecycleEvents(10_000);
     const selected = allEvents
@@ -154,7 +151,7 @@ export default async function (app: FastifyInstance) {
             actor: auditActorFor(req),
             action: 'audit.detection_lags.analyze',
             occurredAt: scenario.shockAt,
-            observedAt: nowSec(),
+            observedAt: await currentObservationTime(),
             details: {
                 scenarioId: scenario.scenarioId,
                 fundId: scenario.fundId,
