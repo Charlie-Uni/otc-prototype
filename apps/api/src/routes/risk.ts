@@ -1,5 +1,4 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { encodeAbiParameters, keccak256 } from 'viem';
 import { z } from 'zod';
 import { ACCESS_POLICY, auditActorFor, requireAnyRole } from '../auth';
 import { waitForTransactionTimestamp } from '../audit/chain-time';
@@ -27,6 +26,11 @@ import {
 import { readControlTransitions } from '../risk/controls';
 import { searchLatestDisclosedSnapshot } from '../risk/disclosure-search';
 import { submitRiskWithOneConfigRetry } from '../risk/submit-retry';
+import {
+  RISK_PAYLOAD_SCHEMA_VERSION,
+  STALE_REFERENCE_USED,
+  riskPayloadHashV3,
+} from '../risk/payload-commitment';
 import {
   TRANSPARENCY_REGIME_IDS,
   TransparencyRegime,
@@ -56,9 +60,6 @@ const SubmitRiskSchema = z.object({
 const RiskAuditQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(1_000).default(100),
 });
-const RISK_PAYLOAD_SCHEMA_VERSION = 3;
-const STALE_REFERENCE_USED = 'storedAt' as const;
-
 type WeightsConfig = {
   id: number;
   maxStaleAgeSec: number;
@@ -337,80 +338,37 @@ function payloadHashFor(
   valuationState: Awaited<ReturnType<typeof resolveValuationHaircut>>,
   liquidityState: Awaited<ReturnType<typeof resolveLiquidityBuffer>>,
 ) {
-  return keccak256(encodeAbiParameters(
-    [
-      { name: 'payloadSchemaVersion', type: 'uint16' },
-      { name: 'chainId', type: 'uint256' },
-      { name: 'riskRegistry', type: 'address' },
-      { name: 'fundId', type: 'bytes32' },
-      { name: 'snapshotBlockNumber', type: 'uint256' },
-      { name: 'snapshotBlockTimestamp', type: 'uint64' },
-      { name: 'occurredAt', type: 'uint64' },
-      { name: 'valuationHaircutBps', type: 'uint16' },
-      { name: 'redemptionPressureBps', type: 'uint16' },
-      { name: 'redemptionQueueRatioBps', type: 'uint16' },
-      { name: 'liquidityBufferRatioBps', type: 'uint256' },
-      { name: 'lastValuationAsOf', type: 'uint64' },
-      { name: 'lastValuationStoredAt', type: 'uint64' },
-      { name: 'staleReferenceUsed', type: 'string' },
-      { name: 'holderSharesBps', type: 'uint16[]' },
-      { name: 'valuationHaircutMetricBps', type: 'uint16' },
-      { name: 'redemptionPressureMetricBps', type: 'uint16' },
-      { name: 'redemptionQueueRatioMetricBps', type: 'uint16' },
-      { name: 'liquidityShortfallMetricBps', type: 'uint16' },
-      { name: 'stalePricingRiskMetricBps', type: 'uint16' },
-      { name: 'investorConcentrationMetricBps', type: 'uint16' },
-      { name: 'weightsConfigId', type: 'uint64' },
-      { name: 'maxStaleAgeSec', type: 'uint64' },
-      { name: 'weightsHash', type: 'bytes32' },
-      { name: 'valuationHaircutOccurredAt', type: 'uint64' },
-      { name: 'valuationHaircutSubmittedAt', type: 'uint64' },
-      { name: 'valuationHaircutPayloadHash', type: 'bytes32' },
-      { name: 'valuationHaircutAgeSec', type: 'uint64' },
-      { name: 'valuationHaircutFreshnessStatus', type: 'string' },
-      { name: 'liquidityBufferOccurredAt', type: 'uint64' },
-      { name: 'liquidityBufferSubmittedAt', type: 'uint64' },
-      { name: 'liquidityBufferPayloadHash', type: 'bytes32' },
-      { name: 'liquidityBufferAgeSec', type: 'uint64' },
-      { name: 'liquidityBufferFreshnessStatus', type: 'string' },
-    ],
-    [
-      RISK_PAYLOAD_SCHEMA_VERSION,
-      BigInt(context.chainId),
-      ENV.RISK_REGISTRY_ADDRESS,
-      fundId,
-      context.blockNumber,
-      BigInt(context.blockTimestamp),
-      BigInt(body.occurredAt),
-      body.valuationHaircutBps,
-      body.redemptionPressureBps,
-      body.redemptionQueueRatioBps,
-      BigInt(body.liquidityBufferRatioBps),
-      BigInt(body.lastValuationAsOf),
-      BigInt(body.lastValuationStoredAt),
-      STALE_REFERENCE_USED,
-      body.holderSharesBps,
-      metrics.valuationHaircutBps,
-      metrics.redemptionPressureBps,
-      metrics.redemptionQueueRatioBps,
-      metrics.liquidityShortfallBps,
-      metrics.stalePricingRiskBps,
-      metrics.investorConcentrationBps,
-      BigInt(config.id),
-      BigInt(config.maxStaleAgeSec),
-      config.weightsHash,
-      BigInt(valuationState.valuationHaircutSnapshot.occurredAt),
-      BigInt(valuationState.valuationHaircutSnapshot.submittedAt),
-      valuationState.valuationHaircutSnapshot.payloadHash,
-      BigInt(valuationState.valuationHaircutFreshness.ageSec),
-      valuationState.valuationHaircutFreshness.status,
-      BigInt(liquidityState.liquidityBufferSnapshot.occurredAt),
-      BigInt(liquidityState.liquidityBufferSnapshot.submittedAt),
-      liquidityState.liquidityBufferSnapshot.payloadHash,
-      BigInt(liquidityState.liquidityBufferFreshness.ageSec),
-      liquidityState.liquidityBufferFreshness.status,
-    ],
-  ));
+  return riskPayloadHashV3({
+    chainId: context.chainId,
+    riskRegistryAddress: ENV.RISK_REGISTRY_ADDRESS,
+    fundId,
+    snapshotBlockNumber: context.blockNumber,
+    snapshotBlockTimestamp: context.blockTimestamp,
+    occurredAt: body.occurredAt,
+    valuationHaircutBps: body.valuationHaircutBps,
+    redemptionPressureBps: body.redemptionPressureBps,
+    redemptionQueueRatioBps: body.redemptionQueueRatioBps,
+    liquidityBufferRatioBps: body.liquidityBufferRatioBps,
+    lastValuationAsOf: body.lastValuationAsOf,
+    lastValuationStoredAt: body.lastValuationStoredAt,
+    holderSharesBps: body.holderSharesBps,
+    metrics,
+    weightsConfigId: config.id,
+    maxStaleAgeSec: config.maxStaleAgeSec,
+    weightsHash: config.weightsHash,
+    valuationHaircut: {
+      occurredAt: valuationState.valuationHaircutSnapshot.occurredAt,
+      submittedAt: valuationState.valuationHaircutSnapshot.submittedAt,
+      payloadHash: valuationState.valuationHaircutSnapshot.payloadHash,
+      freshness: valuationState.valuationHaircutFreshness,
+    },
+    liquidityBuffer: {
+      occurredAt: liquidityState.liquidityBufferSnapshot.occurredAt,
+      submittedAt: liquidityState.liquidityBufferSnapshot.submittedAt,
+      payloadHash: liquidityState.liquidityBufferSnapshot.payloadHash,
+      freshness: liquidityState.liquidityBufferFreshness,
+    },
+  });
 }
 
 async function computeFromChainConfig(body: z.infer<typeof SubmitRiskSchema>): Promise<ComputedRisk> {
