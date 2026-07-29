@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { encodeAbiParameters, keccak256 } from 'viem';
+import { encodeAbiParameters, keccak256, type Hex } from 'viem';
 import { z } from 'zod';
 import { waitForTransactionTimestamp } from '../audit/chain-time';
 import { recordAudit } from '../audit/log';
@@ -13,24 +13,25 @@ const PositiveUintString = z.string()
 const AsOfSchema = z.coerce.number().int().positive();
 const NAV_PAYLOAD_SCHEMA_VERSION = 2;
 
-function normalizeNavRecord(raw: any) {
+type RawNavRecord = readonly [bigint, bigint, bigint, bigint, bigint, bigint, Hex, boolean];
+
+function normalizeNavRecord(raw: RawNavRecord) {
   return {
-    nav: (raw.nav ?? raw[0]).toString(),
-    netAssetValue: (raw.netAssetValue ?? raw[1]).toString(),
-    totalSharesSnapshot: (raw.totalSharesSnapshot ?? raw[2]).toString(),
-    asOf: Number(raw.asOf ?? raw[3]),
-    storedAt: Number(raw.storedAt ?? raw[4]),
-    navAdjustmentBps: (raw.navAdjustmentBps ?? raw[5]).toString(),
-    payloadHash: (raw.payloadHash ?? raw[6]) as `0x${string}`,
-    isInitial: Boolean(raw.isInitial ?? raw[7]),
+    nav: raw[0].toString(),
+    netAssetValue: raw[1].toString(),
+    totalSharesSnapshot: raw[2].toString(),
+    asOf: Number(raw[3]),
+    storedAt: Number(raw[4]),
+    navAdjustmentBps: raw[5].toString(),
+    payloadHash: raw[6],
+    isInitial: Boolean(raw[7]),
   };
 }
 
 export default async function (app: FastifyInstance) {
   app.get('/nav/latest', { preHandler: requireAnyRole(...ACCESS_POLICY.navRead) }, async (req, reply) => {
-    const c = nav as any;
     const result = {
-      ...normalizeNavRecord(await c.read.latestNAV([fundId])),
+      ...normalizeNavRecord(await nav.read.latestNAV([fundId])),
       fundId,
     };
     await recordAudit({
@@ -68,10 +69,14 @@ export default async function (app: FastifyInstance) {
         BigInt(body.asOf),
       ],
     ));
-    const c = nav as any;
-    const tx = await c.write.postInitialNAV([fundId, BigInt(body.initialNav), BigInt(body.asOf), payloadHash]);
+    const tx = await nav.write.postInitialNAV([
+      fundId,
+      BigInt(body.initialNav),
+      BigInt(body.asOf),
+      payloadHash,
+    ]);
     const submittedAt = await waitForTransactionTimestamp(tx);
-    const record = normalizeNavRecord(await c.read.latestNAV([fundId]));
+    const record = normalizeNavRecord(await nav.read.latestNAV([fundId]));
     await recordAudit({
       actor: auditActorFor(req),
       action: 'nav.initial.post',
@@ -93,8 +98,7 @@ export default async function (app: FastifyInstance) {
       rpc.getChainId(),
     ]);
     if (block.number === null) throw new Error('SNAPSHOT_BLOCK_NUMBER_UNAVAILABLE');
-    const tokenContract = token as any;
-    const totalSharesSnapshot = BigInt(await tokenContract.read.totalSupply({ blockNumber: block.number }));
+    const totalSharesSnapshot = await token.read.totalSupply({ blockNumber: block.number });
     if (totalSharesSnapshot === 0n) {
       throw Object.assign(new Error('NO_OUTSTANDING_SHARES'), { statusCode: 409 });
     }
@@ -123,8 +127,7 @@ export default async function (app: FastifyInstance) {
         BigInt(body.asOf),
       ],
     ));
-    const c = nav as any;
-    const tx = await c.write.postNAV([
+    const tx = await nav.write.postNAV([
       fundId,
       BigInt(body.netAssetValue),
       totalSharesSnapshot,
@@ -132,7 +135,7 @@ export default async function (app: FastifyInstance) {
       payloadHash,
     ]);
     const submittedAt = await waitForTransactionTimestamp(tx);
-    const record = normalizeNavRecord(await c.read.latestNAV([fundId]));
+    const record = normalizeNavRecord(await nav.read.latestNAV([fundId]));
     await recordAudit({
       actor: auditActorFor(req),
       action: 'nav.post',
@@ -169,8 +172,7 @@ export default async function (app: FastifyInstance) {
         ],
         [fundId, body.valuationHaircutBps, BigInt(body.occurredAt)],
       ));
-      const c = nav as any;
-      const tx = await c.write.postValuationHaircut([
+      const tx = await nav.write.postValuationHaircut([
         fundId,
         body.valuationHaircutBps,
         BigInt(body.occurredAt),

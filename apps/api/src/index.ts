@@ -13,10 +13,13 @@ import { validateChainConfiguration } from './chain';
 import { initializeDatabase } from './db/client';
 import { classifyHttpError } from './http/errors';
 
-// Global BigInt -> string fallback (harmless if already strings)
-(BigInt.prototype as any).toJSON = function () {
-  return this.toString();
-};
+// Global BigInt -> string fallback (harmless if values are already strings).
+Object.defineProperty(BigInt.prototype, 'toJSON', {
+  configurable: true,
+  value(this: bigint) {
+    return this.toString();
+  },
+});
 
 const app = Fastify({ logger: true });
 

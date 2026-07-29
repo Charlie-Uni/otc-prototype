@@ -40,10 +40,10 @@ export const liquidityOracleWallet = createWalletClient({
   transport: http(ENV.RPC_URL),
 });
 
-const clients = { public: rpc as any, wallet: wallet as any };
-const oracleClients = { public: rpc as any, wallet: oracleWallet as any };
-const regulatorClients = { public: rpc as any, wallet: regulatorWallet as any };
-const liquidityOracleClients = { public: rpc as any, wallet: liquidityOracleWallet as any };
+const clients = { public: rpc, wallet };
+const oracleClients = { public: rpc, wallet: oracleWallet };
+const regulatorClients = { public: rpc, wallet: regulatorWallet };
+const liquidityOracleClients = { public: rpc, wallet: liquidityOracleWallet };
 
 // NAV contract
 export const nav = getContract({
@@ -57,7 +57,7 @@ export const nav = getContract({
     'function postValuationHaircut(bytes32 fundId, uint16 valuationHaircutBps, uint64 occurredAt, bytes32 payloadHash) external',
     'function latestValuationHaircut(bytes32 fundId) view returns (uint16 valuationHaircutBps, uint64 occurredAt, uint64 submittedAt, bytes32 payloadHash, address submittedBy, bool exists)',
   ]),
-  client: clients as any,
+  client: clients,
 });
 
 // Token contract
@@ -83,7 +83,7 @@ export const token = getContract({
     'function setWhitelisted(address investor, bool eligible, bytes32 vcHash) external',
     'function whitelist(address investor) view returns (bool)',
   ]),
-  client: clients as any,
+  client: clients,
 });
 
 const riskRegistryAbi = parseAbi([
@@ -108,32 +108,31 @@ const riskRegistryAbi = parseAbi([
 export const riskRegistry = getContract({
   address: ENV.RISK_REGISTRY_ADDRESS as `0x${string}`,
   abi: riskRegistryAbi,
-  client: oracleClients as any,
+  client: oracleClients,
 });
 
 export const regulatorRiskRegistry = getContract({
   address: ENV.RISK_REGISTRY_ADDRESS as `0x${string}`,
   abi: riskRegistryAbi,
-  client: regulatorClients as any,
+  client: regulatorClients,
 });
 
 export const liquidityRiskRegistry = getContract({
   address: ENV.RISK_REGISTRY_ADDRESS as `0x${string}`,
   abi: riskRegistryAbi,
-  client: liquidityOracleClients as any,
+  client: liquidityOracleClients,
 });
 
 export const controlRiskRegistry = getContract({
   address: ENV.RISK_REGISTRY_ADDRESS as `0x${string}`,
   abi: riskRegistryAbi,
-  client: clients as any,
+  client: clients,
 });
 
 export async function validateChainConfiguration(): Promise<void> {
-  const c = token as any;
   const [onChainFundId, onChainNavRegistry] = await Promise.all([
-    c.read.fundId(),
-    c.read.navRegistry(),
+    token.read.fundId(),
+    token.read.navRegistry(),
   ]);
   assertFundBinding({
     expectedFundId: fundId,

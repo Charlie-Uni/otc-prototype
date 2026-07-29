@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { encodeAbiParameters, keccak256 } from 'viem';
+import { encodeAbiParameters, keccak256, type Hex } from 'viem';
 import { z } from 'zod';
 import { waitForTransactionTimestamp } from '../audit/chain-time';
 import { recordAudit } from '../audit/log';
@@ -23,6 +23,7 @@ export default async function (app: FastifyInstance) {
       const body = controlBaseSchema.extend({
         adjustmentBps: z.coerce.number().int().positive().max(MAX_BPS),
       }).parse(req.body);
+      const ruleId = body.ruleId as Hex;
       const payloadHash = keccak256(encodeAbiParameters(
         [
           { name: 'fundId', type: 'bytes32' },
@@ -30,13 +31,12 @@ export default async function (app: FastifyInstance) {
           { name: 'ruleId', type: 'bytes32' },
           { name: 'occurredAt', type: 'uint64' },
         ],
-        [fundId, body.adjustmentBps, body.ruleId as `0x${string}`, BigInt(body.occurredAt)],
+        [fundId, body.adjustmentBps, ruleId, BigInt(body.occurredAt)],
       ));
-      const c = controlRiskRegistry as any;
-      const tx = await c.write.applySwingPricing([
+      const tx = await controlRiskRegistry.write.applySwingPricing([
         fundId,
         body.adjustmentBps,
-        body.ruleId,
+        ruleId,
         BigInt(body.occurredAt),
         payloadHash,
       ]);
@@ -60,6 +60,8 @@ export default async function (app: FastifyInstance) {
       const body = controlBaseSchema.extend({
         assetCommitmentHash: bytes32Schema,
       }).parse(req.body);
+      const assetCommitmentHash = body.assetCommitmentHash as Hex;
+      const ruleId = body.ruleId as Hex;
       const payloadHash = keccak256(encodeAbiParameters(
         [
           { name: 'fundId', type: 'bytes32' },
@@ -69,16 +71,15 @@ export default async function (app: FastifyInstance) {
         ],
         [
           fundId,
-          body.assetCommitmentHash as `0x${string}`,
-          body.ruleId as `0x${string}`,
+          assetCommitmentHash,
+          ruleId,
           BigInt(body.occurredAt),
         ],
       ));
-      const c = controlRiskRegistry as any;
-      const tx = await c.write.createSidePocket([
+      const tx = await controlRiskRegistry.write.createSidePocket([
         fundId,
-        body.assetCommitmentHash,
-        body.ruleId,
+        assetCommitmentHash,
+        ruleId,
         BigInt(body.occurredAt),
         payloadHash,
       ]);
@@ -104,16 +105,15 @@ export default async function (app: FastifyInstance) {
     '/controls/state',
     { preHandler: requireAnyRole(...ACCESS_POLICY.regulatorRiskRead) },
     async (req, reply) => {
-      const c = controlRiskRegistry as any;
-      const raw = await c.read.extendedControlState([fundId]);
+      const raw = await controlRiskRegistry.read.extendedControlState([fundId]);
       const result = {
         fundId,
-        swingPricingActive: Boolean(raw.swingPricingActive ?? raw[0]),
-        sidePocketActive: Boolean(raw.sidePocketActive ?? raw[1]),
-        swingPricingAdjustmentBps: Number(raw.swingPricingAdjustmentBps ?? raw[2]),
-        lastRiskScoreBps: Number(raw.lastRiskScoreBps ?? raw[3]),
-        lastRuleId: raw.lastRuleId ?? raw[4],
-        sidePocketAssetCommitmentHash: raw.sidePocketAssetCommitmentHash ?? raw[5],
+        swingPricingActive: Boolean(raw[0]),
+        sidePocketActive: Boolean(raw[1]),
+        swingPricingAdjustmentBps: Number(raw[2]),
+        lastRiskScoreBps: Number(raw[3]),
+        lastRuleId: raw[4],
+        sidePocketAssetCommitmentHash: raw[5],
       };
       await recordAudit({
         actor: auditActorFor(req),
