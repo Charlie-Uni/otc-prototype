@@ -58,12 +58,7 @@ contract Deploy is Script {
         config.oracle = vm.addr(vm.envUint("ORACLE_PRIVATE_KEY"));
         config.regulator = vm.addr(vm.envUint("REGULATOR_PRIVATE_KEY"));
         config.liquidityOracle = vm.addr(vm.envUint("LIQUIDITY_ORACLE_PRIVATE_KEY"));
-        require(config.oracle != config.admin, "ORACLE_MUST_DIFFER_FROM_ADMIN");
-        require(config.regulator != config.admin, "REGULATOR_MUST_DIFFER_FROM_ADMIN");
-        require(config.liquidityOracle != config.admin, "LIQUIDITY_ORACLE_MUST_DIFFER_FROM_ADMIN");
-        require(config.oracle != config.regulator, "ORACLE_REGULATOR_ROLE_COLLISION");
-        require(config.oracle != config.liquidityOracle, "ORACLE_LIQUIDITY_ROLE_COLLISION");
-        require(config.regulator != config.liquidityOracle, "REGULATOR_LIQUIDITY_ROLE_COLLISION");
+        _validateRoleAccounts(config.admin, config.oracle, config.regulator, config.liquidityOracle);
         config.fundIdLabel = vm.envOr("FUND_ID_LABEL", string("OTC_FUND_1"));
         config.fundId = keccak256(bytes(config.fundIdLabel));
         config.weights[0] = _envBps("RISK_WEIGHT_1_BPS", 1_667);
@@ -77,6 +72,18 @@ contract Deploy is Script {
         uint256 maxStaleAgeSec = vm.envOr("MAX_STALE_AGE_SEC", uint256(30 days));
         require(maxStaleAgeSec > 0 && maxStaleAgeSec <= type(uint64).max, "INVALID_MAX_STALE_AGE");
         config.maxStaleAgeSec = uint64(maxStaleAgeSec);
+    }
+
+    function _validateRoleAccounts(address admin, address oracle, address regulator, address liquidityOracle)
+        internal
+        pure
+    {
+        require(oracle != admin, "ORACLE_MUST_DIFFER_FROM_ADMIN");
+        require(regulator != admin, "REGULATOR_MUST_DIFFER_FROM_ADMIN");
+        require(liquidityOracle != admin, "LIQUIDITY_ORACLE_MUST_DIFFER_FROM_ADMIN");
+        require(oracle != regulator, "ORACLE_REGULATOR_ROLE_COLLISION");
+        require(oracle != liquidityOracle, "ORACLE_LIQUIDITY_ROLE_COLLISION");
+        require(regulator != liquidityOracle, "REGULATOR_LIQUIDITY_ROLE_COLLISION");
     }
 
     function _envBps(string memory name, uint256 defaultValue) private view returns (uint16) {

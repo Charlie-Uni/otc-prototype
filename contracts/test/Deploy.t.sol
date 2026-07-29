@@ -7,6 +7,15 @@ import {FundToken} from "src/FundToken.sol";
 import {NAVRegistry} from "src/NAVRegistry.sol";
 import {RiskRegistry} from "src/RiskRegistry.sol";
 
+contract DeployHarness is Deploy {
+    function validateRoleAccounts(address admin, address oracle, address regulator, address liquidityOracle)
+        external
+        pure
+    {
+        _validateRoleAccounts(admin, oracle, regulator, liquidityOracle);
+    }
+}
+
 /// Fixes the deployment role-separation claim as an executable test instead of
 /// relying only on the end-to-end smoke's cast checks: after Deploy.run(), the
 /// risk oracle, liquidity oracle, and regulator roles must live on dedicated
@@ -81,18 +90,19 @@ contract DeployTest is Test {
     }
 
     function testDeployRejectsRoleAccountCollisions() public {
-        Deploy deployScript = new Deploy();
+        DeployHarness deployHarness = new DeployHarness();
+        address admin = vm.addr(ADMIN_KEY);
+        address oracle = vm.addr(ORACLE_KEY);
+        address regulator = vm.addr(REGULATOR_KEY);
+        address liquidityOracle = vm.addr(LIQUIDITY_KEY);
 
-        _setDeployEnv(ADMIN_KEY, REGULATOR_KEY, LIQUIDITY_KEY);
         vm.expectRevert(bytes("ORACLE_MUST_DIFFER_FROM_ADMIN"));
-        deployScript.run();
+        deployHarness.validateRoleAccounts(admin, admin, regulator, liquidityOracle);
 
-        _setDeployEnv(ORACLE_KEY, ORACLE_KEY, LIQUIDITY_KEY);
         vm.expectRevert(bytes("ORACLE_REGULATOR_ROLE_COLLISION"));
-        deployScript.run();
+        deployHarness.validateRoleAccounts(admin, oracle, oracle, liquidityOracle);
 
-        _setDeployEnv(ORACLE_KEY, REGULATOR_KEY, REGULATOR_KEY);
         vm.expectRevert(bytes("REGULATOR_LIQUIDITY_ROLE_COLLISION"));
-        deployScript.run();
+        deployHarness.validateRoleAccounts(admin, oracle, regulator, regulator);
     }
 }

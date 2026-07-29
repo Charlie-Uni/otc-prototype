@@ -636,7 +636,11 @@ if ! node -e '
     r3.disclosureDetectionLagSec === systemLag + 86400 &&
     r3.observationDetectionLagSec >= r3.disclosureDetectionLagSec &&
     r3.observationDetectionLagSec < r3.disclosureDetectionLagSec + pollingInterval &&
-    r0.disclosureDetectionLagSec > r3.disclosureDetectionLagSec;
+    r0.disclosedAt % 604800 === 0 &&
+    r0.disclosureDetectionLagSec >= systemLag &&
+    r0.disclosureDetectionLagSec < systemLag + 604800 &&
+    r0.observationDetectionLagSec >= r0.disclosureDetectionLagSec &&
+    r0.observationDetectionLagSec < r0.disclosureDetectionLagSec + pollingInterval;
   process.exit(valid ? 0 : 1);
 ' "$DETECTION_ANALYSIS"; then
   printf 'Expected independent system, R0-R4 disclosure, and scheduled observation DetectionLag outputs.\n' >&2
