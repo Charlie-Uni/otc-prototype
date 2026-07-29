@@ -15,6 +15,12 @@ import {
 
 const memoryLifecycleEvents = new Map<string, LifecycleEvent>();
 
+type LifecyclePersistenceDeps = {
+  databaseUrl?: string;
+  query: (sql: string, values: unknown[]) => Promise<{ rowCount: number | null }>;
+  memoryEvents: Map<string, LifecycleEvent>;
+};
+
 const EVENT_SOURCES = [
   {
     contractName: 'FundToken' as const,
@@ -90,14 +96,17 @@ async function readSourceEvents(source: Source, chainId: number) {
   return { events, skipped };
 }
 
-async function persistLifecycleEvent(event: LifecycleEvent): Promise<boolean> {
-  if (!ENV.DATABASE_URL) {
-    const inserted = !memoryLifecycleEvents.has(event.eventId);
-    memoryLifecycleEvents.set(event.eventId, event);
+export async function persistLifecycleEventWithDeps(
+  event: LifecycleEvent,
+  deps: LifecyclePersistenceDeps,
+): Promise<boolean> {
+  if (!deps.databaseUrl) {
+    const inserted = !deps.memoryEvents.has(event.eventId);
+    deps.memoryEvents.set(event.eventId, event);
     return inserted;
   }
 
-  const result = await db.query(
+  const result = await deps.query(
     `insert into lifecycle_event(
        event_id, chain_id, contract_address, contract_name, event_name, category, fund_id,
        transaction_hash, log_index, block_number, occurred_at, submitted_at, commitment_hash, payload
@@ -120,8 +129,15 @@ async function persistLifecycleEvent(event: LifecycleEvent): Promise<boolean> {
       JSON.stringify(event.payload),
     ],
   );
-  memoryLifecycleEvents.set(event.eventId, event);
   return (result.rowCount ?? 0) > 0;
+}
+
+async function persistLifecycleEvent(event: LifecycleEvent): Promise<boolean> {
+  return persistLifecycleEventWithDeps(event, {
+    databaseUrl: ENV.DATABASE_URL,
+    query: (sql, values) => db.query(sql, values),
+    memoryEvents: memoryLifecycleEvents,
+  });
 }
 
 export async function syncLifecycleEvents() {
