@@ -102,7 +102,9 @@ write_summary() {
     "anvil": "anvil.log",
     "postgresRestartServer": "api-restart.log",
     "postgresRestartRead": "postgres-persistence.json",
-    "postgresAuditRestartRead": "postgres-audit-persistence.json"
+    "postgresAuditRestartRead": "postgres-audit-persistence.json",
+    "detectionBeforeRestart": "detection-before-restart.json",
+    "detectionAfterRestart": "detection-after-restart.json"
   }
 }
 JSON
@@ -353,6 +355,7 @@ env \
   RPC_URL="$RPC_URL" \
   FUND_ID="$(cast keccak "$FUND_ID_LABEL")" \
   GAS_REPORT_PATH="$RESULTS_DIR/smoke-gas.csv" \
+  DETECTION_REPORT_PATH="$RESULTS_DIR/detection-before-restart.json" \
   bash "$ROOT_DIR/scripts/smoke-risk-api.sh" > "$RESULTS_DIR/smoke.log" 2>&1
 SMOKE_STATUS="passed"
 
@@ -432,6 +435,29 @@ if [[ -n "$DATABASE_URL" ]]; then
     process.exit(valid ? 0 : 1);
   ' "$RESULTS_DIR/postgres-audit-persistence.json"; then
     printf 'Persisted API audit entries contained a causally invalid observation time.\n' >&2
+    exit 1
+  fi
+  node -e '
+    const fs = require("node:fs");
+    const before = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+    fs.writeFileSync(process.argv[2], JSON.stringify(before.scenario));
+  ' \
+    "$RESULTS_DIR/detection-before-restart.json" \
+    "$RESULTS_DIR/detection-restart-request.json"
+  curl -fsS -X POST "$API_URL/audit/detection-lags" \
+    -H "x-api-key: $API_KEY_AUDITOR" \
+    -H 'content-type: application/json' \
+    --data-binary "@$RESULTS_DIR/detection-restart-request.json" \
+    > "$RESULTS_DIR/detection-after-restart.json"
+  if ! node -e '
+    const fs = require("node:fs");
+    const before = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+    const after = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+    process.exit(JSON.stringify(before) === JSON.stringify(after) ? 0 : 1);
+  ' \
+    "$RESULTS_DIR/detection-before-restart.json" \
+    "$RESULTS_DIR/detection-after-restart.json"; then
+    printf 'DetectionLag analysis changed after the PostgreSQL-backed API restart.\n' >&2
     exit 1
   fi
   POSTGRES_STATUS="passed"
