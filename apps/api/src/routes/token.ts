@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { decodeEventLog, isAddress, parseAbi } from 'viem';
+import { decodeEventLog, isAddress, parseAbi, type TransactionReceipt } from 'viem';
 import { z } from 'zod';
 import { waitForTransaction, waitForTransactionTimestamp } from '../audit/chain-time';
 import { recordAudit } from '../audit/log';
@@ -20,7 +20,7 @@ const RequestEventsAbi = parseAbi([
 ]);
 
 function requestIdFromReceipt(
-    receipt: { logs: readonly any[] },
+    receipt: Pick<TransactionReceipt, 'logs'>,
     eventName: 'SubscriptionRequested' | 'RedemptionRequested',
 ): bigint {
     for (const log of receipt.logs) {
@@ -32,7 +32,7 @@ function requestIdFromReceipt(
                 strict: true,
             });
             if (decoded.eventName !== eventName) continue;
-            const requestId = (decoded.args as any).requestId;
+            const requestId = decoded.args.requestId;
             if (requestId !== undefined) return BigInt(requestId);
         } catch {
             continue;
@@ -44,8 +44,7 @@ function requestIdFromReceipt(
 export default async function (app: FastifyInstance) {
     app.post('/token/request-subscription', { preHandler: requireAnyRole(...ACCESS_POLICY.subscriptionWrite) }, async (req) => {
         const body = z.object({ to: AddressSchema, subscriptionAmount: AmountSchema }).strict().parse(req.body);
-        const c = token as any;
-        const tx = await c.write.requestSubscriptionFor([body.to as `0x${string}`, body.subscriptionAmount]);
+        const tx = await token.write.requestSubscriptionFor([body.to as `0x${string}`, body.subscriptionAmount]);
         const { receipt, submittedAt } = await waitForTransaction(tx);
         const requestId = requestIdFromReceipt(receipt, 'SubscriptionRequested');
         await recordAudit({
@@ -65,19 +64,17 @@ export default async function (app: FastifyInstance) {
 
     app.post('/token/accept-subscription', { preHandler: requireAnyRole(...ACCESS_POLICY.subscriptionWrite) }, async (req) => {
         const body = z.object({ requestId: SubscriptionRequestIdSchema }).parse(req.body);
-        const c = token as any;
-        const tx = await c.write.acceptSubscription([body.requestId]);
+        const tx = await token.write.acceptSubscription([body.requestId]);
         const submittedAt = await waitForTransactionTimestamp(tx);
-        const raw = await c.read.subscriptionRequestAt([body.requestId]);
-        const request = raw.request ?? raw;
+        const request = await token.read.subscriptionRequestAt([body.requestId]);
         const result = {
             requestId: body.requestId.toString(),
-            investor: request.investor ?? request[0],
-            subscriptionAmount: (request.subscriptionAmount ?? request[1]).toString(),
-            mintedShares: (request.mintedShares ?? request[2]).toString(),
-            navUsed: (request.navUsed ?? request[3]).toString(),
-            navAsOf: Number(request.navAsOf ?? request[4]),
-            requestHash: request.requestHash ?? request[7],
+            investor: request[0],
+            subscriptionAmount: request[1].toString(),
+            mintedShares: request[2].toString(),
+            navUsed: request[3].toString(),
+            navAsOf: Number(request[4]),
+            requestHash: request[7],
         };
         await recordAudit({
             actor: auditActorFor(req),
@@ -92,19 +89,17 @@ export default async function (app: FastifyInstance) {
 
     app.get('/token/subscription-request/:id', { preHandler: requireAnyRole(...ACCESS_POLICY.subscriptionRead) }, async (req) => {
         const { id } = z.object({ id: SubscriptionRequestIdSchema }).parse(req.params);
-        const c = token as any;
-        const raw = await c.read.subscriptionRequestAt([id]);
-        const request = raw.request ?? raw;
+        const request = await token.read.subscriptionRequestAt([id]);
         const result = {
-            investor: request.investor ?? request[0],
-            subscriptionAmount: (request.subscriptionAmount ?? request[1]).toString(),
-            mintedShares: (request.mintedShares ?? request[2]).toString(),
-            navUsed: (request.navUsed ?? request[3]).toString(),
-            navAsOf: Number(request.navAsOf ?? request[4]),
-            requestedAt: Number(request.requestedAt ?? request[5]),
-            acceptedAt: Number(request.acceptedAt ?? request[6]),
-            requestHash: request.requestHash ?? request[7],
-            status: Boolean(request.accepted ?? request[8]) ? 'accepted' : 'pending',
+            investor: request[0],
+            subscriptionAmount: request[1].toString(),
+            mintedShares: request[2].toString(),
+            navUsed: request[3].toString(),
+            navAsOf: Number(request[4]),
+            requestedAt: Number(request[5]),
+            acceptedAt: Number(request[6]),
+            requestHash: request[7],
+            status: request[8] ? 'accepted' : 'pending',
         };
         await recordAudit({
             actor: auditActorFor(req),
@@ -119,8 +114,7 @@ export default async function (app: FastifyInstance) {
 
     app.post('/token/redeem', { preHandler: requireAnyRole(...ACCESS_POLICY.redemptionWrite) }, async (req) => {
         const body = z.object({ from: AddressSchema, redeemedShares: AmountSchema }).strict().parse(req.body);
-        const c = token as any;
-        const tx = await c.write.requestRedemptionFor([body.from as `0x${string}`, body.redeemedShares]);
+        const tx = await token.write.requestRedemptionFor([body.from as `0x${string}`, body.redeemedShares]);
         const { receipt, submittedAt } = await waitForTransaction(tx);
         const requestId = requestIdFromReceipt(receipt, 'RedemptionRequested');
         await recordAudit({
@@ -140,16 +134,14 @@ export default async function (app: FastifyInstance) {
 
     app.post('/token/settle-redemption', { preHandler: requireAnyRole(...ACCESS_POLICY.redemptionWrite) }, async (req) => {
         const body = z.object({ requestId: z.coerce.bigint().min(0n) }).parse(req.body);
-        const c = token as any;
-        const tx = await c.write.settleRedemption([body.requestId]);
+        const tx = await token.write.settleRedemption([body.requestId]);
         const submittedAt = await waitForTransactionTimestamp(tx);
-        const raw = await c.read.redemptionRequestAt([body.requestId]);
-        const request = raw.request ?? raw;
+        const request = await token.read.redemptionRequestAt([body.requestId]);
         const settlement = {
-            redeemedShares: (request.redeemedShares ?? request[1]).toString(),
-            redemptionAmount: (request.redemptionAmount ?? request[2]).toString(),
-            settlementNav: (request.settlementNav ?? request[3]).toString(),
-            settlementNavAsOf: Number(request.settlementNavAsOf ?? request[4]),
+            redeemedShares: request.redeemedShares.toString(),
+            redemptionAmount: request.redemptionAmount.toString(),
+            settlementNav: request.settlementNav.toString(),
+            settlementNavAsOf: Number(request.settlementNavAsOf),
         };
         await recordAudit({
             actor: auditActorFor(req),
@@ -167,8 +159,7 @@ export default async function (app: FastifyInstance) {
             requestId: z.coerce.bigint().min(0n),
             reasonHash: NonZeroBytes32Schema,
         }).parse(req.body);
-        const c = token as any;
-        const tx = await c.write.flagSettlementDelayed([body.requestId, body.reasonHash as `0x${string}`]);
+        const tx = await token.write.flagSettlementDelayed([body.requestId, body.reasonHash as `0x${string}`]);
         const submittedAt = await waitForTransactionTimestamp(tx);
         await recordAudit({
             actor: auditActorFor(req),
@@ -187,10 +178,9 @@ export default async function (app: FastifyInstance) {
     });
 
     app.get('/token/redemption-queue', { preHandler: requireAnyRole(...ACCESS_POLICY.redemptionRead) }, async (req) => {
-        const c = token as any;
         const [totalQueuedRedemption, redemptionQueueRatioBps] = await Promise.all([
-            c.read.totalQueuedRedemption(),
-            c.read.redemptionQueueRatioBps(),
+            token.read.totalQueuedRedemption(),
+            token.read.redemptionQueueRatioBps(),
         ]);
         const result = {
             totalQueuedRedemption: totalQueuedRedemption.toString(),
@@ -206,21 +196,19 @@ export default async function (app: FastifyInstance) {
 
     app.get('/token/redemption-request/:id', { preHandler: requireAnyRole(...ACCESS_POLICY.redemptionRead) }, async (req) => {
         const { id } = z.object({ id: z.coerce.bigint().min(0n) }).parse(req.params);
-        const c = token as any;
-        const raw = await c.read.redemptionRequestAt([id]);
-        const request = raw.request ?? raw;
+        const request = await token.read.redemptionRequestAt([id]);
         const result = {
-            investor: request.investor ?? request[0],
-            redeemedShares: (request.redeemedShares ?? request[1]).toString(),
-            redemptionAmount: (request.redemptionAmount ?? request[2]).toString(),
-            settlementNav: (request.settlementNav ?? request[3]).toString(),
-            settlementNavAsOf: Number(request.settlementNavAsOf ?? request[4]),
-            requestedAt: Number(request.requestedAt ?? request[5]),
-            settledAt: Number(request.settledAt ?? request[6]),
-            delayedAt: Number(request.delayedAt ?? request[7]),
-            delayReasonHash: request.delayReasonHash ?? request[8],
-            settled: Boolean(request.settled ?? request[9]),
-            delayed: Boolean(request.delayed ?? request[10]),
+            investor: request.investor,
+            redeemedShares: request.redeemedShares.toString(),
+            redemptionAmount: request.redemptionAmount.toString(),
+            settlementNav: request.settlementNav.toString(),
+            settlementNavAsOf: Number(request.settlementNavAsOf),
+            requestedAt: Number(request.requestedAt),
+            settledAt: Number(request.settledAt),
+            delayedAt: Number(request.delayedAt),
+            delayReasonHash: request.delayReasonHash,
+            settled: request.settled,
+            delayed: request.delayed,
         };
         await recordAudit({
             actor: auditActorFor(req),
@@ -239,8 +227,7 @@ export default async function (app: FastifyInstance) {
         if (!canReadHolderAddress(req.apiRole, addr, ENV.API_KEY_INVESTOR_ADDRESS)) {
             return reply.code(403).send({ error: 'HOLDER_ADDRESS_FORBIDDEN' });
         }
-        const c = token as any;
-        const bal = await c.read.balanceOf([addr as `0x${string}`]);
+        const bal = await token.read.balanceOf([addr as `0x${string}`]);
         const result = { balance: bal.toString() };
         await recordAudit({
             actor: auditActorFor(req),

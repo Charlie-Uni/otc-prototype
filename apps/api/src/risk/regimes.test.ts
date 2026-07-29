@@ -44,13 +44,13 @@ test('R1 exposes detailed real-time public risk data and control status', () => 
     disclosedAt: 1_000,
     visibleGated: true,
     latestVisibleControlEventName: 'GateTriggered',
-  });
+  }) as Record<string, unknown>;
 
   assert.equal(view.regime, 'R1');
   assert.equal(view.controlDisclosed, true);
-  assert.equal((view as any).gated, true);
-  assert.equal((view as any).riskScoreBps, 1_960);
-  assert.deepEqual((view as any).metrics, snapshot.metrics);
+  assert.equal(view.gated, true);
+  assert.equal(view.riskScoreBps, 1_960);
+  assert.deepEqual(view.metrics, snapshot.metrics);
 });
 
 test('R0 keeps the public payload aggregate after the low-frequency boundary', () => {

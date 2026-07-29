@@ -97,14 +97,14 @@ export async function readRedemptionPressureSnapshot(
       fromBlock: 0n,
       toBlock: blockNumber,
     }),
-    (token as any).read.totalSupply({ blockNumber }),
+    token.read.totalSupply({ blockNumber }),
   ]);
 
   return computeRedemptionPressureSnapshotFromEvents({
     fundId,
     occurredAt,
     windowSec,
-    totalSupply: totalSupplyRaw as bigint,
+    totalSupply: totalSupplyRaw,
     requests: requestLogs.map((log) => ({
       fundId: log.args.fundId as `0x${string}`,
       redeemedShares: log.args.redeemedShares as bigint,

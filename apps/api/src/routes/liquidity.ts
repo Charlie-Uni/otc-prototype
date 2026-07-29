@@ -25,8 +25,7 @@ export default async function (app: FastifyInstance) {
         ],
         [fundId, BigInt(body.liquidityBufferRatioBps), BigInt(body.occurredAt)],
       ));
-      const c = liquidityRiskRegistry as any;
-      const tx = await c.write.submitLiquidityBuffer([
+      const tx = await liquidityRiskRegistry.write.submitLiquidityBuffer([
         fundId,
         BigInt(body.liquidityBufferRatioBps),
         BigInt(body.occurredAt),
@@ -60,15 +59,14 @@ export default async function (app: FastifyInstance) {
     '/liquidity/latest',
     { preHandler: requireAnyRole(...ACCESS_POLICY.liquidityRead) },
     async (req, reply) => {
-      const c = liquidityRiskRegistry as any;
-      const raw = await c.read.latestLiquidityBuffer([fundId]);
+      const raw = await liquidityRiskRegistry.read.latestLiquidityBuffer([fundId]);
       const result = {
         fundId,
-        liquidityBufferRatioBps: Number(raw.liquidityBufferRatioBps ?? raw[0]),
-        occurredAt: Number(raw.occurredAt ?? raw[1]),
-        submittedAt: Number(raw.submittedAt ?? raw[2]),
-        payloadHash: raw.payloadHash ?? raw[3],
-        submittedBy: raw.submittedBy ?? raw[4],
+        liquidityBufferRatioBps: Number(raw[0]),
+        occurredAt: Number(raw[1]),
+        submittedAt: Number(raw[2]),
+        payloadHash: raw[3],
+        submittedBy: raw[4],
       };
       await recordAudit({
         actor: auditActorFor(req),

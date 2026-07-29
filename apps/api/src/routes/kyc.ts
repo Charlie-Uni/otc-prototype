@@ -21,8 +21,7 @@ export default async function (app: FastifyInstance) {
     const investor = getAddress(body.address) as `0x${string}`;
     const vcHash = body.vcHash as `0x${string}`;
 
-    const c = token as any;
-    const tx = await c.write.setWhitelisted([investor, true, vcHash]);
+    const tx = await token.write.setWhitelisted([investor, true, vcHash]);
     const submittedAt = await waitForTransactionTimestamp(tx);
 
     if (ENV.DATABASE_URL) {
@@ -46,8 +45,7 @@ export default async function (app: FastifyInstance) {
   app.get('/kyc/:address', { preHandler: requireAnyRole(...ACCESS_POLICY.kycRead) }, async (req) => {
     const { address } = z.object({ address: z.string().refine(isAddress, 'Invalid address') }).parse(req.params);
     const investor = getAddress(address);
-    const c = token as any;
-    const chainEligible = Boolean(await c.read.whitelist([investor]));
+    const chainEligible = Boolean(await token.read.whitelist([investor]));
     if (!ENV.DATABASE_URL) {
       const result = { address: investor, eligible: chainEligible, vc_hash: null, source: 'chain' };
       await recordAudit({

@@ -96,7 +96,7 @@ export async function readHolderShareSnapshot(blockNumber: bigint): Promise<Hold
       fromBlock: 0n,
       toBlock: blockNumber,
     }),
-    (token as any).read.totalSupply({ blockNumber }) as Promise<bigint>,
+    token.read.totalSupply({ blockNumber }),
   ]);
 
   let latestEventTotalSupply: bigint | null = null;
