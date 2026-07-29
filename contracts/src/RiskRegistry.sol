@@ -423,7 +423,7 @@ contract RiskRegistry is AccessControl {
 
     function _setWeights(uint16[6] memory weightBps, uint64 maxStaleAgeSec) private {
         require(maxStaleAgeSec > 0, "INVALID_MAX_STALE_AGE");
-        uint256 totalWeightBps;
+        uint256 totalWeightBps = 0;
         for (uint256 i = 0; i < weightBps.length; i++) {
             _validateBps(weightBps[i]);
             totalWeightBps += weightBps[i];
