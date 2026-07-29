@@ -40,7 +40,7 @@ pnpm test:chapter3
 - 静态检查：TypeScript `--noEmit` 通过。
 - 端到端：初始 NAV、现金认购换份额、净资产计算 NAV、赎回现金金额、链上指标溯源、高风险评分、30 天陈旧警告、Gate、R0-R4、基金绑定错配拒绝启动、审计与仿真全部通过。
 - 合约行覆盖率与运行时字节数以 `coverage.log` 与 `summary.json` 为准；三份业务合约均低于 EIP-170 的 24576 B。部署脚本另由 `Deploy.t.sol` 与端到端 smoke 验证，不计入业务合约覆盖率报表。
-- 固定摘要见 `docs/evidence/chapter3-summary.json`；其证据来源 commit 与 GitHub Actions run id 以该文件的 `source` 字段为准（避免本文档与重锚定后的证据产生引用漂移）。本轮 ABI 和业务变更合并后必须由启用 PostgreSQL 16 的新 CI 重新锚定，旧摘要不能作为当前版本证据。
+- 固定摘要见 `docs/evidence/chapter3-summary.json`；其证据来源 commit 与 GitHub Actions run id 以该文件的 `source` 字段为准（避免本文档与重锚定后的证据产生引用漂移）。当前摘要已锚定到合并后 master 的 CI 运行（启用 PostgreSQL 16），并附独立云沙盒同 commit 完整复现记录；除 R0 披露滞后随运行时刻在周期边界内确定性变化外，两环境全部指标一致。
 - Smoke 是压缩时间的功能验证，生命周期 CSV 中接近零的原始时间差不作为制度效果证据；三类 DetectionLag 均以 `/audit/detection-lags` 的情景输出为准。
 
 ## 时间戳口径

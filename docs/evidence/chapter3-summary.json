@@ -3,12 +3,12 @@
     "kind": "github_actions_artifact",
     "repository": "Charlie-Uni/otc-prototype",
     "branch": "master",
-    "commitSha": "77abc0fee2ee6b50cf1c21c10d97c71001ada8f7",
+    "commitSha": "34883d0",
     "workflow": "Chapter 3 Artifact Tests",
-    "workflowRunId": 30327991820,
-    "workflowRunUrl": "https://github.com/Charlie-Uni/otc-prototype/actions/runs/30327991820",
+    "workflowRunId": 30416449429,
+    "workflowRunUrl": "https://github.com/Charlie-Uni/otc-prototype/actions/runs/30416449429",
     "artifactName": "chapter3-test-evidence",
-    "artifactRunId": "20260728T041114Z"
+    "artifactRunId": "20260729T021835Z"
   },
   "status": "passed",
   "environment": {
@@ -16,97 +16,70 @@
   },
   "checks": {
     "contractTests": "passed",
-    "contractTestCount": 58,
+    "contractTestCount": 83,
+    "fuzzTestCount": 4,
     "fuzzRunsPerFuzzTest": 256,
     "apiTests": "passed",
-    "apiTestCount": 60,
+    "apiTestCount": 84,
     "typecheck": "passed",
     "deploymentRoleSeparation": "passed",
+    "fundBindingValidation": "passed",
     "endToEndSmoke": "passed",
     "postgresRestartPersistence": "passed",
     "contractCoverage": "passed"
   },
   "contractLineCoveragePercent": {
-    "FundToken": 96.75,
+    "FundToken": 99.27,
     "NAVRegistry": 100,
-    "RiskRegistry": 97.22,
-    "total": 97.4
+    "RiskRegistry": 97.3,
+    "total": 98.55
   },
   "runtimeCodeSizeBytes": {
-    "FundToken": 19065,
-    "NAVRegistry": 8419,
-    "RiskRegistry": 19095,
+    "FundToken": 21671,
+    "NAVRegistry": 10302,
+    "RiskRegistry": 19598,
     "eip170Limit": 24576
   },
   "endToEndAssertions": {
-    "riskScoreBps": 7702,
+    "riskPayloadSchemaVersion": 3,
+    "gateTriggerRiskScoreBps": 7702,
+    "staleWarningRiskScoreBps": 7838,
     "gateError": "REDEMPTION_GATED",
     "gateHttpStatus": 409,
-    "postgresEventCountAfterRestart": 1,
-    "postgresGateTriggeredCount": 1,
-    "postgresAuditEntryCountAfterRestart": 57,
-    "postgresRiskSubmitCountAfterRestart": 2
+    "stalePricingWarningAtMaxAge": true,
+    "riskWarningEventAsserted": true,
+    "fundBindingMismatchRejectedAtStartup": true,
+    "postgresGateTriggeredEventCountAfterRestart": 5,
+    "postgresAuditEntryCountAfterRestart": 179,
+    "postgresRiskSubmitCountAfterRestart": 8
   },
   "detectionScenario": {
     "scenarioId": "smoke-valuation-shock",
     "detectionThresholdBps": 6000,
     "pollingIntervalSec": 60,
+    "anchorFilter": "fundId + occurredAt >= shockAt + submittedAt >= shockAt + rawScore >= tau",
     "systemDetectionLagSec": 0,
     "disclosureDetectionLagSec": {
-      "public": {
-        "R0": 157711,
-        "R1": 0,
-        "R2": 0,
-        "R3": 86400,
-        "R4": 0
-      },
-      "regulator": {
-        "R0": 157711,
-        "R1": 0,
-        "R2": 0,
-        "R3": 86400,
-        "R4": 0
-      }
+      "R1": 0,
+      "R2": 0,
+      "R3": 86400,
+      "R4": 0,
+      "R0": "epoch-aligned, varies with run clock within [systemLag, systemLag + 604800); smoke asserts disclosedAt % 604800 == 0"
     },
-    "observationDetectionLagSec": {
-      "public": {
-        "R0": 157740,
-        "R1": 0,
-        "R2": 0,
-        "R3": 86400,
-        "R4": 0
-      },
-      "regulator": {
-        "R0": 157740,
-        "R1": 0,
-        "R2": 0,
-        "R3": 86400,
-        "R4": 0
-      }
-    }
+    "aggregateThresholdCensoring": "tau=6000 equals the public red band boundary, so no rows are censored in the baseline scenario; non-boundary thresholds yield censored(threshold_not_identifiable) for aggregate-granularity public views"
   },
-  "evidenceFiles": {
-    "summary.json": {
-      "sha256": "59e99a49cdbfea5791e4a0c630bcc918fbd1fda10530fac1803d9bd4b1fd4213"
-    },
-    "postgres-persistence.json": {
-      "sizeBytes": 1129,
-      "sha256": "656c0d7d532d3e847b7f0b9f7f027f251a36909134f56fb06a16caa435a4b7a0"
-    },
-    "postgres-audit-persistence.json": {
-      "sizeBytes": 24981,
-      "sha256": "d022943ad1c3d67e910fb9710976ef4fddc6f56c179602ca9d6e3c5d4c420624"
-    },
-    "role-separation.log": {
-      "sizeBytes": 132,
-      "sha256": "1b1de94e11614b963fe80c68ba592dbb6afcec27522984e43d87653e537dfa9b"
-    }
+  "independentReproduction": {
+    "environment": "isolated cloud sandbox (Ubuntu 24.04, Node 22, forge 1.5.1, solc 0.8.30, PostgreSQL 16)",
+    "commitSha": "34883d0",
+    "artifactRunId": "20260729T022159Z",
+    "result": "all checks passed; test counts, coverage percentages, runtime code sizes, gate/stale scores, postgres persistence counts identical to the CI run; R0 lag differs only by run clock as documented"
   },
   "notes": [
-    "Risk inputs were read at one fixed block and committed with payload schema version 2.",
-    "PostgreSQL event and API audit records were read after an API process restart.",
-    "Risk submission, liquidity submission, and Gate release roles were assigned to separate accounts and removed from admin after deployment.",
+    "Risk inputs were read at one fixed block and committed with payload schema version 3 (chainId + registry address + fundId + snapshot block domain binding).",
+    "Subscription mints shares as SubscriptionAmount*1e18/NAV on-chain; post-initial NAV is computed on-chain as NetAssetValue*1e18/TotalSharesSnapshot with the share snapshot read from the token at a fixed block; redemption records the settlement-time NAV and cash amount. Math.mulDiv floors in the fund-favorable (anti-dilutive) direction.",
+    "FundToken is immutably bound to its NAVRegistry; the API validates fundId and registry binding at startup and refuses to start on mismatch (asserted end-to-end).",
+    "Risk submission, liquidity submission, and gate release roles were assigned to separate accounts and removed from admin after deployment (Deploy.t.sol + on-chain cast checks).",
     "Smoke is a compressed functional test; the dedicated scenario output is the evidence source for all three DetectionLag measures.",
-    "Complete raw logs are retained in the GitHub Actions artifact referenced above."
+    "Complete raw logs and evidence files are retained in the GitHub Actions artifact referenced above; per-file SHA-256 digests can be verified by downloading that artifact."
   ]
 }
