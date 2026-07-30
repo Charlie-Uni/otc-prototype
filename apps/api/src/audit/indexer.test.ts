@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { LifecycleEvent } from './lifecycle';
-import { persistLifecycleEventWithDeps } from './indexer';
+import { persistLifecycleEventWithDeps } from './persistence';
 
 const EVENT: LifecycleEvent = {
   eventId: '31337:0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:0',
