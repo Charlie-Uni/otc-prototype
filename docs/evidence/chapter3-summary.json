@@ -3,12 +3,12 @@
     "kind": "github_actions_artifact",
     "repository": "Charlie-Uni/otc-prototype",
     "branch": "master",
-    "commitSha": "4213428c77ea5ad00032ca4db8f0ccbb07eb3cac",
+    "commitSha": "b5fe1c8ec2153d1e84e0492012be44a45182dfe2",
     "workflow": "Chapter 3 Artifact Tests",
-    "workflowRunId": 30450820190,
-    "workflowRunUrl": "https://github.com/Charlie-Uni/otc-prototype/actions/runs/30450820190",
+    "workflowRunId": 30505900338,
+    "workflowRunUrl": "https://github.com/Charlie-Uni/otc-prototype/actions/runs/30505900338",
     "artifactName": "chapter3-test-evidence",
-    "artifactRunId": "20260729T121549Z"
+    "artifactRunId": "20260730T013229Z"
   },
   "status": "passed",
   "environment": {
@@ -26,7 +26,7 @@
     "invariantDepth": 64,
     "invariantCallsPerTest": 8192,
     "apiTests": "passed",
-    "apiTestCount": 88,
+    "apiTestCount": 99,
     "typecheck": "passed",
     "gasSnapshot": "passed",
     "smokeReceiptGas": "passed",
@@ -80,16 +80,22 @@
     "riskWarningEventAsserted": true,
     "fundBindingMismatchRejectedAtStartup": true,
     "postgresGateTriggeredEventCountAfterRestart": 2,
-    "postgresAuditEntryCountAfterRestart": 60,
+    "postgresAuditEntryCountAfterRestart": 62,
     "postgresRiskSubmitCountAfterRestart": 3,
+    "postgresDetectionOutputByteIdenticalAfterRestart": true,
     "causalObservationTimeAsserted": true,
     "postgresLifecycleCausalInvalidCount": 0,
-    "postgresAuditCausalInvalidCount": 0
+    "postgresAuditCausalInvalidCount": 0,
+    "subscriptionFlowRequestedAmount": 109000,
+    "subscriptionFlowAcceptedAmount": 109000,
+    "subscriptionFlowMintedShares": 100000,
+    "settlementDelayPendingCount": 2,
+    "settlementDelaySettledCount": 1
   },
   "gasEvidence": {
     "forgeSnapshotEntries": 82,
     "smokeReceiptRows": 27,
-    "smokeReceiptTotalGas": 3716837,
+    "smokeReceiptTotalGas": 3719661,
     "interpretation": "descriptive on-chain write cost for the pinned compiler, contract version, and smoke state sequence; not a throughput or production-performance claim"
   },
   "detectionScenario": {
@@ -109,11 +115,11 @@
   },
   "staticAnalysis": {
     "workflow": "Static Analysis",
-    "workflowRunId": 30450820225,
-    "workflowRunUrl": "https://github.com/Charlie-Uni/otc-prototype/actions/runs/30450820225",
+    "workflowRunId": 30505900279,
+    "workflowRunUrl": "https://github.com/Charlie-Uni/otc-prototype/actions/runs/30505900279",
     "shellcheck": {
       "version": "0.11.0",
-      "scriptLineCount": 1237,
+      "scriptLineCount": 1305,
       "warningOrHigherCount": 0
     },
     "slither": {
@@ -131,10 +137,10 @@
     }
   },
   "independentReproduction": {
-    "environment": "local macOS, Node 22.14.0, PostgreSQL disabled",
-    "commitSha": "a7321c7",
-    "artifactRunId": "20260729T120445Z",
-    "result": "all non-PostgreSQL checks passed with 88 contract tests, 88 API tests, five invariants at 128 runs x 64 depth, 27 receipt gas rows, and 98.54% production-contract line coverage; PostgreSQL 16 persistence was independently exercised by the master CI run"
+    "environment": "clean git archive without .env on local macOS, Node 22.14.0, PostgreSQL disabled; pinned installed dependencies reused",
+    "commitSha": "b5fe1c8ec2153d1e84e0492012be44a45182dfe2",
+    "artifactRunId": "20260730T054501Z",
+    "result": "all non-PostgreSQL checks passed with 88 contract tests, 99 API tests, five invariants at 128 runs x 64 depth, 27 receipt gas rows, and 98.54% production-contract line coverage; PostgreSQL 16 persistence and byte-identical DetectionLag output across restart were independently exercised by the master CI run"
   },
   "notes": [
     "The dependency-hardening release upgrades Fastify to 5.10.0, viem to 2.55.10, the application baseline to Node 22, and GitHub Actions to Node-24-based major releases without changing Chapter 3 business semantics.",
@@ -144,6 +150,9 @@
     "FundToken is immutably bound to its NAVRegistry; the API validates fundId and registry binding at startup and refuses to start on mismatch (asserted end-to-end).",
     "Risk submission, liquidity submission, and gate release roles were assigned to separate accounts and removed from admin after deployment (Deploy.t.sol + on-chain cast checks).",
     "Risk API payload schema version 3 has a golden-hash regression test; risk submission, chain readers, disclosure views, and route registration are separated into focused modules with no TypeScript `as any` assertions.",
+    "SubscriptionFlow and SettlementDelay are derived by independent pure audit modules with the same closed-window convention as RedemptionPressure; they are exported for audit and simulation without changing risk payload schema version 3.",
+    "Risk submission confirmation is scoped to the transaction receipt and requires an exact registry address, fundId and payloadHash match; missing or ambiguous matching events fail fast without falling back to the latest snapshot.",
+    "PostgreSQL mode no longer mirrors lifecycle events into the in-memory index, while memory mode remains an explicit short-lived demonstration path; the persistence helper is environment-independent so unit tests do not require a local .env file.",
     "Observed timestamps use the API access time with the latest chain block and observed record as causal lower bounds; smoke and PostgreSQL restart evidence reject negative observation lag.",
     "Stateful Foundry invariants use four bounded actors and ten lifecycle operations to verify supply, holder balances, queued shares, accepted mints, settled burns, NAV history, risk-score range, and Gate transitions across random operation sequences.",
     "Lifecycle event commitments are recomputed from topics and data; mutation tests demonstrate detectable hash mismatch without claiming that the chain automatically rejects tampered off-chain index records.",
@@ -151,6 +160,6 @@
     "The audit index assumes stable permissioned-chain finality; confirmation-depth handling and chain-reorganization rollback/replay remain production deployment concerns.",
     "ShellCheck and Slither evidence is retained separately; all 21 Slither findings are manually classified in docs/chapter3-static-analysis.md and are not represented as a production security audit.",
     "Smoke is a compressed functional test; the dedicated scenario output is the evidence source for all three DetectionLag measures.",
-    "Complete raw logs and evidence files are retained in the GitHub Actions artifacts referenced above; SHA-256 digests for all 17 functional evidence files and 4 static-analysis files are recorded in docs/evidence/chapter3-artifact-sha256.txt and docs/evidence/chapter3-static-analysis-sha256.txt."
+    "Complete raw logs and evidence files are retained in the GitHub Actions artifacts referenced above; SHA-256 digests for all 20 functional evidence files and 4 static-analysis files are recorded in docs/evidence/chapter3-artifact-sha256.txt and docs/evidence/chapter3-static-analysis-sha256.txt."
   ]
 }
