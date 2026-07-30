@@ -30,6 +30,10 @@
 | SwingPricingApplied | RiskRegistry | 状态、调整 bps、规则 ID、触发评分、承诺 |
 | SidePocketCreated | RiskRegistry | 状态、资产承诺、规则 ID、触发评分、承诺 |
 
+表 3-2 中不进入六项主评分的 `SubscriptionFlow` 和 `SettlementDelay` 由审计索引派生：前者在同一闭区间窗口内分别汇总申请金额、接受金额和铸造份额；后者按 requestId 关联申请、延迟标记与最终结算，输出 `settledAt - requestedAt`。两者仅进入 `/audit/simulation` 和独立审计查询端点，不进入 `/risk/submit`、payload v3 或链上评分。
+
+表 3-3 的零知识资格证明未作为本原型已实现能力。当前实现是白名单、VC 承诺哈希和角色访问控制；真正的 ZK eligibility proof 属于生产隐私层的扩展方向。
+
 ### 2.1 认购、NAV 与赎回公式
 
 金额与份额使用整数定点数，NAV 精度为 `1e18`：
@@ -58,7 +62,7 @@ RedemptionAmount = floor(RedeemedShares * SettlementNAV / 1e18)
 ### 3.1 指标来源
 
 - ValuationHaircut：读取 NAVRegistry 最新估值折价快照。
-- RedemptionPressure：实现口径为前瞻性 RedemptionRequestPressure，聚合同一快照区块之前窗口期内的 RedemptionRequested 事件，除以该区块的 totalSupply；申请量与结算量分别导出。
+- RedemptionPressure：实现口径为前瞻性 RedemptionRequestPressure，聚合同一快照区块之前窗口期内的 RedemptionRequested 事件，除以该区块的 totalSupply；申请量与结算量分别导出。论文中的结算口径 `sum(RedeemedShares) / TotalShares` 不被删除，系统通过 `settledAmount` 和 SettlementDelay 记录并行保留已实现结算事实。
 - RedemptionQueueRatio：直接读取 FundToken 队列状态。
 - LiquidityShortfall：读取链上流动性缓冲率并计算 `max(10000 - LBR, 0)`。
 - StalePricingRisk：评分固定读取最新 NAV `storedAt`；同时保留从 `asOf` 和 `storedAt` 起算的两组原始陈旧秒数及 `staleReferenceUsed=storedAt`。
@@ -68,7 +72,7 @@ RedemptionAmount = floor(RedeemedShares * SettlementNAV / 1e18)
 
 该约束由 API 架构保证，不是 `RiskRegistry.submitMetrics` 对指标来源的链上证明。持有 `RISK_ORACLE_ROLE` 的账户若绕过 API 直接调用合约，仍可提交六项指标；合约会使用活动权重自行计算评分、校验指标范围并自动执行阈值规则，但信任授权 Oracle 对指标来源负责。这是原型的明确 Oracle 信任边界。
 
-每次提交先固定 `snapshotBlockNumber` 和 `snapshotBlockTimestamp`。活动权重、NAV、估值折价、流动性、份额事件、totalSupply、赎回事件和队列比例均读取该区块；发生 `INACTIVE_WEIGHTS` 时废弃整组结果，在新区块完整重算一次。实时提交端点默认要求 `occurredAt` 不晚于快照区块且与其相差不超过 300 秒，该窗口可由服务端配置。该窗口约束受信 Oracle 输入相对快照区块的新鲜度，不定义也不限制链下 `shockAt` 到检测锚事件的 DetectionLag。
+每次提交先固定 `snapshotBlockNumber` 和 `snapshotBlockTimestamp`。活动权重、NAV、估值折价、流动性、份额事件、totalSupply、赎回事件和队列比例均读取该区块；发生 `INACTIVE_WEIGHTS` 时废弃整组结果，在新区块完整重算一次。交易确认从当前 receipt 中按 RiskRegistry 地址、fundId 和 payloadHash 精确定位 `RiskMetricsSubmitted.snapshotId`，再调用 `snapshotAt` 校验，避免并发提交时误读另一笔交易的 latest 快照。实时提交端点默认要求 `occurredAt` 不晚于快照区块且与其相差不超过 300 秒，该窗口可由服务端配置。该窗口约束受信 Oracle 输入相对快照区块的新鲜度，不定义也不限制链下 `shockAt` 到检测锚事件的 DetectionLag。
 
 估值折价与流动性缓冲均保留来源事件的 `occurredAt`、`submittedAt`、`payloadHash` 和相对风险快照的原始 `ageSec`。若服务端未配置来源最大年龄，状态标记为 `trusted_latest_unbounded`；若配置，则仅产生 `fresh` 或 `stale_warning`。该机制不拒绝交易，也不改变六项评分，避免在论文未规定陈旧 SLA 的情况下擅自引入新的评分规则。
 
@@ -133,7 +137,7 @@ f(Frequency, Visibility, Granularity, Delay, ControlDisclosure)
 
 制度由服务端默认配置控制；仅开启实验开关时允许 `?regime=` 切换。`visibility=public` 时监管端也受相同披露时间边界约束，因此 R3 监管者不能绕过一天延迟。未到披露时间返回 `unknown`，不把“无可见数据”误报为低风险。
 
-R4 控制事件在 gated、原始评分为 red，或事件为 GateReleased 时披露。实时视图和审计时间线复用同一判断函数，避免制度语义分叉。
+R4 的三层含义分别为：角色层由 public/regulator 受众边界实现；风险状态层在 gated 或原始评分进入 red 时提高控制可见性；信息类型层把精确六指标、风险档位和控制事件分开处理。R4 风险视图只公开 `riskScoreBand`，控制事件在 gated、原始评分为 red，或事件为 GateReleased 时披露。实时视图和审计时间线复用同一判断函数，避免制度语义分叉。
 
 R0 的 `frequencySec=604800` 表示按 Unix epoch 对齐的周期披露，而非每条状态固定延迟七天；单条状态的实际等待时间随提交时点在 0–7 天之间变化。
 
@@ -152,7 +156,7 @@ R0 的 `frequencySec=604800` 表示按 Unix epoch 对齐的周期披露，而非
 
 链上的 `CONTROL_OPERATOR_ROLE`（Swing Pricing / Side Pocket）在 API 侧没有独立 Key：扩展控制端点由 manager Key 触发、admin 签名账户执行，属第 10 节声明的原型角色合并边界。
 
-Visibility 是双层实现：端点 RBAC 决定谁能调用；披露引擎决定调用后可见的时间、粒度和控制信息。
+Visibility 是双层实现：端点 RBAC 决定谁能调用；披露引擎决定调用后可见的时间、粒度和控制信息。监管者可读取当前控制状态；审计者读取生命周期时间线和控制日志，不拥有 `/controls/state` 的实时操作视图。
 
 投资者 API Key 额外绑定一个 EIP-55 地址，余额端点强制投资者只查询绑定地址；管理人、登记代理、监管者和审计者仍按角色矩阵访问。这提供原型范围内的横向隔离，但不替代生产身份系统。
 
@@ -167,7 +171,9 @@ Visibility 是双层实现：端点 RBAC 决定谁能调用；披露引擎决定
 - `disclosedAt`：制度和受众共同决定的首次可见时间。
 - `observedAt`：API 被实际查询的时间。为避免 Anvil 时间推进或分布式时钟微小偏差造成“先观察、后上链”的因果倒置，API 以最新链上区块时间和被观察记录时间作为下界进行归一化；正常运行时仍等于实际访问时间。
 
-事件索引幂等键为 `chainId:txHash:logIndex`。`commitmentHash = keccak(topics || data)`，用于验证索引记录对应的原始日志未被替换；测试通过分别修改 topic 和 data，确认复算摘要与原承诺不一致。该能力支持事后发现和归因，不等同链上自动拒绝被修改的链下索引记录。数据库路径使用 `ON CONFLICT DO NOTHING`；API 审计查询采用 PostgreSQL 优先和有界 limit，CSV 导出在数据库模式下受 `AUDIT_EXPORT_MAX_ROWS`（默认 50000）约束。无数据库时使用最多 5000 条的内存缓冲，且淘汰策略优先移除最旧的匿名公共观察条目——匿名请求无法把特权操作（risk.submit、准入登记、Gate 解除等）的审计证据挤出缓冲。控制事件日志扫描按事件主题过滤，起始区块可由 `CHAIN_LOG_START_BLOCK` 配置为部署区块；披露快照查找按披露时间单调性做二分检索，公共视图查询成本为 O(log n)。
+事件索引幂等键为 `chainId:txHash:logIndex`。`commitmentHash = keccak(topics || data)`，用于验证索引记录对应的原始日志未被替换；测试通过分别修改 topic 和 data，确认复算摘要与原承诺不一致。该能力支持事后发现和归因，不等同链上自动拒绝被修改的链下索引记录。数据库路径使用 `ON CONFLICT DO NOTHING`，且成功落库后不再复制到生命周期内存 Map；timeline、DetectionLag、simulation 和 CSV 均通过同一 DB-first 读取函数。无数据库模式保留完整生命周期内存 Map，不做会破坏时间线完整性的事件淘汰，仅定位为短期演示。
+
+API 访问审计是另一套存储：查询采用 PostgreSQL 优先和有界 limit，CSV 导出在数据库模式下受 `AUDIT_EXPORT_MAX_ROWS`（默认 50000）约束；无数据库时使用最多 5000 条的有界缓冲，并优先移除最旧的匿名公共观察条目，避免匿名请求把特权操作证据挤出缓冲。控制事件日志扫描按事件主题过滤，起始区块可由 `CHAIN_LOG_START_BLOCK` 配置为部署区块；披露快照查找按披露时间单调性做二分检索，公共视图查询成本为 O(log n)。
 
 ## 8. DetectionLag 方法
 
@@ -189,12 +195,12 @@ ObservationDetectionLag = firstPollingObservationAt - shockAt
 
 - Foundry 单元测试：状态机、权限、事件、配置版本、边界和 revert；含部署脚本测试（角色分离矩阵、fundId 单一来源、账户碰撞拒绝）与 fundId 错配边界固化测试。
 - Foundry Fuzz：六指标评分、净资产/NAV、现金认购/份额和份额/赎回金额四组性质测试，每组运行 256 个随机输入（`foundry.toml` 显式锁定 runs=256）。
-- Foundry Invariant：四个有界投资者和十类合法 Handler 操作组成随机生命周期序列；每项运行 128 轮、每轮深度 64，验证持仓/总供应量、队列/锁定份额、认购 mint/赎回 burn、NAV 公式、评分范围和 Gate 转移等跨操作不变量。
+- Foundry Invariant：四个有界投资者和十类合法 Handler 操作组成随机生命周期序列；每项运行 128 轮、每轮深度 64，验证持仓/总供应量、队列/锁定份额、认购 mint/赎回 burn、NAV 公式、评分范围和 Gate 转移等跨操作不变量。随机 Handler 不覆盖 Swing Pricing 和 Side Pocket 的完整会计交互；这两类扩展控制由单元测试验证状态、权限、触发依据与承诺。
 - Foundry Coverage：独立生成原始 coverage 日志，分母只包含 `contracts/src/` 生产合约，避免测试 Handler 稀释业务覆盖率。
-- TypeScript 纯函数测试：HHI、最大余数法、流动性截断、陈旧归一化、R0-R4、RBAC、DetectionLag、敏感性、披露二分检索（含 R0 epoch 边界零等待）、INACTIVE_WEIGHTS 整批废弃重算协议、审计缓冲淘汰策略、来源新鲜度评估、基金绑定校验和事件承诺篡改检测。
+- TypeScript 纯函数测试：HHI、最大余数法、流动性截断、陈旧归一化、SubscriptionFlow、SettlementDelay、R0-R4、RBAC、DetectionLag、敏感性、receipt 精确确认、披露二分检索（含 R0 epoch 边界零等待）、INACTIVE_WEIGHTS 整批废弃重算协议、审计缓冲淘汰策略、来源新鲜度评估、基金绑定校验和事件承诺篡改检测。
 - 端到端 smoke：独立 Anvil、顺序广播重新部署、角色签名、基金绑定启动校验（含错配拒绝启动）、现金/份额/NAV 公式、完整生命周期、风险与陈旧警告、Gate 拦截/解除、披露差异、审计同步和导出。
 - 描述性 gas 证据：`.gas-snapshot` 用于版本 diff；smoke 根据 API 返回的交易哈希读取 receipt `gasUsed`，记录完整状态序列下认购、赎回、NAV、风险和控制操作成本。该数据不构成吞吐量或生产性能主张。
-- PostgreSQL 集成：CI 中初始化数据库、API 重启、验证事件仍可查询。
+- PostgreSQL 集成：CI 中初始化数据库、API 重启，验证事件、API 审计和同一情景的 DetectionLag 结果保持可读且一致。
 
 Smoke 在压缩时间内验证链路与时间戳字段，所得生命周期滞后通常接近零，不作为制度滞后的实证结果；非零制度滞后由带外生 `shockAt` 的 DetectionLag 情景输出提供。
 
@@ -208,6 +214,7 @@ Smoke 在压缩时间内验证链路与时间戳字段，所得生命周期滞�
 - NAV 的 `asOf` 按基金单调不回退，允许同一基准时点提交估值修正。
 - 投资者 API Key 只绑定一个地址，不提供生产级用户生命周期、多地址身份或密钥轮换。
 - 原始许可链日志仍可能泄露地址，承诺哈希不等同 ZK。
+- 零知识资格证明属于扩展方向；本原型不得把白名单、VC 哈希或 payload commitment 表述为 ZK proof。
 - 赎回压力按申请量而非结算量计算，应解释为前瞻性申请压力；实际结算量作为独立导出字段。
 - 当前陈旧度评分从 storedAt 起算；asOf 与两类原始陈旧秒数同时保留。
 - 估值折价和流动性来源默认采用“受信 Oracle 最新状态”假设；可配置年龄只产生警告，不构成论文未规定的硬拒绝规则。
@@ -221,3 +228,6 @@ Smoke 在压缩时间内验证链路与时间戳字段，所得生命周期滞�
 - 赎回结算金额向下取整后若为 0（`REDEMPTION_TOO_SMALL`），该笔请求将持续留在队列中：原型不提供请求取消流程，需等待 NAV 上行后重试结算。
 - 初始发行 NAV 记录的 `netAssetValue` 与 `totalSharesSnapshot` 为 0，消费方必须依据 `isInitial` 标志区分一次性发行定价与公式计算 NAV；API 层已按此处理。
 - 审计索引假设许可链已提供稳定最终性；原型未实现确认区块深度、链重组检测或从共同祖先回滚重放。生产部署应在达到配置确认数后再固化索引，并在检测到重组时撤销孤块记录后重新同步。
+- 无数据库模式的生命周期事件 Map 不设淘汰上限，以保持短期演示中的完整事件轨迹；长时间运行必须启用 PostgreSQL。
+- `RiskWarningEvent` 与 Gate 当前共用链上 `kappa` 条件，预警和干预在合约原型中同时发生；独立预警阈值属于后续扩展，实验检测阈值 `tau` 仍在仿真层独立定义。
+- R0-R4 是第 3 章固定透明度参数包；任意五维组合不开放给生产公开 API，第 5 章机制剥离如需扩展组合，应由独立实验 runner 按同一参数语义生成。

@@ -350,7 +350,7 @@ export async function resolveRiskStates(
   };
 }
 
-export async function readRiskSnapshotAt(index: number): Promise<RiskSnapshot> {
+export async function readRiskSnapshotAt(index: number | bigint): Promise<RiskSnapshot> {
   const snapshot = await riskRegistry.read.snapshotAt([fundId, BigInt(index)]);
   return normalizeSnapshot(snapshot);
 }

@@ -8,10 +8,13 @@ import {
 } from '../audit/lifecycle';
 import { exportAuditCsv, recordAudit } from '../audit/log';
 import { ACCESS_POLICY, auditActorFor, requireAnyRole } from '../auth';
+import { fundId } from '../chain';
 import { ENV } from '../env';
 import { currentObservationTime } from '../observation-clock';
 import { DisclosureAudience, TRANSPARENCY_REGIME_IDS, getTransparencyRegime } from '../risk/regimes';
 import { MAX_BPS } from '../risk/calc';
+import { deriveSettlementDelays } from '../risk/settlement-delay';
+import { computeSubscriptionFlow } from '../risk/subscription-flow';
 import { analyzeDetectionLags } from '../simulation/detection';
 import {
     CHAPTER3_KAPPA_BPS_VALUES,
@@ -60,13 +63,22 @@ const SensitivitySchema = z.object({
         .refine((values) => new Set(values).size === values.length, 'Duplicate kappa values are not allowed')
         .default([...CHAPTER3_KAPPA_BPS_VALUES]),
 });
+const SimulationQuerySchema = TimelineQuerySchema.extend({
+    metricWindowEndAt: z.coerce.number().int().positive().optional(),
+    metricWindowSec: z.coerce.number().int().positive()
+        .default(ENV.REDEMPTION_PRESSURE_WINDOW_SEC),
+});
+const SubscriptionFlowQuerySchema = z.object({
+    windowEndAt: z.coerce.number().int().positive().optional(),
+    windowSec: z.coerce.number().int().positive()
+        .default(ENV.REDEMPTION_PRESSURE_WINDOW_SEC),
+});
+const SettlementDelayQuerySchema = z.object({
+    status: z.enum(['pending', 'settled']).optional(),
+    limit: z.coerce.number().int().positive().max(10_000).default(1_000),
+});
 
-async function readTimeline(rawQuery: unknown) {
-    const parsed = TimelineQuerySchema.safeParse(rawQuery);
-    if (!parsed.success) {
-        throw Object.assign(new Error('INVALID_AUDIT_QUERY'), { statusCode: 400 });
-    }
-    const query = parsed.data;
+async function timelineForQuery(query: z.infer<typeof TimelineQuerySchema>) {
     const observedAt = await currentObservationTime();
     const regime = getTransparencyRegime(query.regime);
     const allEvents = await listLifecycleEvents(10_000);
@@ -80,7 +92,15 @@ async function readTimeline(rawQuery: unknown) {
         query.audience as DisclosureAudience,
         observedAt,
     ));
-    return { query, observedAt, entries };
+    return { query, observedAt, entries, allEvents };
+}
+
+async function readTimeline(rawQuery: unknown) {
+    const parsed = TimelineQuerySchema.safeParse(rawQuery);
+    if (!parsed.success) {
+        throw Object.assign(new Error('INVALID_AUDIT_QUERY'), { statusCode: 400 });
+    }
+    return timelineForQuery(parsed.data);
 }
 
 export default async function (app: FastifyInstance) {
@@ -117,26 +137,90 @@ export default async function (app: FastifyInstance) {
     });
 
     app.get('/audit/simulation', { preHandler: requireAnyRole(...ACCESS_POLICY.auditRead) }, async (req) => {
-        const { entries, observedAt, query } = await readTimeline(req.query);
+        const parsed = SimulationQuerySchema.safeParse(req.query);
+        if (!parsed.success) {
+            throw Object.assign(new Error('INVALID_AUDIT_QUERY'), { statusCode: 400 });
+        }
+        const { entries, observedAt, allEvents } = await timelineForQuery(parsed.data);
+        const metricWindowEndAt = parsed.data.metricWindowEndAt ?? observedAt;
+        const subscriptionFlow = computeSubscriptionFlow({
+            events: allEvents,
+            fundId,
+            occurredAt: metricWindowEndAt,
+            windowSec: parsed.data.metricWindowSec,
+        });
+        const settlementDelays = deriveSettlementDelays({ events: allEvents, fundId });
         await recordAudit({
             actor: auditActorFor(req),
             action: 'audit.simulation.export',
             observedAt,
-            details: { regime: query.regime, audience: query.audience, count: entries.length },
+            details: {
+                regime: parsed.data.regime,
+                audience: parsed.data.audience,
+                count: entries.length,
+                metricWindowEndAt,
+                metricWindowSec: parsed.data.metricWindowSec,
+            },
         });
         return {
             observedAt,
-            regime: query.regime,
-            audience: query.audience,
+            regime: parsed.data.regime,
+            audience: parsed.data.audience,
             methodology: {
                 detectionLagDefinition: 'three_measure_model',
                 system: 'first qualifying RiskMetricsSubmitted.submittedAt - shockAt',
                 disclosure: 'qualifying event disclosedAt(regime,audience) - shockAt',
                 observation: 'first scheduled observedAt at or after disclosedAt - shockAt',
                 dedicatedEndpoint: '/audit/detection-lags',
+                subscriptionFlow: 'requested and accepted amounts are exported separately',
+                settlementDelay: 'settledAt - requestedAt; unresolved requests remain pending',
+            },
+            derivedMetrics: {
+                subscriptionFlow,
+                settlementDelays,
             },
             events: entries,
         };
+    });
+
+    app.get('/audit/subscription-flow', { preHandler: requireAnyRole(...ACCESS_POLICY.auditRead) }, async (req) => {
+        const query = SubscriptionFlowQuerySchema.parse(req.query);
+        const observedAt = await currentObservationTime();
+        const windowEndAt = query.windowEndAt ?? observedAt;
+        const snapshot = computeSubscriptionFlow({
+            events: await listLifecycleEvents(10_000),
+            fundId,
+            occurredAt: windowEndAt,
+            windowSec: query.windowSec,
+        });
+        await recordAudit({
+            actor: auditActorFor(req),
+            action: 'audit.subscription_flow.read',
+            observedAt,
+            details: {
+                windowStartAt: snapshot.windowStartAt,
+                windowEndAt: snapshot.windowEndAt,
+                windowSec: query.windowSec,
+            },
+        });
+        return snapshot;
+    });
+
+    app.get('/audit/settlement-delays', { preHandler: requireAnyRole(...ACCESS_POLICY.auditRead) }, async (req) => {
+        const query = SettlementDelayQuerySchema.parse(req.query);
+        const records = deriveSettlementDelays({
+            events: await listLifecycleEvents(10_000),
+            fundId,
+        })
+            .filter((record) => query.status === undefined || record.status === query.status)
+            .slice(0, query.limit);
+        await recordAudit({
+            actor: auditActorFor(req),
+            action: 'audit.settlement_delays.read',
+            observedAt: await currentObservationTime(),
+            details: { status: query.status ?? 'all', count: records.length },
+        });
+        return { count: records.length, records };
     });
 
     app.post('/audit/detection-lags', { preHandler: requireAnyRole(...ACCESS_POLICY.auditRead) }, async (req) => {

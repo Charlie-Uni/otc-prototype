@@ -30,6 +30,7 @@ SWING_RULE_ID="${SWING_RULE_ID:-0x0000000000000000000000000000000000000000000000
 SIDE_POCKET_RULE_ID="${SIDE_POCKET_RULE_ID:-0x0000000000000000000000000000000000000000000000000000000000000052}"
 SIDE_POCKET_ASSET_COMMITMENT="${SIDE_POCKET_ASSET_COMMITMENT:-0x0000000000000000000000000000000000000000000000000000000000000a55}"
 GAS_REPORT_PATH="${GAS_REPORT_PATH:-}"
+DETECTION_REPORT_PATH="${DETECTION_REPORT_PATH:-}"
 
 if [[ -n "$GAS_REPORT_PATH" ]]; then
   mkdir -p "$(dirname "$GAS_REPORT_PATH")"
@@ -326,6 +327,10 @@ fi
 
 if [[ "$RISK_RESPONSE" != *'"payloadSchemaVersion":3'* || "$RISK_RESPONSE" != *'"chainId":31337'* || "$RISK_RESPONSE" != *'"riskRegistryAddress":'* || "$RISK_RESPONSE" != *'"snapshotBlockNumber":'* || "$RISK_RESPONSE" != *'"snapshotBlockTimestamp":'* ]]; then
   printf 'Expected risk submission to disclose its fixed chain snapshot context.\n' >&2
+  exit 1
+fi
+if [[ "$RISK_RESPONSE" == *'"derivedMetrics"'* || "$RISK_RESPONSE" == *'"subscriptionFlow"'* || "$RISK_RESPONSE" == *'"settlementDelays"'* ]]; then
+  printf 'Derived lifecycle metrics must not enter the risk submission payload or response.\n' >&2
   exit 1
 fi
 
@@ -659,6 +664,44 @@ if [[ "$AUDIT_SIMULATION" != *'"eventName":"SubscriptionRequested"'* || "$AUDIT_
   printf 'Expected simulation export to contain all implemented lifecycle signals, controls, and timestamps.\n' >&2
   exit 1
 fi
+if ! node -e '
+  const result = JSON.parse(process.argv[1]);
+  const flow = result.derivedMetrics?.subscriptionFlow;
+  const delays = result.derivedMetrics?.settlementDelays;
+  const valid =
+    flow?.requestedSubscriptionAmount === "109000"
+    && flow?.acceptedSubscriptionAmount === "109000"
+    && flow?.mintedShares === "100000"
+    && flow?.requestCount === 5
+    && flow?.acceptedCount === 5
+    && delays?.some((record) =>
+      record.status === "pending"
+      && record.settled === false
+      && record.settlementDelaySec === null
+    )
+    && delays?.some((record) =>
+      record.status === "settled"
+      && record.delayed === true
+      && record.delayFlagLagSec >= 0
+      && record.settlementDelaySec >= record.delayFlagLagSec
+    );
+  process.exit(valid ? 0 : 1);
+' "$AUDIT_SIMULATION"; then
+  printf 'Expected simulation export to include dual subscription flows and request-linked settlement delays.\n' >&2
+  exit 1
+fi
+
+printf '\n--- independent derived lifecycle metric endpoints ---\n'
+SUBSCRIPTION_FLOW="$(curl -sS "$API_URL/audit/subscription-flow" -H "x-api-key: $API_KEY_AUDITOR")"
+SETTLEMENT_DELAYS="$(curl -sS "$API_URL/audit/settlement-delays" -H "x-api-key: $API_KEY_AUDITOR")"
+if [[ "$SUBSCRIPTION_FLOW" != *'"requestedSubscriptionAmount":"109000"'* || "$SUBSCRIPTION_FLOW" != *'"acceptedSubscriptionAmount":"109000"'* || "$SUBSCRIPTION_FLOW" != *'"mintedShares":"100000"'* ]]; then
+  printf 'Expected the independent SubscriptionFlow endpoint to retain requested, accepted, and minted values.\n' >&2
+  exit 1
+fi
+if [[ "$SETTLEMENT_DELAYS" != *'"status":"pending"'* || "$SETTLEMENT_DELAYS" != *'"status":"settled"'* || "$SETTLEMENT_DELAYS" != *'"settlementDelaySec":null'* || "$SETTLEMENT_DELAYS" != *'"delayFlagLagSec":'* ]]; then
+  printf 'Expected the independent SettlementDelay endpoint to distinguish pending and settled requests.\n' >&2
+  exit 1
+fi
 
 printf '\n--- three-measure DetectionLag analysis from chain-offline shockAt ---\n'
 DETECTION_ANALYSIS="$(curl -sS -X POST "$API_URL/audit/detection-lags" \
@@ -700,6 +743,9 @@ if ! node -e '
 ' "$DETECTION_ANALYSIS"; then
   printf 'Expected independent system, R0-R4 disclosure, and scheduled observation DetectionLag outputs.\n' >&2
   exit 1
+fi
+if [[ -n "$DETECTION_REPORT_PATH" ]]; then
+  printf '%s\n' "$DETECTION_ANALYSIS" > "$DETECTION_REPORT_PATH"
 fi
 
 printf '\n--- 7/14/30/45-day, two-weight-scheme, and four-kappa sensitivity matrix ---\n'

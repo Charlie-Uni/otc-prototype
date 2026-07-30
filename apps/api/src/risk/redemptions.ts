@@ -1,5 +1,6 @@
 import { parseAbiItem } from 'viem';
 import { computeRedemptionPressureBps } from './calc';
+import { inWindow } from './window';
 
 type Address = `0x${string}`;
 
@@ -31,10 +32,6 @@ const redemptionRequestedEvent = parseAbiItem(
 const redemptionSettledEvent = parseAbiItem(
   'event RedemptionSettled(bytes32 indexed fundId, address indexed investor, uint256 indexed requestId, uint256 redeemedShares, uint256 redemptionAmount, uint256 settlementNav, uint64 settlementNavAsOf, uint64 requestedAt, uint64 settledAt)',
 );
-
-function inWindow(timestamp: number, startAt: number, endAt: number): boolean {
-  return timestamp >= startAt && timestamp <= endAt;
-}
 
 function sameBytes32(a: `0x${string}`, b: `0x${string}`): boolean {
   return a.toLowerCase() === b.toLowerCase();

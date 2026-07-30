@@ -3,6 +3,7 @@ import { fundId, rpc } from '../chain';
 import { db } from '../db/client';
 import { ENV } from '../env';
 import { lifecycleLogCommitmentHash } from './commitment';
+import { persistLifecycleEventWithDeps } from './persistence';
 import {
   FUND_TOKEN_EVENT_ABI,
   LifecycleContractName,
@@ -91,37 +92,11 @@ async function readSourceEvents(source: Source, chainId: number) {
 }
 
 async function persistLifecycleEvent(event: LifecycleEvent): Promise<boolean> {
-  if (!ENV.DATABASE_URL) {
-    const inserted = !memoryLifecycleEvents.has(event.eventId);
-    memoryLifecycleEvents.set(event.eventId, event);
-    return inserted;
-  }
-
-  const result = await db.query(
-    `insert into lifecycle_event(
-       event_id, chain_id, contract_address, contract_name, event_name, category, fund_id,
-       transaction_hash, log_index, block_number, occurred_at, submitted_at, commitment_hash, payload
-     ) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
-     on conflict (chain_id, transaction_hash, log_index) do nothing`,
-    [
-      event.eventId,
-      event.chainId,
-      event.contractAddress,
-      event.contractName,
-      event.eventName,
-      event.category,
-      event.fundId,
-      event.transactionHash,
-      event.logIndex,
-      event.blockNumber,
-      event.occurredAt,
-      event.submittedAt,
-      event.commitmentHash,
-      JSON.stringify(event.payload),
-    ],
-  );
-  memoryLifecycleEvents.set(event.eventId, event);
-  return (result.rowCount ?? 0) > 0;
+  return persistLifecycleEventWithDeps(event, {
+    databaseUrl: ENV.DATABASE_URL,
+    query: (sql, values) => db.query(sql, values),
+    memoryEvents: memoryLifecycleEvents,
+  });
 }
 
 export async function syncLifecycleEvents() {
