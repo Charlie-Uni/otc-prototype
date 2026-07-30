@@ -449,12 +449,8 @@ if [[ -n "$DATABASE_URL" ]]; then
     -H 'content-type: application/json' \
     --data-binary "@$RESULTS_DIR/detection-restart-request.json" \
     > "$RESULTS_DIR/detection-after-restart.json"
-  if ! node -e '
-    const fs = require("node:fs");
-    const before = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-    const after = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
-    process.exit(JSON.stringify(before) === JSON.stringify(after) ? 0 : 1);
-  ' \
+  printf '\n' >> "$RESULTS_DIR/detection-after-restart.json"
+  if ! cmp -s \
     "$RESULTS_DIR/detection-before-restart.json" \
     "$RESULTS_DIR/detection-after-restart.json"; then
     printf 'DetectionLag analysis changed after the PostgreSQL-backed API restart.\n' >&2
