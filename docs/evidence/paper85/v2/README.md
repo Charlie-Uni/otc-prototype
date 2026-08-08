@@ -15,6 +15,8 @@ ablation classifications in `paper85-prereg-v1`.
 - Production artifact commit: `e5b1e126e5e7ff37f5fe47307d945447724a17d1`
 - M0 run: `m0-20260808T072627647Z`
 - Ablation run: `ablation-20260808T072635107Z`
+- Verified CI run: `31246245332`
+- CI head: `168be49e74bdefd192f716d53f361abea6b519f6`
 
 ## Results
 
@@ -45,11 +47,16 @@ kept as historical evidence and v2 is a complete rerun rather than a relabel.
 
 ## Raw evidence
 
-The permanent Release asset is named `paper85-evaluation-v2-39693e5.zip` and
-has SHA-256:
+The permanent Release contains both the canonical local rerun and the
+independently executed CI artifact:
 
-`c67629b634c5bb10bc20b5744ecc8523f79f6ad8d00fcc09e756c6ca524bbeea`
+- `paper85-evaluation-v2-39693e5.zip`:
+  `c67629b634c5bb10bc20b5744ecc8523f79f6ad8d00fcc09e756c6ca524bbeea`
+- `paper85-evaluation-v2-ci-31246245332.zip`:
+  `d2de86cc45b4e585436acf48bb30853ef3d3c22dd2dd3b6cd61a9355b227d4d7`
 
-It contains both raw Forge runs, normalized observations, summaries, and
-run-instance SHA manifests. Gas figures remain excluded: production gas must
-be measured from `chapter3-artifact-v1.4.0`, never from feature-flagged tests.
+Both contain raw Forge runs, normalized observations, summaries, and
+run-instance SHA manifests. Their stable semantic hashes are identical even
+though run-instance metadata differs. Gas figures remain excluded: production
+gas must be measured from `chapter3-artifact-v1.4.0`, never from
+feature-flagged tests.
