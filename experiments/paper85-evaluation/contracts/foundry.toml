@@ -1,0 +1,17 @@
+[profile.default]
+src = 'generated'
+test = 'test'
+out = 'out'
+cache_path = 'cache'
+libs = ['../../../contracts/lib']
+allow_paths = ['../../../contracts/src']
+solc_version = '0.8.30'
+evm_version = 'osaka'
+remappings = [
+  'production/=../../../contracts/src/',
+  'openzeppelin/=../../../contracts/lib/openzeppelin-contracts/contracts/',
+  'forge-std/=../../../contracts/lib/forge-std/src/'
+]
+
+[fuzz]
+runs = 256

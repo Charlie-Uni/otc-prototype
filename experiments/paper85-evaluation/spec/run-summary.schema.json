@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/paper85/run-summary.schema.json",
+  "title": "Paper 8.5 evaluation run summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "preregistration",
+    "sourceArtifact",
+    "run",
+    "counts",
+    "metrics",
+    "evidenceManifestSha256"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "preregistration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag", "commitSha", "manifestSha256"],
+      "properties": {
+        "tag": { "const": "paper85-prereg-v1" },
+        "commitSha": { "pattern": "^[0-9a-f]{40}$" },
+        "manifestSha256": { "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "sourceArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag", "commitSha", "evidenceAnchor"],
+      "properties": {
+        "tag": { "const": "chapter3-artifact-v1.4.0" },
+        "commitSha": { "const": "e5b1e126e5e7ff37f5fe47307d945447724a17d1" },
+        "evidenceAnchor": { "const": "b5fe1c8ec2153d1e84e0492012be44a45182dfe2" }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["runId", "startedAt", "chainId", "genesisTimestamp", "toolchain"],
+      "properties": {
+        "runId": { "type": "string" },
+        "startedAt": { "type": "string" },
+        "chainId": { "const": 31337 },
+        "genesisTimestamp": { "const": 1710000000 },
+        "toolchain": { "type": "object" }
+      }
+    },
+    "counts": { "type": "object" },
+    "metrics": { "type": "object" },
+    "evidenceManifestSha256": { "pattern": "^[0-9a-f]{64}$" }
+  }
+}

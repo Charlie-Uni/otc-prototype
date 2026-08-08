@@ -1,0 +1,269 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/paper85/scenarios.schema.json",
+  "title": "Paper 8.5 preregistered scenario manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "sourceArtifact",
+    "counts",
+    "determinism",
+    "predicates",
+    "variants",
+    "resultTaxonomy",
+    "actors",
+    "constants",
+    "fixtures",
+    "scenarios"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "sourceArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag", "evidenceAnchor", "fundTokenPath", "navRegistryPath", "riskRegistryPath"],
+      "properties": {
+        "tag": { "const": "chapter3-artifact-v1.4.0" },
+        "evidenceAnchor": { "$ref": "#/$defs/commit" },
+        "fundTokenPath": { "const": "contracts/src/FundToken.sol" },
+        "navRegistryPath": { "const": "contracts/src/NAVRegistry.sol" },
+        "riskRegistryPath": { "const": "contracts/src/RiskRegistry.sol" }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "valid", "invalid"],
+      "properties": {
+        "total": { "const": 42 },
+        "valid": { "const": 18 },
+        "invalid": { "const": 24 }
+      }
+    },
+    "determinism": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chainId",
+        "genesisTimestamp",
+        "oneOperationPerBlock",
+        "freshDeploymentPerScenario",
+        "semanticDigestExcludes",
+        "semanticDigestIncludes",
+        "deploymentOrder",
+        "restoreDeployerNonceBeforeEachArm",
+        "riskGatePolicy",
+        "actorBinding"
+      ],
+      "properties": {
+        "chainId": { "const": 31337 },
+        "genesisTimestamp": { "const": 1710000000 },
+        "oneOperationPerBlock": { "const": true },
+        "freshDeploymentPerScenario": { "const": true },
+        "semanticDigestExcludes": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "semanticDigestIncludes": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "deploymentOrder": {
+          "type": "array",
+          "prefixItems": [
+            { "const": "RiskRegistry" },
+            { "const": "NAVRegistry" },
+            { "const": "FundToken" }
+          ],
+          "items": false
+        },
+        "restoreDeployerNonceBeforeEachArm": { "const": true },
+        "riskGatePolicy": { "type": "string", "minLength": 20 },
+        "actorBinding": { "const": "fixed manifest addresses" }
+      }
+    },
+    "predicates": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "Authorized" },
+        { "const": "ComplianceValid" },
+        { "const": "NAVValid" },
+        { "const": "LifecycleValid" },
+        { "const": "ParamConsistent" }
+      ],
+      "items": false
+    },
+    "variants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["M0", "M1", "M2", "M3", "M4", "M5"],
+      "properties": {
+        "M0": { "type": "string" },
+        "M1": { "type": "string" },
+        "M2": { "type": "string" },
+        "M3": { "type": "string" },
+        "M4": { "type": "string" },
+        "M5": { "type": "string" }
+      }
+    },
+    "resultTaxonomy": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true,
+      "items": { "type": "string" }
+    },
+    "actors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "admin", "manager", "subscriptionOperator", "redemptionOperator", "pauser",
+        "operator2", "transferOperator", "alice", "bob", "stranger"
+      ],
+      "properties": {
+        "admin": { "$ref": "#/$defs/address" },
+        "manager": { "$ref": "#/$defs/address" },
+        "subscriptionOperator": { "$ref": "#/$defs/address" },
+        "redemptionOperator": { "$ref": "#/$defs/address" },
+        "pauser": { "$ref": "#/$defs/address" },
+        "operator2": { "$ref": "#/$defs/address" },
+        "transferOperator": { "$ref": "#/$defs/address" },
+        "alice": { "$ref": "#/$defs/address" },
+        "bob": { "$ref": "#/$defs/address" },
+        "stranger": { "$ref": "#/$defs/address" }
+      }
+    },
+    "constants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fundId", "aliceVcHash", "bobVcHash", "initialNavPayloadHash", "formulaNav1PayloadHash",
+        "formulaNav2PayloadHash", "navCorrectionPayloadHash", "delayReasonHash", "initialNav", "highNav",
+        "subscriptionAmount", "redemptionAmount", "initialWeightsBps", "maxStaleAgeSec", "kappaBps"
+      ],
+      "properties": {
+        "fundId": { "$ref": "#/$defs/bytes32" },
+        "aliceVcHash": { "$ref": "#/$defs/bytes32" },
+        "bobVcHash": { "$ref": "#/$defs/bytes32" },
+        "initialNavPayloadHash": { "$ref": "#/$defs/bytes32" },
+        "formulaNav1PayloadHash": { "$ref": "#/$defs/bytes32" },
+        "formulaNav2PayloadHash": { "$ref": "#/$defs/bytes32" },
+        "navCorrectionPayloadHash": { "$ref": "#/$defs/bytes32" },
+        "delayReasonHash": { "$ref": "#/$defs/bytes32" },
+        "initialNav": { "$ref": "#/$defs/uintString" },
+        "highNav": { "$ref": "#/$defs/uintString" },
+        "subscriptionAmount": { "$ref": "#/$defs/uintString" },
+        "redemptionAmount": { "$ref": "#/$defs/uintString" },
+        "initialWeightsBps": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": { "type": "integer", "minimum": 0, "maximum": 10000 }
+        },
+        "maxStaleAgeSec": { "type": "integer", "minimum": 1 },
+        "kappaBps": { "type": "integer", "minimum": 1, "maximum": 10000 }
+      }
+    },
+    "fixtures": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/fixture" }
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 42,
+      "maxItems": 42,
+      "items": { "$ref": "#/$defs/scenario" }
+    }
+  },
+  "$defs": {
+    "address": { "type": "string", "pattern": "^0x[0-9a-f]{40}$" },
+    "bytes32": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "uintString": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+    "call": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["call", "caller", "args"],
+      "properties": {
+        "call": {
+          "enum": [
+            "deployRiskRegistry", "deployNAVRegistry", "deployFundToken", "setRiskGate", "grantRole",
+            "revokeRole", "setWhitelisted", "postInitialNAV", "postNAV", "requestSubscription",
+            "requestSubscriptionFor", "acceptSubscription", "transfer", "approve", "transferFrom",
+            "requestRedemption", "requestRedemptionFor", "settleRedemption", "flagSettlementDelayed",
+            "pause", "unpause"
+          ]
+        },
+        "caller": { "type": "string", "minLength": 1 },
+        "args": { "type": "object" }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["atSec", "call", "caller", "args"],
+      "properties": {
+        "atSec": { "type": "integer", "minimum": 1 },
+        "call": { "$ref": "#/$defs/call/properties/call" },
+        "caller": { "type": "string", "minLength": 1 },
+        "args": { "type": "object" }
+      }
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["extends", "steps"],
+      "properties": {
+        "extends": { "type": ["string", "null"] },
+        "steps": { "type": "array", "items": { "$ref": "#/$defs/step" } }
+      }
+    },
+    "expectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome"],
+      "properties": {
+        "outcome": { "enum": ["accept", "reject"] },
+        "errorKind": { "enum": ["string", "customError", "panic"] },
+        "errorCode": { "type": "string" },
+        "errorArgs": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "ablation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["variant", "expectedOutcome", "classification"],
+      "properties": {
+        "variant": { "enum": ["all", "M1", "M2", "M3", "M4", "M5"] },
+        "expectedOutcome": { "enum": ["accept", "reject"] },
+        "classification": { "type": "string" },
+        "expectedError": { "$ref": "#/$defs/expectation" },
+        "expectedResidualGuard": { "type": ["string", "null"] }
+      }
+    },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "class", "operation", "fixture", "action", "actionLabel", "actionAtSec",
+        "baselineExpected", "ablationHypothesis", "stateAssertions", "rationale"
+      ],
+      "properties": {
+        "id": { "pattern": "^[VI][0-9]{2}$" },
+        "class": { "enum": ["valid", "invalid"] },
+        "operation": {
+          "enum": [
+            "updateQualification", "submitNAV", "subscribe", "redeem", "transfer", "pause", "resume", "updateRole"
+          ]
+        },
+        "targetPredicate": {
+          "enum": ["Authorized", "ComplianceValid", "NAVValid", "LifecycleValid", "ParamConsistent"]
+        },
+        "fixture": { "type": "string" },
+        "action": { "$ref": "#/$defs/call" },
+        "actionLabel": { "type": "string", "minLength": 10 },
+        "actionAtSec": { "type": "integer", "minimum": 1 },
+        "baselineExpected": { "$ref": "#/$defs/expectation" },
+        "ablationHypothesis": { "$ref": "#/$defs/ablation" },
+        "stateAssertions": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "rationale": { "type": "string", "minLength": 10 }
+      }
+    }
+  }
+}

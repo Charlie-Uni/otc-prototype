@@ -1,0 +1,62 @@
+name: Paper 8.5 Preregistration Checks
+
+on:
+  push:
+    paths:
+      - 'contracts/src/FundToken.sol'
+      - 'contracts/src/NAVRegistry.sol'
+      - 'contracts/src/RiskRegistry.sol'
+      - '.gitattributes'
+      - 'experiments/paper85-evaluation/**'
+      - '.github/workflows/paper85-preregistration.yml'
+  pull_request:
+    paths:
+      - 'contracts/src/FundToken.sol'
+      - 'contracts/src/NAVRegistry.sol'
+      - 'contracts/src/RiskRegistry.sol'
+      - '.gitattributes'
+      - 'experiments/paper85-evaluation/**'
+      - '.github/workflows/paper85-preregistration.yml'
+
+jobs:
+  preregistration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.7.1
+
+      - name: Install Foundry dependencies
+        working-directory: contracts
+        run: |
+          mkdir -p lib
+          git clone --branch v1.10.0 --depth 1 https://github.com/foundry-rs/forge-std.git lib/forge-std
+          git clone --branch v5.4.0 --depth 1 https://github.com/OpenZeppelin/openzeppelin-contracts.git lib/openzeppelin-contracts
+
+      - name: Validate preregistered scenario manifest
+        run: |
+          node --test experiments/paper85-evaluation/scripts/validate-manifest.test.mjs
+          node experiments/paper85-evaluation/scripts/validate-manifest.mjs
+
+      - name: Verify generated experimental contracts
+        run: |
+          node experiments/paper85-evaluation/scripts/generate-experimental-contracts.mjs --check
+          node experiments/paper85-evaluation/scripts/validate-guard-map.mjs
+
+      - name: Verify preregistration evidence lock
+        run: node experiments/paper85-evaluation/scripts/prereg-lock.mjs --check
+
+      - name: Run preregistration infrastructure tests
+        working-directory: experiments/paper85-evaluation/contracts
+        run: forge test -vv

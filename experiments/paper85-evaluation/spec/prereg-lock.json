@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "kind": "paper85-preregistration",
+  "preregistrationTag": "paper85-prereg-v1",
+  "sourceArtifact": {
+    "tag": "chapter3-artifact-v1.4.0",
+    "commit": "e5b1e126e5e7ff37f5fe47307d945447724a17d1",
+    "evidenceAnchor": "b5fe1c8ec2153d1e84e0492012be44a45182dfe2"
+  },
+  "manifest": {
+    "path": "experiments/paper85-evaluation/spec/scenarios.v1.json",
+    "bytes": 53228,
+    "sha256": "97eabdaab3de5cc4d3cb41bbce1b82e445edfa7c8ea060618dc7b51fa5be4c69"
+  },
+  "files": {
+    ".gitattributes": "7e9f40b79392b7b4d5927092f65e5bc360b222aca366f194293f0b831c8cf12c",
+    ".github/workflows/paper85-preregistration.yml": "3a38de008ffa628bd44227c97e52936f18d59a3424103a907cdbd5aa3d79dc57",
+    "experiments/paper85-evaluation/README.md": "b772a8769d6b841f9cb810a068199ef6f6c8f77f89014d119f92618caf2f0fd1",
+    "experiments/paper85-evaluation/contracts/.gitignore": "c90c8cbf1e27949544aabb868a744b75a4866a4f1d71c96d437ac0033bf3e9e7",
+    "experiments/paper85-evaluation/contracts/foundry.toml": "b3991d42aaf430e7a893ea56a3b16bac97ac59cb61320e36d84ab90e752d0bae",
+    "experiments/paper85-evaluation/contracts/generated/ExperimentalFundToken.sol": "60d0b1d1d8de9a698d1ecc57a79abd24874492e09704a26be339cbdee9075949",
+    "experiments/paper85-evaluation/contracts/generated/ExperimentalNAVRegistry.sol": "623e9930353fdcafb8b8324a7a0629669c13e82546ebbad90836debcf1d7b503",
+    "experiments/paper85-evaluation/contracts/test/PreregistrationInfrastructure.t.sol": "69c54e2affa7083865aaf553c098ed180bf28aa8ff118762511296f2b5e5a388",
+    "experiments/paper85-evaluation/patches/experimental-contracts.patch": "53ec5c4e7ce8b5ad2009476bb5e8c73a3d7cbce69c9366e408173b8e0ca03403",
+    "experiments/paper85-evaluation/scripts/generate-experimental-contracts.mjs": "dd7eb5d128767363f2e7f64feada8cb61202ad43cd7244ba83a3617d005f6269",
+    "experiments/paper85-evaluation/scripts/prereg-lock.mjs": "37b9c5f3caaad939c7d4390c72a25689d3ade4c34efbf64c23ea722d7b68fbab",
+    "experiments/paper85-evaluation/scripts/validate-guard-map.mjs": "2b687eb491f6850e5aa77c2dbeed12a68d6ad54c21f442c396dec45a94a2b098",
+    "experiments/paper85-evaluation/scripts/validate-manifest.mjs": "3f9301bb97dd984a276e19f6898aea9f134e17379b7068ec3c791a83822727ac",
+    "experiments/paper85-evaluation/scripts/validate-manifest.test.mjs": "445dd516daa7fb2b4921e53b763c14dce9a1ae8cce6116b859761d3ee4e7c569",
+    "experiments/paper85-evaluation/spec/guard-flag-map.md": "9f850f96fd472b8f8a902e5c84ba915350b543818c6be5ee16567159e71dcc0b",
+    "experiments/paper85-evaluation/spec/m0-equivalence-protocol.md": "1623ee7d1615b13e81c7f1180e93efa410419cf357c0865d588bdaee1654872d",
+    "experiments/paper85-evaluation/spec/operation-predicate-coverage.md": "59a2bb2f64407a9f52e4fe9c72f32469664ee35714e1a3e50c63e1116b8d1a10",
+    "experiments/paper85-evaluation/spec/prewritten-claims.md": "b228b8a029bb6cec0176f57f18d9fbc568bb3c34babcc7e9913aa3f7634c4fb7",
+    "experiments/paper85-evaluation/spec/replay-protocol.md": "1704d3d40d9fbc9f5a6008cf2d40412940b1c6307dfa10264922cf32208618b1",
+    "experiments/paper85-evaluation/spec/requirements-traceability.md": "ed90d616b14a2d12d92b8d95d8066aa440a109e149ee1bee258722913f636004",
+    "experiments/paper85-evaluation/spec/result-taxonomy.md": "f5808f860902066e06f959bc76790e1bf546a81f979af079cd1fe4986b630a14",
+    "experiments/paper85-evaluation/spec/run-summary.schema.json": "9562c7a55b161376595e1d4b6f8b0098379e89f873d9dabfe329c17bc62eeac7",
+    "experiments/paper85-evaluation/spec/scenarios.schema.json": "5915475bbbd5ca97d96c685d0eb9c5b4cd6526c41ec3968580d3f72ca7784635",
+    "experiments/paper85-evaluation/spec/scenarios.v1.json": "97eabdaab3de5cc4d3cb41bbce1b82e445edfa7c8ea060618dc7b51fa5be4c69",
+    "experiments/paper85-evaluation/spec/semantic-alignment.md": "5f6a73a79cb753fef935794616fecdda06042638d4dd2542b06b562798c61339",
+    "experiments/paper85-evaluation/spec/source-lock.json": "a6d8ea6a410f8af8bfb17832c906864ebbea2cf3a257297ca6c40ad187a0586b"
+  }
+}

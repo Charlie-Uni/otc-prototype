@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 2,
+  "sourceTag": "chapter3-artifact-v1.4.0",
+  "sourceCommit": "e5b1e126e5e7ff37f5fe47307d945447724a17d1",
+  "evidenceAnchor": "b5fe1c8ec2153d1e84e0492012be44a45182dfe2",
+  "files": {
+    "contracts/src/FundToken.sol": "ee89dbc60d2671a92f7735c0f54ee0c337d0c8ec8d6e7b748d91c4688f67f273",
+    "contracts/src/NAVRegistry.sol": "2f4fb0b7633c184edfd155f0bdef9963c426eb45d1b7165fbaabf8303a855559",
+    "contracts/src/RiskRegistry.sol": "59b781ca8b770fa15302a905794ffc86839d42ee0565df4b4af184e78127db3f"
+  },
+  "dependencies": {
+    "openzeppelin-contracts": {
+      "path": "contracts/lib/openzeppelin-contracts",
+      "ref": "v5.4.0",
+      "commit": "c64a1edb67b6e3f4a15cca8909c9482ad33a02b0"
+    },
+    "forge-std": {
+      "path": "contracts/lib/forge-std",
+      "ref": "v1.10.0",
+      "commit": "8bbcf6e3f8f62f419e5429a0bd89331c85c37824"
+    }
+  },
+  "toolchain": {
+    "foundryVersion": "1.7.1",
+    "foundryCommit": "4072e48705af9d93e3c0f6e29e93b5e9a40caed8",
+    "solcVersion": "0.8.30",
+    "evmVersion": "osaka"
+  }
+}

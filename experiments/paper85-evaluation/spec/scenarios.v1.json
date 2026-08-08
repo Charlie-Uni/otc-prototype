@@ -1,0 +1,1867 @@
+{
+  "schemaVersion": 1,
+  "sourceArtifact": {
+    "tag": "chapter3-artifact-v1.4.0",
+    "evidenceAnchor": "b5fe1c8ec2153d1e84e0492012be44a45182dfe2",
+    "fundTokenPath": "contracts/src/FundToken.sol",
+    "navRegistryPath": "contracts/src/NAVRegistry.sol",
+    "riskRegistryPath": "contracts/src/RiskRegistry.sol"
+  },
+  "counts": {
+    "total": 42,
+    "valid": 18,
+    "invalid": 24
+  },
+  "determinism": {
+    "chainId": 31337,
+    "genesisTimestamp": 1710000000,
+    "oneOperationPerBlock": true,
+    "freshDeploymentPerScenario": true,
+    "semanticDigestExcludes": [
+      "transactionHash",
+      "blockHash",
+      "gasUsed"
+    ],
+    "semanticDigestIncludes": [
+      "eventOrder",
+      "eventArgs",
+      "businessTimestamp",
+      "stateProjection"
+    ],
+    "deploymentOrder": [
+      "RiskRegistry",
+      "NAVRegistry",
+      "FundToken"
+    ],
+    "restoreDeployerNonceBeforeEachArm": true,
+    "riskGatePolicy": "source-locked production RiskRegistry configured without metrics",
+    "actorBinding": "fixed manifest addresses"
+  },
+  "predicates": [
+    "Authorized",
+    "ComplianceValid",
+    "NAVValid",
+    "LifecycleValid",
+    "ParamConsistent"
+  ],
+  "variants": {
+    "M0": "all predicates enforced",
+    "M1": "Authorized removed",
+    "M2": "ComplianceValid removed",
+    "M3": "NAVValid removed",
+    "M4": "LifecycleValid removed",
+    "M5": "ParamConsistent removed"
+  },
+  "resultTaxonomy": [
+    "expected_accept",
+    "expected_reject",
+    "invalid_transition_accepted",
+    "rejected_by_residual_guard",
+    "runtime_revert",
+    "state_divergence",
+    "event_divergence"
+  ],
+  "fixtures": {
+    "bare": {
+      "extends": null,
+      "steps": [
+        {
+          "atSec": 10,
+          "call": "deployRiskRegistry",
+          "caller": "harness",
+          "args": {
+            "admin": "admin",
+            "initialWeightsBps": "$initialWeightsBps",
+            "maxStaleAgeSec": "$maxStaleAgeSec",
+            "kappaBps": "$kappaBps"
+          }
+        },
+        {
+          "atSec": 20,
+          "call": "deployNAVRegistry",
+          "caller": "harness",
+          "args": {
+            "admin": "admin"
+          }
+        },
+        {
+          "atSec": 30,
+          "call": "deployFundToken",
+          "caller": "harness",
+          "args": {
+            "admin": "admin",
+            "fundId": "$fundId",
+            "navRegistry": "NAVRegistry"
+          }
+        },
+        {
+          "atSec": 40,
+          "call": "setRiskGate",
+          "caller": "admin",
+          "args": {
+            "riskGate": "RiskRegistry"
+          }
+        },
+        {
+          "atSec": 42,
+          "call": "grantRole",
+          "caller": "admin",
+          "args": {
+            "contract": "NAVRegistry",
+            "role": "MANAGER_ROLE",
+            "account": "manager"
+          }
+        },
+        {
+          "atSec": 44,
+          "call": "grantRole",
+          "caller": "admin",
+          "args": {
+            "contract": "FundToken",
+            "role": "SUBSCRIPTION_ROLE",
+            "account": "subscriptionOperator"
+          }
+        },
+        {
+          "atSec": 46,
+          "call": "grantRole",
+          "caller": "admin",
+          "args": {
+            "contract": "FundToken",
+            "role": "REDEMPTION_ROLE",
+            "account": "redemptionOperator"
+          }
+        },
+        {
+          "atSec": 48,
+          "call": "grantRole",
+          "caller": "admin",
+          "args": {
+            "contract": "FundToken",
+            "role": "PAUSER_ROLE",
+            "account": "pauser"
+          }
+        }
+      ]
+    },
+    "eligible": {
+      "extends": "bare",
+      "steps": [
+        {
+          "atSec": 60,
+          "call": "setWhitelisted",
+          "caller": "admin",
+          "args": {
+            "investor": "alice",
+            "eligible": true,
+            "vcHash": "$aliceVcHash"
+          }
+        }
+      ]
+    },
+    "initial_nav": {
+      "extends": "bare",
+      "steps": [
+        {
+          "atSec": 60,
+          "call": "postInitialNAV",
+          "caller": "manager",
+          "args": {
+            "fundId": "$fundId",
+            "initialNav": "$initialNav",
+            "asOfSec": 60,
+            "payloadHash": "$initialNavPayloadHash"
+          }
+        }
+      ]
+    },
+    "eligible_initial_nav": {
+      "extends": "eligible",
+      "steps": [
+        {
+          "atSec": 90,
+          "call": "postInitialNAV",
+          "caller": "manager",
+          "args": {
+            "fundId": "$fundId",
+            "initialNav": "$initialNav",
+            "asOfSec": 90,
+            "payloadHash": "$initialNavPayloadHash"
+          }
+        }
+      ]
+    },
+    "pending_subscription": {
+      "extends": "eligible_initial_nav",
+      "steps": [
+        {
+          "atSec": 120,
+          "call": "requestSubscription",
+          "caller": "alice",
+          "args": {
+            "subscriptionAmount": "$subscriptionAmount"
+          }
+        }
+      ]
+    },
+    "pending_subscription_no_nav": {
+      "extends": "eligible",
+      "steps": [
+        {
+          "atSec": 120,
+          "call": "requestSubscription",
+          "caller": "alice",
+          "args": {
+            "subscriptionAmount": "$subscriptionAmount"
+          }
+        }
+      ]
+    },
+    "tiny_pending_subscription": {
+      "extends": "eligible",
+      "steps": [
+        {
+          "atSec": 90,
+          "call": "postInitialNAV",
+          "caller": "manager",
+          "args": {
+            "fundId": "$fundId",
+            "initialNav": "$highNav",
+            "asOfSec": 90,
+            "payloadHash": "$initialNavPayloadHash"
+          }
+        },
+        {
+          "atSec": 120,
+          "call": "requestSubscription",
+          "caller": "alice",
+          "args": {
+            "subscriptionAmount": "1"
+          }
+        }
+      ]
+    },
+    "funded_alice": {
+      "extends": "pending_subscription",
+      "steps": [
+        {
+          "atSec": 150,
+          "call": "acceptSubscription",
+          "caller": "subscriptionOperator",
+          "args": {
+            "requestId": 0
+          }
+        }
+      ]
+    },
+    "funded_alice_bob": {
+      "extends": "funded_alice",
+      "steps": [
+        {
+          "atSec": 180,
+          "call": "setWhitelisted",
+          "caller": "admin",
+          "args": {
+            "investor": "bob",
+            "eligible": true,
+            "vcHash": "$bobVcHash"
+          }
+        },
+        {
+          "atSec": 210,
+          "call": "transfer",
+          "caller": "alice",
+          "args": {
+            "to": "bob",
+            "amount": "20000000000000000000"
+          }
+        }
+      ]
+    },
+    "pending_redemption": {
+      "extends": "funded_alice",
+      "steps": [
+        {
+          "atSec": 180,
+          "call": "requestRedemption",
+          "caller": "alice",
+          "args": {
+            "redeemedShares": "$redemptionAmount"
+          }
+        }
+      ]
+    },
+    "settled_redemption": {
+      "extends": "pending_redemption",
+      "steps": [
+        {
+          "atSec": 210,
+          "call": "settleRedemption",
+          "caller": "redemptionOperator",
+          "args": {
+            "requestId": 0
+          }
+        }
+      ]
+    },
+    "queued_alice": {
+      "extends": "funded_alice",
+      "steps": [
+        {
+          "atSec": 170,
+          "call": "setWhitelisted",
+          "caller": "admin",
+          "args": {
+            "investor": "bob",
+            "eligible": true,
+            "vcHash": "$bobVcHash"
+          }
+        },
+        {
+          "atSec": 180,
+          "call": "requestRedemption",
+          "caller": "alice",
+          "args": {
+            "redeemedShares": "80000000000000000000"
+          }
+        }
+      ]
+    },
+    "revoked_funded_alice": {
+      "extends": "funded_alice",
+      "steps": [
+        {
+          "atSec": 180,
+          "call": "setWhitelisted",
+          "caller": "admin",
+          "args": {
+            "investor": "alice",
+            "eligible": false,
+            "vcHash": "$aliceVcHash"
+          }
+        }
+      ]
+    },
+    "revoked_pending_subscription": {
+      "extends": "pending_subscription",
+      "steps": [
+        {
+          "atSec": 150,
+          "call": "setWhitelisted",
+          "caller": "admin",
+          "args": {
+            "investor": "alice",
+            "eligible": false,
+            "vcHash": "$aliceVcHash"
+          }
+        }
+      ]
+    },
+    "nav_history": {
+      "extends": "initial_nav",
+      "steps": [
+        {
+          "atSec": 90,
+          "call": "postNAV",
+          "caller": "manager",
+          "args": {
+            "fundId": "$fundId",
+            "netAssetValue": "110000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOfSec": 80,
+            "payloadHash": "$formulaNav1PayloadHash"
+          }
+        },
+        {
+          "atSec": 120,
+          "call": "postNAV",
+          "caller": "manager",
+          "args": {
+            "fundId": "$fundId",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOfSec": 110,
+            "payloadHash": "$formulaNav2PayloadHash"
+          }
+        }
+      ]
+    },
+    "paused_funded": {
+      "extends": "funded_alice_bob",
+      "steps": [
+        {
+          "atSec": 240,
+          "call": "pause",
+          "caller": "pauser",
+          "args": {}
+        }
+      ]
+    },
+    "paused_pending_subscription": {
+      "extends": "pending_subscription",
+      "steps": [
+        {
+          "atSec": 150,
+          "call": "pause",
+          "caller": "pauser",
+          "args": {}
+        }
+      ]
+    },
+    "paused_pending_redemption": {
+      "extends": "pending_redemption",
+      "steps": [
+        {
+          "atSec": 210,
+          "call": "pause",
+          "caller": "pauser",
+          "args": {}
+        }
+      ]
+    },
+    "allowanced_paused_funded": {
+      "extends": "funded_alice_bob",
+      "steps": [
+        {
+          "atSec": 230,
+          "call": "approve",
+          "caller": "alice",
+          "args": {
+            "spender": "transferOperator",
+            "amount": "10000000000000000000"
+          }
+        },
+        {
+          "atSec": 240,
+          "call": "pause",
+          "caller": "pauser",
+          "args": {}
+        }
+      ]
+    },
+    "role_granted_operator2": {
+      "extends": "bare",
+      "steps": [
+        {
+          "atSec": 120,
+          "call": "grantRole",
+          "caller": "admin",
+          "args": {
+            "contract": "FundToken",
+            "role": "SUBSCRIPTION_ROLE",
+            "account": "operator2"
+          }
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "id": "V01",
+      "class": "valid",
+      "operation": "updateQualification",
+      "fixture": "bare",
+      "action": {
+        "call": "setWhitelisted",
+        "caller": "admin",
+        "args": {
+          "investor": "alice",
+          "eligible": true,
+          "vcHash": "$aliceVcHash"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "whitelist(alice)=true",
+        "InvestorWhitelisted emitted"
+      ],
+      "rationale": "Authorized eligibility admission is a valid lifecycle transition.",
+      "actionLabel": "admin whitelists alice with nonzero vcHash"
+    },
+    {
+      "id": "V02",
+      "class": "valid",
+      "operation": "updateQualification",
+      "fixture": "eligible",
+      "action": {
+        "call": "setWhitelisted",
+        "caller": "admin",
+        "args": {
+          "investor": "alice",
+          "eligible": false,
+          "vcHash": "$aliceVcHash"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "whitelist(alice)=false",
+        "InvestorWhitelisted eligible=false emitted"
+      ],
+      "rationale": "Eligibility is maintained as a reversible institutional outcome.",
+      "actionLabel": "admin revokes alice eligibility"
+    },
+    {
+      "id": "V03",
+      "class": "valid",
+      "operation": "submitNAV",
+      "fixture": "bare",
+      "action": {
+        "call": "postInitialNAV",
+        "caller": "manager",
+        "args": {
+          "fundId": "$fundId",
+          "initialNav": "$initialNav",
+          "asOfSec": 590,
+          "payloadHash": "$initialNavPayloadHash"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "historyLength=1",
+        "latestNAV.isInitial=true",
+        "NAVUpdatedEvent emitted"
+      ],
+      "rationale": "A positive fund-scoped initial offering NAV starts the version sequence.",
+      "actionLabel": "manager posts initial NAV=1e18"
+    },
+    {
+      "id": "V04",
+      "class": "valid",
+      "operation": "submitNAV",
+      "fixture": "initial_nav",
+      "action": {
+        "call": "postNAV",
+        "caller": "manager",
+        "args": {
+          "fundId": "$fundId",
+          "netAssetValue": "110000000000000000000",
+          "totalSharesSnapshot": "100000000000000000000",
+          "asOfSec": 590,
+          "payloadHash": "$formulaNav1PayloadHash"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "latestNAV.nav=1.1e18",
+        "historyLength=2",
+        "navAdjustmentBps=1000"
+      ],
+      "rationale": "Formula NAV is calculated and appended from positive institutional inputs.",
+      "actionLabel": "manager posts netAssetValue=110e18 and totalShares=100e18"
+    },
+    {
+      "id": "V05",
+      "class": "valid",
+      "operation": "submitNAV",
+      "fixture": "nav_history",
+      "action": {
+        "call": "postNAV",
+        "caller": "manager",
+        "args": {
+          "fundId": "$fundId",
+          "netAssetValue": "125000000000000000000",
+          "totalSharesSnapshot": "100000000000000000000",
+          "asOfSec": 110,
+          "payloadHash": "$navCorrectionPayloadHash"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "historyLength increases by one",
+        "latestNAV.asOf equals prior asOf"
+      ],
+      "rationale": "The artifact permits append-only correction at the same valuation reference time.",
+      "actionLabel": "manager posts a same-asOf NAV correction"
+    },
+    {
+      "id": "V06",
+      "class": "valid",
+      "operation": "subscribe",
+      "fixture": "eligible_initial_nav",
+      "action": {
+        "call": "requestSubscription",
+        "caller": "alice",
+        "args": {
+          "subscriptionAmount": "$subscriptionAmount"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "subscriptionRequestCount=1",
+        "SubscriptionRequested emitted"
+      ],
+      "rationale": "An eligible investor may submit a positive subscription request.",
+      "actionLabel": "alice requests her own positive subscription"
+    },
+    {
+      "id": "V07",
+      "class": "valid",
+      "operation": "subscribe",
+      "fixture": "eligible_initial_nav",
+      "action": {
+        "call": "requestSubscriptionFor",
+        "caller": "subscriptionOperator",
+        "args": {
+          "investor": "alice",
+          "subscriptionAmount": "$subscriptionAmount"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "request investor=alice",
+        "SubscriptionRequested emitted"
+      ],
+      "rationale": "The authorized administrator may create an investor request.",
+      "actionLabel": "subscription operator requests a positive subscription for alice"
+    },
+    {
+      "id": "V08",
+      "class": "valid",
+      "operation": "subscribe",
+      "fixture": "pending_subscription",
+      "action": {
+        "call": "acceptSubscription",
+        "caller": "subscriptionOperator",
+        "args": {
+          "requestId": 0
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "request.accepted=true",
+        "alice balance=100e18",
+        "totalSupply=100e18",
+        "navUsed=1e18"
+      ],
+      "rationale": "Acceptance converts cash amount to shares using the latest NAV.",
+      "actionLabel": "subscription operator accepts request 0"
+    },
+    {
+      "id": "V09",
+      "class": "valid",
+      "operation": "transfer",
+      "fixture": "funded_alice_bob",
+      "action": {
+        "call": "transfer",
+        "caller": "bob",
+        "args": {
+          "to": "alice",
+          "amount": "5000000000000000000"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "totalSupply unchanged",
+        "both balances updated",
+        "ShareBalanceUpdated emitted twice"
+      ],
+      "rationale": "A transfer between eligible holders with available shares is valid.",
+      "actionLabel": "bob transfers 5e18 shares to eligible alice"
+    },
+    {
+      "id": "V10",
+      "class": "valid",
+      "operation": "redeem",
+      "fixture": "funded_alice",
+      "action": {
+        "call": "requestRedemption",
+        "caller": "alice",
+        "args": {
+          "redeemedShares": "$redemptionAmount"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "totalQueuedRedemption=20e18",
+        "RedemptionRequested emitted",
+        "RedemptionQueueUpdated emitted"
+      ],
+      "rationale": "An eligible holder may queue a positive amount not exceeding available shares.",
+      "actionLabel": "alice requests redemption of 20e18 available shares"
+    },
+    {
+      "id": "V11",
+      "class": "valid",
+      "operation": "redeem",
+      "fixture": "funded_alice",
+      "action": {
+        "call": "requestRedemptionFor",
+        "caller": "redemptionOperator",
+        "args": {
+          "investor": "alice",
+          "redeemedShares": "$redemptionAmount"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "request investor=alice",
+        "totalQueuedRedemption=20e18"
+      ],
+      "rationale": "The authorized administrator may queue a valid investor redemption.",
+      "actionLabel": "redemption operator requests 20e18 redemption for alice"
+    },
+    {
+      "id": "V12",
+      "class": "valid",
+      "operation": "redeem",
+      "fixture": "pending_redemption",
+      "action": {
+        "call": "flagSettlementDelayed",
+        "caller": "redemptionOperator",
+        "args": {
+          "requestId": 0,
+          "reasonHash": "$delayReasonHash"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "request.delayed=true",
+        "delayReasonHash nonzero",
+        "SettlementDelayed emitted"
+      ],
+      "rationale": "A pending redemption can record a committed settlement-delay reason.",
+      "actionLabel": "redemption operator flags request 0 delayed with reasonHash"
+    },
+    {
+      "id": "V13",
+      "class": "valid",
+      "operation": "redeem",
+      "fixture": "pending_redemption",
+      "action": {
+        "call": "settleRedemption",
+        "caller": "redemptionOperator",
+        "args": {
+          "requestId": 0
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "request.settled=true",
+        "balance and totalSupply reduced",
+        "settlementNav=1e18"
+      ],
+      "rationale": "A pending redemption settles against the latest NAV and burns queued shares.",
+      "actionLabel": "redemption operator settles request 0"
+    },
+    {
+      "id": "V14",
+      "class": "valid",
+      "operation": "pause",
+      "fixture": "bare",
+      "action": {
+        "call": "pause",
+        "caller": "pauser",
+        "args": {}
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "paused=true",
+        "Paused event emitted"
+      ],
+      "rationale": "An authorized pauser may enter the suspended operational state.",
+      "actionLabel": "pauser pauses the token"
+    },
+    {
+      "id": "V15",
+      "class": "valid",
+      "operation": "resume",
+      "fixture": "paused_funded",
+      "action": {
+        "call": "unpause",
+        "caller": "pauser",
+        "args": {}
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "paused=false",
+        "Unpaused event emitted"
+      ],
+      "rationale": "An authorized pauser may resume normal share-state transitions.",
+      "actionLabel": "pauser unpauses the token"
+    },
+    {
+      "id": "V16",
+      "class": "valid",
+      "operation": "updateRole",
+      "fixture": "bare",
+      "action": {
+        "call": "grantRole",
+        "caller": "admin",
+        "args": {
+          "contract": "FundToken",
+          "role": "SUBSCRIPTION_ROLE",
+          "account": "operator2"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "hasRole(SUBSCRIPTION_ROLE,operator2)=true",
+        "RoleGranted emitted"
+      ],
+      "rationale": "The governance root may add an operational role assignment.",
+      "actionLabel": "admin grants SUBSCRIPTION_ROLE to operator2"
+    },
+    {
+      "id": "V17",
+      "class": "valid",
+      "operation": "updateRole",
+      "fixture": "role_granted_operator2",
+      "action": {
+        "call": "revokeRole",
+        "caller": "admin",
+        "args": {
+          "contract": "FundToken",
+          "role": "SUBSCRIPTION_ROLE",
+          "account": "operator2"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "hasRole(SUBSCRIPTION_ROLE,operator2)=false",
+        "RoleRevoked emitted"
+      ],
+      "rationale": "The governance root may revoke a previously assigned operational role.",
+      "actionLabel": "admin revokes SUBSCRIPTION_ROLE from operator2"
+    },
+    {
+      "id": "V18",
+      "class": "valid",
+      "operation": "subscribe",
+      "fixture": "paused_funded",
+      "action": {
+        "call": "requestSubscription",
+        "caller": "alice",
+        "args": {
+          "subscriptionAmount": "$subscriptionAmount"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "accept"
+      },
+      "ablationHypothesis": {
+        "variant": "all",
+        "expectedOutcome": "accept",
+        "classification": "expected_accept"
+      },
+      "stateAssertions": [
+        "subscriptionRequestCount increases",
+        "totalSupply unchanged"
+      ],
+      "rationale": "The implemented pause boundary permits request intake but blocks later share-state execution.",
+      "actionLabel": "eligible alice submits a subscription request while paused"
+    },
+    {
+      "id": "I01",
+      "class": "invalid",
+      "operation": "updateQualification",
+      "targetPredicate": "Authorized",
+      "fixture": "bare",
+      "action": {
+        "call": "setWhitelisted",
+        "caller": "stranger",
+        "args": {
+          "investor": "alice",
+          "eligible": true,
+          "vcHash": "$aliceVcHash"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "customError",
+        "errorCode": "AccessControlUnauthorizedAccount",
+        "errorArgs": [
+          "stranger",
+          "DEFAULT_ADMIN_ROLE"
+        ]
+      },
+      "ablationHypothesis": {
+        "variant": "M1",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline whitelist(alice)=false",
+        "M1 whitelist(alice)=true"
+      ],
+      "rationale": "Eligibility must not be changed by an account lacking governance authority.",
+      "actionLabel": "stranger attempts to whitelist alice"
+    },
+    {
+      "id": "I02",
+      "class": "invalid",
+      "operation": "submitNAV",
+      "targetPredicate": "Authorized",
+      "fixture": "bare",
+      "action": {
+        "call": "postInitialNAV",
+        "caller": "stranger",
+        "args": {
+          "fundId": "$fundId",
+          "initialNav": "$initialNav",
+          "asOfSec": 590,
+          "payloadHash": "$initialNavPayloadHash"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "customError",
+        "errorCode": "AccessControlUnauthorizedAccount",
+        "errorArgs": [
+          "stranger",
+          "MANAGER_ROLE"
+        ]
+      },
+      "ablationHypothesis": {
+        "variant": "M1",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline historyLength=0",
+        "M1 historyLength=1"
+      ],
+      "rationale": "Only a valuation authority may append an institutional NAV result.",
+      "actionLabel": "stranger attempts to post initial NAV"
+    },
+    {
+      "id": "I03",
+      "class": "invalid",
+      "operation": "subscribe",
+      "targetPredicate": "Authorized",
+      "fixture": "pending_subscription",
+      "action": {
+        "call": "acceptSubscription",
+        "caller": "stranger",
+        "args": {
+          "requestId": 0
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "customError",
+        "errorCode": "AccessControlUnauthorizedAccount",
+        "errorArgs": [
+          "stranger",
+          "SUBSCRIPTION_ROLE"
+        ]
+      },
+      "ablationHypothesis": {
+        "variant": "M1",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline totalSupply=0",
+        "M1 totalSupply=100e18"
+      ],
+      "rationale": "Subscription acceptance must require the designated operational role.",
+      "actionLabel": "stranger attempts to accept subscription request 0"
+    },
+    {
+      "id": "I04",
+      "class": "invalid",
+      "operation": "redeem",
+      "targetPredicate": "Authorized",
+      "fixture": "pending_redemption",
+      "action": {
+        "call": "settleRedemption",
+        "caller": "stranger",
+        "args": {
+          "requestId": 0
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "customError",
+        "errorCode": "AccessControlUnauthorizedAccount",
+        "errorArgs": [
+          "stranger",
+          "REDEMPTION_ROLE"
+        ]
+      },
+      "ablationHypothesis": {
+        "variant": "M1",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline request.settled=false",
+        "M1 request.settled=true"
+      ],
+      "rationale": "Cash settlement and share burning require the redemption operator role.",
+      "actionLabel": "stranger attempts to settle redemption request 0"
+    },
+    {
+      "id": "I05",
+      "class": "invalid",
+      "operation": "updateRole",
+      "targetPredicate": "Authorized",
+      "fixture": "bare",
+      "action": {
+        "call": "grantRole",
+        "caller": "stranger",
+        "args": {
+          "contract": "FundToken",
+          "role": "SUBSCRIPTION_ROLE",
+          "account": "operator2"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "customError",
+        "errorCode": "AccessControlUnauthorizedAccount",
+        "errorArgs": [
+          "stranger",
+          "DEFAULT_ADMIN_ROLE"
+        ]
+      },
+      "ablationHypothesis": {
+        "variant": "M1",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline hasRole(SUBSCRIPTION_ROLE,operator2)=false",
+        "M1 hasRole(SUBSCRIPTION_ROLE,operator2)=true"
+      ],
+      "rationale": "Only the governance root may grant an operational role assignment.",
+      "actionLabel": "stranger attempts to grant SUBSCRIPTION_ROLE to operator2"
+    },
+    {
+      "id": "I06",
+      "class": "invalid",
+      "operation": "subscribe",
+      "targetPredicate": "ComplianceValid",
+      "fixture": "initial_nav",
+      "action": {
+        "call": "requestSubscription",
+        "caller": "alice",
+        "args": {
+          "subscriptionAmount": "$subscriptionAmount"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "NOT_WHITELISTED",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M2",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline request count unchanged",
+        "M2 request count increases"
+      ],
+      "rationale": "Investor admission is a prerequisite for entering the subscription process.",
+      "actionLabel": "unwhitelisted alice requests a subscription"
+    },
+    {
+      "id": "I07",
+      "class": "invalid",
+      "operation": "subscribe",
+      "targetPredicate": "ComplianceValid",
+      "fixture": "revoked_pending_subscription",
+      "action": {
+        "call": "acceptSubscription",
+        "caller": "subscriptionOperator",
+        "args": {
+          "requestId": 0
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "NOT_WHITELISTED",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M2",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline totalSupply=0",
+        "M2 mints shares despite revoked eligibility"
+      ],
+      "rationale": "Eligibility is rechecked at acceptance rather than frozen at request time.",
+      "actionLabel": "operator accepts subscription request 0 after eligibility revocation"
+    },
+    {
+      "id": "I08",
+      "class": "invalid",
+      "operation": "transfer",
+      "targetPredicate": "ComplianceValid",
+      "fixture": "funded_alice",
+      "action": {
+        "call": "transfer",
+        "caller": "alice",
+        "args": {
+          "to": "bob",
+          "amount": "$redemptionAmount"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "RECEIVER_NOT_WHITELISTED",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M2",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline bob balance=0",
+        "M2 bob receives shares"
+      ],
+      "rationale": "Restricted transfer must prevent an ineligible receiver from acquiring fund shares.",
+      "actionLabel": "alice transfers shares to unwhitelisted bob"
+    },
+    {
+      "id": "I09",
+      "class": "invalid",
+      "operation": "redeem",
+      "targetPredicate": "ComplianceValid",
+      "fixture": "revoked_funded_alice",
+      "action": {
+        "call": "requestRedemption",
+        "caller": "alice",
+        "args": {
+          "redeemedShares": "$redemptionAmount"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "NOT_WHITELISTED",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M2",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline queue unchanged",
+        "M2 queues revoked holder redemption"
+      ],
+      "rationale": "The boolean artifact requires current eligibility at redemption request intake.",
+      "actionLabel": "revoked alice requests redemption"
+    },
+    {
+      "id": "I10",
+      "class": "invalid",
+      "operation": "subscribe",
+      "targetPredicate": "NAVValid",
+      "fixture": "pending_subscription_no_nav",
+      "action": {
+        "call": "acceptSubscription",
+        "caller": "subscriptionOperator",
+        "args": {
+          "requestId": 0
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "NO_NAV",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M3",
+        "expectedOutcome": "reject",
+        "classification": "rejected_by_residual_guard",
+        "expectedError": {
+          "outcome": "reject",
+          "errorKind": "string",
+          "errorCode": "NO_NAV",
+          "errorArgs": []
+        },
+        "expectedResidualGuard": "latestNAV read remains a required pricing dependency"
+      },
+      "stateAssertions": [
+        "totalSupply remains zero in M0 and M3"
+      ],
+      "rationale": "Removing an explicit NAV predicate cannot synthesize a missing pricing record.",
+      "actionLabel": "operator accepts subscription request 0 before NAV initialization"
+    },
+    {
+      "id": "I11",
+      "class": "invalid",
+      "operation": "submitNAV",
+      "targetPredicate": "NAVValid",
+      "fixture": "bare",
+      "action": {
+        "call": "postNAV",
+        "caller": "manager",
+        "args": {
+          "fundId": "$fundId",
+          "netAssetValue": "100000000000000000000",
+          "totalSharesSnapshot": "100000000000000000000",
+          "asOfSec": 590,
+          "payloadHash": "$formulaNav1PayloadHash"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "NAV_NOT_INITIALIZED",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M3",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline historyLength=0",
+        "M3 historyLength=1 with isInitial=false"
+      ],
+      "rationale": "Formula NAV must not precede the initial offering-price record.",
+      "actionLabel": "manager posts formula NAV before initial NAV"
+    },
+    {
+      "id": "I12",
+      "class": "invalid",
+      "operation": "submitNAV",
+      "targetPredicate": "NAVValid",
+      "fixture": "initial_nav",
+      "action": {
+        "call": "postInitialNAV",
+        "caller": "manager",
+        "args": {
+          "fundId": "$fundId",
+          "initialNav": "$initialNav",
+          "asOfSec": 590,
+          "payloadHash": "$initialNavPayloadHash"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "NAV_ALREADY_INITIALIZED",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M3",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline historyLength=1",
+        "M3 historyLength=2 with duplicate initial record"
+      ],
+      "rationale": "A fund can have only one initial issuance NAV.",
+      "actionLabel": "manager posts a second initial NAV"
+    },
+    {
+      "id": "I13",
+      "class": "invalid",
+      "operation": "submitNAV",
+      "targetPredicate": "NAVValid",
+      "fixture": "nav_history",
+      "action": {
+        "call": "postNAV",
+        "caller": "manager",
+        "args": {
+          "fundId": "$fundId",
+          "netAssetValue": "130000000000000000000",
+          "totalSharesSnapshot": "100000000000000000000",
+          "asOfSec": 109,
+          "payloadHash": "$navCorrectionPayloadHash"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "AS_OF_BEFORE_LATEST",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M3",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline latest asOf unchanged",
+        "M3 latest asOf moves backwards"
+      ],
+      "rationale": "Append-only valuation history must not regress its business-time ordering.",
+      "actionLabel": "manager posts NAV with asOf before latest asOf"
+    },
+    {
+      "id": "I14",
+      "class": "invalid",
+      "operation": "transfer",
+      "targetPredicate": "LifecycleValid",
+      "fixture": "paused_funded",
+      "action": {
+        "call": "transfer",
+        "caller": "alice",
+        "args": {
+          "to": "bob",
+          "amount": "5000000000000000000"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "PAUSED",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M4",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline balances unchanged",
+        "M4 balances change while paused"
+      ],
+      "rationale": "Suspension blocks executable peer-to-peer ownership changes.",
+      "actionLabel": "alice transfers shares to bob while paused"
+    },
+    {
+      "id": "I15",
+      "class": "invalid",
+      "operation": "subscribe",
+      "targetPredicate": "LifecycleValid",
+      "fixture": "paused_pending_subscription",
+      "action": {
+        "call": "acceptSubscription",
+        "caller": "subscriptionOperator",
+        "args": {
+          "requestId": 0
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "PAUSED",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M4",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline totalSupply=0",
+        "M4 mints while paused"
+      ],
+      "rationale": "Pause permits request intake but blocks subscription share issuance.",
+      "actionLabel": "operator accepts subscription request 0 while paused"
+    },
+    {
+      "id": "I16",
+      "class": "invalid",
+      "operation": "redeem",
+      "targetPredicate": "LifecycleValid",
+      "fixture": "paused_pending_redemption",
+      "action": {
+        "call": "settleRedemption",
+        "caller": "redemptionOperator",
+        "args": {
+          "requestId": 0
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "PAUSED",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M4",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline supply unchanged",
+        "M4 burns shares while paused"
+      ],
+      "rationale": "Suspension blocks settlement-driven share destruction.",
+      "actionLabel": "operator settles redemption request 0 while paused"
+    },
+    {
+      "id": "I17",
+      "class": "invalid",
+      "operation": "transfer",
+      "targetPredicate": "LifecycleValid",
+      "fixture": "allowanced_paused_funded",
+      "action": {
+        "call": "transferFrom",
+        "caller": "transferOperator",
+        "args": {
+          "from": "alice",
+          "to": "bob",
+          "amount": "5000000000000000000"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "PAUSED",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M4",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline delegated transfer rejected",
+        "M4 delegated transfer changes balances"
+      ],
+      "rationale": "The lifecycle predicate applies equally to direct and delegated transfers.",
+      "actionLabel": "operator calls transferFrom alice to bob while paused"
+    },
+    {
+      "id": "I18",
+      "class": "invalid",
+      "operation": "subscribe",
+      "targetPredicate": "ParamConsistent",
+      "fixture": "eligible_initial_nav",
+      "action": {
+        "call": "requestSubscription",
+        "caller": "alice",
+        "args": {
+          "subscriptionAmount": "0"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "INVALID_SUBSCRIPTION_AMOUNT",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M5",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline request count unchanged",
+        "M5 stores zero-amount request"
+      ],
+      "rationale": "A zero-value subscription request is not a meaningful business transition.",
+      "actionLabel": "alice requests subscriptionAmount=0"
+    },
+    {
+      "id": "I19",
+      "class": "invalid",
+      "operation": "subscribe",
+      "targetPredicate": "ParamConsistent",
+      "fixture": "tiny_pending_subscription",
+      "action": {
+        "call": "acceptSubscription",
+        "caller": "subscriptionOperator",
+        "args": {
+          "requestId": 0
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "SUBSCRIPTION_TOO_SMALL",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M5",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline request remains pending",
+        "M5 marks accepted with mintedShares=0"
+      ],
+      "rationale": "Fixed-point rounding must not create an accepted subscription with zero shares.",
+      "actionLabel": "operator accepts request 0 whose amount rounds to zero shares"
+    },
+    {
+      "id": "I20",
+      "class": "invalid",
+      "operation": "subscribe",
+      "targetPredicate": "ParamConsistent",
+      "fixture": "funded_alice",
+      "action": {
+        "call": "acceptSubscription",
+        "caller": "subscriptionOperator",
+        "args": {
+          "requestId": 0
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "SUBSCRIPTION_ALREADY_ACCEPTED",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M5",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline supply unchanged",
+        "M5 mints the same request twice"
+      ],
+      "rationale": "A lifecycle request must produce at most one accepted share-state transition.",
+      "actionLabel": "operator accepts subscription request 0 a second time"
+    },
+    {
+      "id": "I21",
+      "class": "invalid",
+      "operation": "redeem",
+      "targetPredicate": "ParamConsistent",
+      "fixture": "funded_alice",
+      "action": {
+        "call": "requestRedemption",
+        "caller": "alice",
+        "args": {
+          "redeemedShares": "0"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "INVALID_REDEMPTION_AMOUNT",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M5",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline queue unchanged",
+        "M5 stores zero-share redemption"
+      ],
+      "rationale": "A zero-share redemption request is not a valid business transition.",
+      "actionLabel": "alice requests redemption of zero shares"
+    },
+    {
+      "id": "I22",
+      "class": "invalid",
+      "operation": "redeem",
+      "targetPredicate": "ParamConsistent",
+      "fixture": "funded_alice",
+      "action": {
+        "call": "requestRedemption",
+        "caller": "alice",
+        "args": {
+          "redeemedShares": "100000000000000000001"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "INSUFFICIENT_AVAILABLE_SHARES",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M5",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline queue unchanged",
+        "M5 queued amount exceeds balance"
+      ],
+      "rationale": "Queued redemption must remain bounded by currently available holdings.",
+      "actionLabel": "alice requests more shares than her available balance"
+    },
+    {
+      "id": "I23",
+      "class": "invalid",
+      "operation": "transfer",
+      "targetPredicate": "ParamConsistent",
+      "fixture": "queued_alice",
+      "action": {
+        "call": "transfer",
+        "caller": "alice",
+        "args": {
+          "to": "bob",
+          "amount": "20000000000000000001"
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "INSUFFICIENT_AVAILABLE_SHARES",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M5",
+        "expectedOutcome": "accept",
+        "classification": "invalid_transition_accepted",
+        "expectedResidualGuard": null
+      },
+      "stateAssertions": [
+        "baseline balance unchanged",
+        "M5 balance falls below queued redemption"
+      ],
+      "rationale": "A transfer must not consume shares already locked in the redemption queue.",
+      "actionLabel": "alice transfers an amount that consumes queued shares"
+    },
+    {
+      "id": "I24",
+      "class": "invalid",
+      "operation": "redeem",
+      "targetPredicate": "ParamConsistent",
+      "fixture": "settled_redemption",
+      "action": {
+        "call": "settleRedemption",
+        "caller": "redemptionOperator",
+        "args": {
+          "requestId": 0
+        }
+      },
+      "actionAtSec": 600,
+      "baselineExpected": {
+        "outcome": "reject",
+        "errorKind": "string",
+        "errorCode": "REDEMPTION_ALREADY_SETTLED",
+        "errorArgs": []
+      },
+      "ablationHypothesis": {
+        "variant": "M5",
+        "expectedOutcome": "reject",
+        "classification": "runtime_revert",
+        "expectedError": {
+          "outcome": "reject",
+          "errorKind": "panic",
+          "errorCode": "Panic(0x11)",
+          "errorArgs": []
+        },
+        "expectedResidualGuard": "checked arithmetic rejects queue underflow after duplicate-settlement guard removal"
+      },
+      "stateAssertions": [
+        "M0 and M5 preserve post-first-settlement state"
+      ],
+      "rationale": "Removing the duplicate-settlement guard exposes a residual arithmetic failure rather than a valid transition.",
+      "actionLabel": "operator settles redemption request 0 a second time"
+    }
+  ],
+  "actors": {
+    "admin": "0x000000000000000000000000000000000000a001",
+    "manager": "0x000000000000000000000000000000000000a002",
+    "subscriptionOperator": "0x000000000000000000000000000000000000a003",
+    "redemptionOperator": "0x000000000000000000000000000000000000a004",
+    "pauser": "0x000000000000000000000000000000000000a005",
+    "operator2": "0x000000000000000000000000000000000000a006",
+    "transferOperator": "0x000000000000000000000000000000000000a007",
+    "alice": "0x000000000000000000000000000000000000a101",
+    "bob": "0x000000000000000000000000000000000000a102",
+    "stranger": "0x000000000000000000000000000000000000afff"
+  },
+  "constants": {
+    "fundId": "0xac4a93645b61f4f102884f40e6a589263b542e97cda3dd28d1de825f80f90169",
+    "aliceVcHash": "0xc897dd66b2857180257021de2aaf6472bcdd73e5578e5c31fd4637976913f459",
+    "bobVcHash": "0x6550237a180b992bad948e5e78f2df12f753532d9b116919c1db3762ce25e03c",
+    "initialNavPayloadHash": "0x670d332a72021c0917a475987dba74f620f9a814089ce41f31a1aff83586c391",
+    "formulaNav1PayloadHash": "0x1ebf10ade294d208b34aa27aeaed35ce15f9f78c713b444d16a4da8a53a3e6c5",
+    "formulaNav2PayloadHash": "0xbfdc730c777183bd7f7acc7ef2771bccf42e7ddbd0a52965f11d5cfc3e991c59",
+    "navCorrectionPayloadHash": "0xf53bd5b40adf342a28ab5637eb25b9b6110dd01950d4a8d77f141b9ab12b81e7",
+    "delayReasonHash": "0x1beec4ba77a4f1ad613270c28775038bc14cad9bc2228ceb0f4dbc12f3ce0e4b",
+    "initialNav": "1000000000000000000",
+    "highNav": "1000000000000000000000000000000",
+    "subscriptionAmount": "100000000000000000000",
+    "redemptionAmount": "20000000000000000000",
+    "initialWeightsBps": [
+      1667,
+      1667,
+      1667,
+      1667,
+      1666,
+      1666
+    ],
+    "maxStaleAgeSec": 2592000,
+    "kappaBps": 7000
+  }
+}
