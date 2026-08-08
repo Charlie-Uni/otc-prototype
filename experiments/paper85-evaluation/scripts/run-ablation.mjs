@@ -12,6 +12,7 @@ import {
   writeEvidence,
   writeFailure,
 } from './run-common.mjs';
+import { validateRunSummary } from './run-summary-validator.mjs';
 
 const VARIANTS = ['M1', 'M2', 'M3', 'M4', 'M5'];
 const STATE_FIELDS = [
@@ -26,9 +27,11 @@ const STATE_FIELDS = [
   'aliceWhitelisted',
   'bobWhitelisted',
   'operator2SubscriptionRole',
+  'paused',
   'navHistoryLength',
   'latestNavAsOf',
   'latestNavIsInitial',
+  'subscription0Amount',
   'subscription0Accepted',
   'subscription0MintedShares',
   'redemption0Settled',
@@ -37,6 +40,7 @@ const BOOLEAN_STATE_FIELDS = new Set([
   'aliceWhitelisted',
   'bobWhitelisted',
   'operator2SubscriptionRole',
+  'paused',
   'latestNavIsInitial',
   'subscription0Accepted',
   'redemption0Settled',
@@ -85,6 +89,11 @@ function parseObservation(testName, result, scenarioById) {
   if (targeted && !stateAssertionVerified) {
     throw new Error(`${variant}/${scenarioId} did not verify its preregistered state assertion`);
   }
+  const baselineBeforeStateDigest = targeted ? decoded.get('ablation.baseline.beforeStateDigest') : null;
+  const ablatedBeforeStateDigest = targeted ? decoded.get('ablation.ablated.beforeStateDigest') : null;
+  if (targeted && (!baselineBeforeStateDigest || !ablatedBeforeStateDigest)) {
+    throw new Error(`${variant}/${scenarioId} is missing its pre-action state digests`);
+  }
 
   return {
     variant,
@@ -100,6 +109,8 @@ function parseObservation(testName, result, scenarioById) {
     stateDigest,
     eventDigest,
     stateAssertionVerified,
+    baselineBeforeStateDigest,
+    ablatedBeforeStateDigest,
     baselineState: targeted ? parseStateObservation(decoded, 'baseline', `${variant}/${scenarioId}`) : null,
     ablatedState: targeted ? parseStateObservation(decoded, 'ablated', `${variant}/${scenarioId}`) : null,
   };
@@ -165,6 +176,8 @@ try {
     metadata: {
       preregistrationCommit: inputs.preregistrationCommit,
       manifestSha256: inputs.manifestHash,
+      evaluationLockSha256: inputs.evaluationLockSha256,
+      stateAssertionSpecSha256: inputs.stateAssertionSpecSha256,
       headCommit: inputs.repository.headCommit,
     },
     files: evidenceFiles,
@@ -193,6 +206,11 @@ try {
       genesisTimestamp: inputs.manifest.determinism.genesisTimestamp,
       toolchain: { foundry: inputs.forgeVersion },
       repository: inputs.repository,
+      measurement: {
+        preregistrationLockSha256: inputs.preregistrationLockSha256,
+        evaluationLockSha256: inputs.evaluationLockSha256,
+        stateAssertionSpecSha256: inputs.stateAssertionSpecSha256,
+      },
     },
     counts: {
       total: observations1.length,
@@ -215,6 +233,7 @@ try {
     },
     evidenceManifestSha256,
   };
+  validateRunSummary(summary);
   await writeFile(join(context.outputDirectory, 'run-summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
   process.stdout.write(`${JSON.stringify({ outputDirectory: context.outputDirectory, summary }, null, 2)}\n`);
 } catch (error) {

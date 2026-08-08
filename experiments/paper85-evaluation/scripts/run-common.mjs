@@ -9,7 +9,9 @@ export const ROOT = resolve(SCRIPT_DIR, '..');
 export const REPO_ROOT = resolve(ROOT, '..', '..');
 export const CONTRACT_ROOT = resolve(ROOT, 'contracts');
 export const MANIFEST_PATH = resolve(ROOT, 'spec/scenarios.v1.json');
-export const EXPECTED_MANIFEST_HASH = '97eabdaab3de5cc4d3cb41bbce1b82e445edfa7c8ea060618dc7b51fa5be4c69';
+export const PREREG_LOCK_PATH = resolve(ROOT, 'spec/prereg-lock.json');
+export const STATE_ASSERTION_SPEC_PATH = resolve(ROOT, 'spec-v2/state-assertions.v2.json');
+export const EVALUATION_LOCK_PATH = resolve(ROOT, 'spec-v2/evaluation-lock.v2.1.json');
 
 export function sha256(bytes) {
   return createHash('sha256').update(bytes).digest('hex');
@@ -64,18 +66,28 @@ export async function createRunContext(kind) {
 }
 
 export async function loadRunInputs() {
+  const preregLockBytes = await readFile(PREREG_LOCK_PATH);
+  const preregLock = JSON.parse(preregLockBytes);
   const manifestBytes = await readFile(MANIFEST_PATH);
   const manifestHash = sha256(manifestBytes);
-  if (manifestHash !== EXPECTED_MANIFEST_HASH) {
-    throw new Error(`manifest hash ${manifestHash} does not match preregistered ${EXPECTED_MANIFEST_HASH}`);
+  if (manifestHash !== preregLock.manifest.sha256) {
+    throw new Error(`manifest hash ${manifestHash} does not match preregistered ${preregLock.manifest.sha256}`);
   }
 
   command('node', [resolve(SCRIPT_DIR, 'generate-experimental-contracts.mjs'), '--check']);
   command('node', [resolve(SCRIPT_DIR, 'generate-m0-tests.mjs'), '--check']);
+  command('node', [resolve(SCRIPT_DIR, 'generate-state-assertions.mjs'), '--check']);
+  command('node', [resolve(SCRIPT_DIR, 'evaluation-lock.mjs'), '--check']);
+
+  const stateAssertionSpecBytes = await readFile(STATE_ASSERTION_SPEC_PATH);
+  const evaluationLockBytes = await readFile(EVALUATION_LOCK_PATH);
 
   return {
     manifest: JSON.parse(manifestBytes),
     manifestHash,
+    preregistrationLockSha256: sha256(preregLockBytes),
+    stateAssertionSpecSha256: sha256(stateAssertionSpecBytes),
+    evaluationLockSha256: sha256(evaluationLockBytes),
     preregistrationCommit: command('git', ['rev-parse', 'paper85-prereg-v1^{commit}']),
     sourceCommit: command('git', ['rev-parse', 'chapter3-artifact-v1.4.0^{commit}']),
     forgeVersion: command('forge', ['--version']).split('\n')[0],

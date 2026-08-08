@@ -10,6 +10,7 @@ import {
   writeEvidence,
   writeFailure,
 } from './run-common.mjs';
+import { validateRunSummary } from './run-summary-validator.mjs';
 
 function parseObservation(testName, result, scenarioById) {
   const match = /^testM0_([VI][0-9]{2})\(\)$/.exec(testName);
@@ -84,6 +85,7 @@ try {
     metadata: {
       preregistrationCommit: inputs.preregistrationCommit,
       manifestSha256: inputs.manifestHash,
+      evaluationLockSha256: inputs.evaluationLockSha256,
       headCommit: inputs.repository.headCommit,
     },
     files: evidenceFiles,
@@ -110,6 +112,11 @@ try {
       genesisTimestamp: inputs.manifest.determinism.genesisTimestamp,
       toolchain: { foundry: inputs.forgeVersion },
       repository: inputs.repository,
+      measurement: {
+        preregistrationLockSha256: inputs.preregistrationLockSha256,
+        evaluationLockSha256: inputs.evaluationLockSha256,
+        stateAssertionSpecSha256: inputs.stateAssertionSpecSha256,
+      },
     },
     counts: {
       total,
@@ -126,6 +133,7 @@ try {
     },
     evidenceManifestSha256,
   };
+  validateRunSummary(summary);
   await writeFile(join(context.outputDirectory, 'run-summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
   process.stdout.write(`${JSON.stringify({ outputDirectory: context.outputDirectory, summary }, null, 2)}\n`);
 } catch (error) {

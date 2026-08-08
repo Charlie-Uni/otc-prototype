@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 2,
+  "kind": "paper85-typed-state-assertions",
+  "sourceManifest": {
+    "path": "experiments/paper85-evaluation/spec/scenarios.v1.json",
+    "sha256": "97eabdaab3de5cc4d3cb41bbce1b82e445edfa7c8ea060618dc7b51fa5be4c69"
+  },
+  "assertions": [
+    {
+      "scenarioId": "I01",
+      "sourceAssertions": ["baseline whitelist(alice)=false", "M1 whitelist(alice)=true"],
+      "checks": [
+        {"left": {"field": "baseline.aliceWhitelisted"}, "op": "eq", "right": {"bool": false}},
+        {"left": {"field": "ablated.aliceWhitelisted"}, "op": "eq", "right": {"bool": true}}
+      ]
+    },
+    {
+      "scenarioId": "I02",
+      "sourceAssertions": ["baseline historyLength=0", "M1 historyLength=1"],
+      "checks": [
+        {"left": {"field": "baseline.navHistoryLength"}, "op": "eq", "right": {"uint": "0"}},
+        {"left": {"field": "ablated.navHistoryLength"}, "op": "eq", "right": {"uint": "1"}}
+      ]
+    },
+    {
+      "scenarioId": "I03",
+      "sourceAssertions": ["baseline totalSupply=0", "M1 totalSupply=100e18"],
+      "checks": [
+        {"left": {"field": "baseline.totalSupply"}, "op": "eq", "right": {"uint": "0"}},
+        {"left": {"field": "ablated.totalSupply"}, "op": "eq", "right": {"uint": "100000000000000000000"}}
+      ]
+    },
+    {
+      "scenarioId": "I04",
+      "sourceAssertions": ["baseline request.settled=false", "M1 request.settled=true"],
+      "checks": [
+        {"left": {"field": "baseline.redemption0Settled"}, "op": "eq", "right": {"bool": false}},
+        {"left": {"field": "ablated.redemption0Settled"}, "op": "eq", "right": {"bool": true}}
+      ]
+    },
+    {
+      "scenarioId": "I05",
+      "sourceAssertions": ["baseline hasRole(SUBSCRIPTION_ROLE,operator2)=false", "M1 hasRole(SUBSCRIPTION_ROLE,operator2)=true"],
+      "checks": [
+        {"left": {"field": "baseline.operator2SubscriptionRole"}, "op": "eq", "right": {"bool": false}},
+        {"left": {"field": "ablated.operator2SubscriptionRole"}, "op": "eq", "right": {"bool": true}}
+      ]
+    },
+    {
+      "scenarioId": "I06",
+      "sourceAssertions": ["baseline request count unchanged", "M2 request count increases"],
+      "checks": [
+        {"left": {"field": "ablated.subscriptionRequestCount"}, "op": "eq", "right": {"add": [{"field": "baseline.subscriptionRequestCount"}, {"uint": "1"}]}}
+      ]
+    },
+    {
+      "scenarioId": "I07",
+      "sourceAssertions": ["baseline totalSupply=0", "M2 mints shares despite revoked eligibility"],
+      "checks": [
+        {"left": {"field": "baseline.totalSupply"}, "op": "eq", "right": {"uint": "0"}},
+        {"left": {"field": "ablated.totalSupply"}, "op": "gt", "right": {"uint": "0"}},
+        {"left": {"field": "ablated.aliceWhitelisted"}, "op": "eq", "right": {"bool": false}}
+      ]
+    },
+    {
+      "scenarioId": "I08",
+      "sourceAssertions": ["baseline bob balance=0", "M2 bob receives shares"],
+      "checks": [
+        {"left": {"field": "baseline.bobBalance"}, "op": "eq", "right": {"uint": "0"}},
+        {"left": {"field": "ablated.bobBalance"}, "op": "gt", "right": {"uint": "0"}}
+      ]
+    },
+    {
+      "scenarioId": "I09",
+      "sourceAssertions": ["baseline queue unchanged", "M2 queues revoked holder redemption"],
+      "checks": [
+        {"left": {"field": "ablated.totalQueuedRedemption"}, "op": "gt", "right": {"field": "baseline.totalQueuedRedemption"}},
+        {"left": {"field": "ablated.aliceWhitelisted"}, "op": "eq", "right": {"bool": false}}
+      ]
+    },
+    {
+      "scenarioId": "I10",
+      "sourceAssertions": ["totalSupply remains zero in M0 and M3"],
+      "checks": [
+        {"left": {"field": "baseline.totalSupply"}, "op": "eq", "right": {"uint": "0"}},
+        {"left": {"field": "ablated.totalSupply"}, "op": "eq", "right": {"uint": "0"}},
+        {"left": {"field": "baselineStateDigest"}, "op": "eq", "right": {"field": "ablatedStateDigest"}}
+      ]
+    },
+    {
+      "scenarioId": "I11",
+      "sourceAssertions": ["baseline historyLength=0", "M3 historyLength=1 with isInitial=false"],
+      "checks": [
+        {"left": {"field": "baseline.navHistoryLength"}, "op": "eq", "right": {"uint": "0"}},
+        {"left": {"field": "ablated.navHistoryLength"}, "op": "eq", "right": {"uint": "1"}},
+        {"left": {"field": "ablated.latestNavIsInitial"}, "op": "eq", "right": {"bool": false}}
+      ]
+    },
+    {
+      "scenarioId": "I12",
+      "sourceAssertions": ["baseline historyLength=1", "M3 historyLength=2 with duplicate initial record"],
+      "checks": [
+        {"left": {"field": "baseline.navHistoryLength"}, "op": "eq", "right": {"uint": "1"}},
+        {"left": {"field": "ablated.navHistoryLength"}, "op": "eq", "right": {"uint": "2"}},
+        {"left": {"field": "ablated.latestNavIsInitial"}, "op": "eq", "right": {"bool": true}}
+      ]
+    },
+    {
+      "scenarioId": "I13",
+      "sourceAssertions": ["baseline latest asOf unchanged", "M3 latest asOf moves backwards"],
+      "checks": [
+        {"left": {"field": "ablated.latestNavAsOf"}, "op": "lt", "right": {"field": "baseline.latestNavAsOf"}}
+      ]
+    },
+    {
+      "scenarioId": "I14",
+      "sourceAssertions": ["baseline balances unchanged", "M4 balances change while paused"],
+      "checks": [
+        {"left": {"field": "baseline.paused"}, "op": "eq", "right": {"bool": true}},
+        {"left": {"field": "ablated.paused"}, "op": "eq", "right": {"bool": true}},
+        {"left": {"field": "ablated.aliceBalance"}, "op": "neq", "right": {"field": "baseline.aliceBalance"}},
+        {"left": {"field": "ablated.bobBalance"}, "op": "neq", "right": {"field": "baseline.bobBalance"}}
+      ]
+    },
+    {
+      "scenarioId": "I15",
+      "sourceAssertions": ["baseline totalSupply=0", "M4 mints while paused"],
+      "checks": [
+        {"left": {"field": "baseline.paused"}, "op": "eq", "right": {"bool": true}},
+        {"left": {"field": "ablated.paused"}, "op": "eq", "right": {"bool": true}},
+        {"left": {"field": "baseline.totalSupply"}, "op": "eq", "right": {"uint": "0"}},
+        {"left": {"field": "ablated.totalSupply"}, "op": "gt", "right": {"uint": "0"}}
+      ]
+    },
+    {
+      "scenarioId": "I16",
+      "sourceAssertions": ["baseline supply unchanged", "M4 burns shares while paused"],
+      "checks": [
+        {"left": {"field": "baseline.paused"}, "op": "eq", "right": {"bool": true}},
+        {"left": {"field": "ablated.paused"}, "op": "eq", "right": {"bool": true}},
+        {"left": {"field": "ablated.totalSupply"}, "op": "lt", "right": {"field": "baseline.totalSupply"}}
+      ]
+    },
+    {
+      "scenarioId": "I17",
+      "sourceAssertions": ["baseline delegated transfer rejected", "M4 delegated transfer changes balances"],
+      "checks": [
+        {"left": {"field": "baseline.paused"}, "op": "eq", "right": {"bool": true}},
+        {"left": {"field": "ablated.paused"}, "op": "eq", "right": {"bool": true}},
+        {"left": {"field": "ablated.aliceBalance"}, "op": "neq", "right": {"field": "baseline.aliceBalance"}},
+        {"left": {"field": "ablated.bobBalance"}, "op": "neq", "right": {"field": "baseline.bobBalance"}}
+      ]
+    },
+    {
+      "scenarioId": "I18",
+      "sourceAssertions": ["baseline request count unchanged", "M5 stores zero-amount request"],
+      "checks": [
+        {"left": {"field": "ablated.subscriptionRequestCount"}, "op": "eq", "right": {"add": [{"field": "baseline.subscriptionRequestCount"}, {"uint": "1"}]}},
+        {"left": {"field": "ablated.subscription0Amount"}, "op": "eq", "right": {"uint": "0"}}
+      ]
+    },
+    {
+      "scenarioId": "I19",
+      "sourceAssertions": ["baseline request remains pending", "M5 marks accepted with mintedShares=0"],
+      "checks": [
+        {"left": {"field": "baseline.subscription0Accepted"}, "op": "eq", "right": {"bool": false}},
+        {"left": {"field": "ablated.subscription0Accepted"}, "op": "eq", "right": {"bool": true}},
+        {"left": {"field": "ablated.subscription0MintedShares"}, "op": "eq", "right": {"uint": "0"}}
+      ]
+    },
+    {
+      "scenarioId": "I20",
+      "sourceAssertions": ["baseline supply unchanged", "M5 mints the same request twice"],
+      "checks": [
+        {"left": {"field": "baseline.subscription0Accepted"}, "op": "eq", "right": {"bool": true}},
+        {"left": {"field": "ablated.subscription0Accepted"}, "op": "eq", "right": {"bool": true}},
+        {"left": {"field": "ablated.subscription0MintedShares"}, "op": "eq", "right": {"field": "baseline.subscription0MintedShares"}},
+        {"left": {"field": "ablated.totalSupply"}, "op": "eq", "right": {"add": [{"field": "baseline.totalSupply"}, {"field": "baseline.subscription0MintedShares"}]}}
+      ]
+    },
+    {
+      "scenarioId": "I21",
+      "sourceAssertions": ["baseline queue unchanged", "M5 stores zero-share redemption"],
+      "checks": [
+        {"left": {"field": "ablated.redemptionRequestCount"}, "op": "eq", "right": {"add": [{"field": "baseline.redemptionRequestCount"}, {"uint": "1"}]}},
+        {"left": {"field": "ablated.totalQueuedRedemption"}, "op": "eq", "right": {"field": "baseline.totalQueuedRedemption"}}
+      ]
+    },
+    {
+      "scenarioId": "I22",
+      "sourceAssertions": ["baseline queue unchanged", "M5 queued amount exceeds balance"],
+      "checks": [
+        {"left": {"field": "ablated.aliceQueued"}, "op": "gt", "right": {"field": "baseline.aliceQueued"}},
+        {"left": {"field": "ablated.aliceQueued"}, "op": "gt", "right": {"field": "ablated.aliceBalance"}}
+      ]
+    },
+    {
+      "scenarioId": "I23",
+      "sourceAssertions": ["baseline balance unchanged", "M5 balance falls below queued redemption"],
+      "checks": [
+        {"left": {"field": "ablated.aliceQueued"}, "op": "eq", "right": {"field": "baseline.aliceQueued"}},
+        {"left": {"field": "ablated.aliceBalance"}, "op": "lt", "right": {"field": "baseline.aliceBalance"}},
+        {"left": {"field": "ablated.aliceBalance"}, "op": "lt", "right": {"field": "ablated.aliceQueued"}}
+      ]
+    },
+    {
+      "scenarioId": "I24",
+      "sourceAssertions": ["M0 and M5 preserve post-first-settlement state"],
+      "checks": [
+        {"left": {"field": "baselineBeforeStateDigest"}, "op": "eq", "right": {"field": "baselineStateDigest"}},
+        {"left": {"field": "ablatedBeforeStateDigest"}, "op": "eq", "right": {"field": "ablatedStateDigest"}},
+        {"left": {"field": "baselineStateDigest"}, "op": "eq", "right": {"field": "ablatedStateDigest"}}
+      ]
+    }
+  ]
+}

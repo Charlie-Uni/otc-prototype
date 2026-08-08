@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "kind": "paper85-evidence-common-semantics-comparison",
+  "left": {
+    "directory": "docs/evidence/paper85/v1",
+    "files": {
+      "docs/evidence/paper85/v1/m0-observations.json": "2790bf811788602acdb56eaf57d46a0b7c1c28f76bf22f7b6a6a360b9ea9dca6",
+      "docs/evidence/paper85/v1/M1.jsonl": "8821a6a274167ec305602910c2a8cdbe577a0b683db028d0bddbc8091bc34e41",
+      "docs/evidence/paper85/v1/M2.jsonl": "46ab71b3d93cc99cfcd98e21bf817674e4f2208244bafaee344869984cf4659a",
+      "docs/evidence/paper85/v1/M3.jsonl": "7e3ea3b86e180c5d78b0b53cf6015a712b6588428db5e543d7e2e09ec50b062e",
+      "docs/evidence/paper85/v1/M4.jsonl": "c5e642faeba53d31ac4583c47f8807442fd56affe30cf9590db80e85bb441711",
+      "docs/evidence/paper85/v1/M5.jsonl": "0f8d745c2a46f4d1161c1315cfd96ae95f1e159603f5fc612e8738650dec54a4"
+    }
+  },
+  "right": {
+    "directory": "docs/evidence/paper85/v2",
+    "files": {
+      "docs/evidence/paper85/v2/m0-observations.json": "56e78b202a16f5a8b236f107991b4c5804db54cfe7784b6b1681682b499f1c19",
+      "docs/evidence/paper85/v2/M1.jsonl": "a6c886a7c5a7ce6e8c33b251f5f84890f1a4d3351e0bdec4e7586d2e0cfde3ff",
+      "docs/evidence/paper85/v2/M2.jsonl": "47417c97706f7c5957b6e003d3b697d73cbcd3eb97249610d8cb9b963f5bd664",
+      "docs/evidence/paper85/v2/M3.jsonl": "05c23333b7895f5de3016bcadd861a0d3561647121a3e67b53552b61d2e16b11",
+      "docs/evidence/paper85/v2/M4.jsonl": "f8541db0b7c71da05067329cde48495584b417e1d3d4482b09517fbf3ff9b0ee",
+      "docs/evidence/paper85/v2/M5.jsonl": "92470f3c65c0eafe68fbfb3a4935094ab718b250dce9b137eb38b9ee3e4c9d48"
+    }
+  },
+  "comparedFields": {
+    "m0": [
+      "scenarioId",
+      "class",
+      "baselineOutcome",
+      "status"
+    ],
+    "ablation": [
+      "variant",
+      "scenarioId",
+      "class",
+      "targetPredicate",
+      "targeted",
+      "classification",
+      "stateDivergence",
+      "eventDivergence"
+    ]
+  },
+  "counts": {
+    "m0RowsCompared": 42,
+    "ablationRowsCompared": 210,
+    "totalRowsCompared": 252,
+    "mismatches": 0
+  },
+  "equivalentOnCommonSemantics": true,
+  "mismatches": []
+}

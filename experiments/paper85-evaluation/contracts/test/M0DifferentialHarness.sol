@@ -21,9 +21,11 @@ struct StateObservation {
     bool aliceWhitelisted;
     bool bobWhitelisted;
     bool operator2SubscriptionRole;
+    bool paused;
     uint256 navHistoryLength;
     uint64 latestNavAsOf;
     bool latestNavIsInitial;
+    uint256 subscription0Amount;
     bool subscription0Accepted;
     uint256 subscription0MintedShares;
     bool redemption0Settled;
@@ -72,6 +74,7 @@ abstract contract M0DifferentialHarness is Test {
         address fundToken;
         bool accepted;
         bytes resultData;
+        bytes32 beforeStateDigest;
         bytes32 stateDigest;
         bytes32 eventDigest;
         StateObservation state;
@@ -141,6 +144,7 @@ abstract contract M0DifferentialHarness is Test {
         result.riskRegistry = riskRegistry;
         result.navRegistry = navRegistry;
         result.fundToken = fundToken;
+        result.beforeStateDigest = beforeDigest;
         result.stateDigest = _stateDigest();
         result.eventDigest = _eventDigest(logs);
         result.state = _stateObservation();
@@ -295,6 +299,7 @@ abstract contract M0DifferentialHarness is Test {
         state.bobWhitelisted = _readBool(fundToken, abi.encodeWithSignature("whitelist(address)", BOB));
         state.operator2SubscriptionRole =
             _readBool(fundToken, abi.encodeWithSignature("hasRole(bytes32,address)", SUBSCRIPTION_ROLE, OPERATOR_2));
+        state.paused = _readBool(fundToken, abi.encodeWithSignature("paused()"));
         state.navHistoryLength = _readUint(navRegistry, abi.encodeWithSignature("historyLength(bytes32)", FUND_ID));
 
         if (state.navHistoryLength > 0) {
@@ -313,6 +318,7 @@ abstract contract M0DifferentialHarness is Test {
                 _read(fundToken, abi.encodeWithSignature("subscriptionRequestAt(uint256)", 0)),
                 (FundToken.SubscriptionRequest)
             );
+            state.subscription0Amount = request.subscriptionAmount;
             state.subscription0Accepted = request.accepted;
             state.subscription0MintedShares = request.mintedShares;
         }

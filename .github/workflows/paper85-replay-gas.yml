@@ -1,39 +1,33 @@
-name: Paper 8.5 Predicate Ablation
+name: Paper 8.5 Replay and Gas
 
 on:
   push:
     paths:
       - 'contracts/src/**'
-      - 'experiments/paper85-evaluation/contracts/generated/**'
-      - 'experiments/paper85-evaluation/contracts/test/Ablation*.sol'
-      - 'experiments/paper85-evaluation/contracts/test/M0DifferentialHarness.sol'
-      - 'experiments/paper85-evaluation/contracts/test/AblationM*.t.sol'
-      - 'experiments/paper85-evaluation/contracts/test/ScenarioFixtures.sol'
-      - 'experiments/paper85-evaluation/patches/**'
+      - 'contracts/foundry.toml'
+      - 'apps/api/package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
       - 'experiments/paper85-evaluation/scripts/**'
       - 'experiments/paper85-evaluation/spec/**'
       - 'experiments/paper85-evaluation/spec-v2/**'
-      - 'experiments/paper85-evaluation/docs/ablation-runbook.md'
-      - '.github/workflows/paper85-ablation.yml'
+      - '.github/workflows/paper85-replay-gas.yml'
   pull_request:
     paths:
       - 'contracts/src/**'
-      - 'experiments/paper85-evaluation/contracts/generated/**'
-      - 'experiments/paper85-evaluation/contracts/test/Ablation*.sol'
-      - 'experiments/paper85-evaluation/contracts/test/M0DifferentialHarness.sol'
-      - 'experiments/paper85-evaluation/contracts/test/AblationM*.t.sol'
-      - 'experiments/paper85-evaluation/contracts/test/ScenarioFixtures.sol'
-      - 'experiments/paper85-evaluation/patches/**'
+      - 'contracts/foundry.toml'
+      - 'apps/api/package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
       - 'experiments/paper85-evaluation/scripts/**'
       - 'experiments/paper85-evaluation/spec/**'
       - 'experiments/paper85-evaluation/spec-v2/**'
-      - 'experiments/paper85-evaluation/docs/ablation-runbook.md'
-      - '.github/workflows/paper85-ablation.yml'
+      - '.github/workflows/paper85-replay-gas.yml'
 
 jobs:
-  predicate-ablation:
+  replay-and-gas:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v6
@@ -56,7 +50,12 @@ jobs:
           git clone --branch v1.10.0 --depth 1 https://github.com/foundry-rs/forge-std.git lib/forge-std
           git clone --branch v5.4.0 --depth 1 https://github.com/OpenZeppelin/openzeppelin-contracts.git lib/openzeppelin-contracts
 
-      - name: Verify preregistration and generated sources
+      - name: Install Node dependencies
+        run: |
+          corepack enable
+          corepack pnpm@9.6.0 install --frozen-lockfile
+
+      - name: Verify frozen inputs and measurement implementation
         run: |
           node experiments/paper85-evaluation/scripts/validate-manifest.mjs
           node experiments/paper85-evaluation/scripts/prereg-lock.mjs --check
@@ -65,24 +64,20 @@ jobs:
           node experiments/paper85-evaluation/scripts/generate-state-assertions.mjs --check
           node experiments/paper85-evaluation/scripts/evaluation-lock.mjs --check
 
-      - name: Test manifest and state-assertion integrity guards
+      - name: Test measurement helpers
         run: node --test experiments/paper85-evaluation/scripts/*.test.mjs
 
-      - name: Check Solidity formatting
-        working-directory: experiments/paper85-evaluation/contracts
-        run: forge fmt --check
+      - name: Run closed-input replay twice
+        run: node experiments/paper85-evaluation/scripts/run-replay.mjs
 
-      - name: Re-run M0 quality gate
-        run: node experiments/paper85-evaluation/scripts/run-m0.mjs
+      - name: Measure production contract gas in repeated batches
+        run: node experiments/paper85-evaluation/scripts/run-gas.mjs
 
-      - name: Run five single-predicate ablations twice
-        run: node experiments/paper85-evaluation/scripts/run-ablation.mjs
-
-      - name: Upload M0 and ablation evidence
+      - name: Upload replay and gas evidence
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: paper85-ablation-evidence-${{ github.run_id }}
+          name: paper85-replay-gas-evidence-${{ github.run_id }}
           path: experiments/paper85-evaluation/results
           if-no-files-found: error
           retention-days: 90

@@ -53,10 +53,18 @@ abstract contract AblationDifferentialHarness is ScenarioFixtures {
 
         if (targeted) {
             AblationStateAssertions.verify(
-                scenario.id, baseline.state, ablated.state, baseline.stateDigest, ablated.stateDigest
+                scenario.id,
+                baseline.state,
+                ablated.state,
+                baseline.beforeStateDigest,
+                baseline.stateDigest,
+                ablated.beforeStateDigest,
+                ablated.stateDigest
             );
             _logStateObservation("baseline", baseline.state);
             _logStateObservation("ablated", ablated.state);
+            console2.log(string.concat("ablation.baseline.beforeStateDigest=", vm.toString(baseline.beforeStateDigest)));
+            console2.log(string.concat("ablation.ablated.beforeStateDigest=", vm.toString(ablated.beforeStateDigest)));
             console2.log("ablation.stateAssertionVerified=true");
         }
 
@@ -82,9 +90,11 @@ abstract contract AblationDifferentialHarness is ScenarioFixtures {
         console2.log(string.concat(prefix, "aliceWhitelisted=", vm.toString(state.aliceWhitelisted)));
         console2.log(string.concat(prefix, "bobWhitelisted=", vm.toString(state.bobWhitelisted)));
         console2.log(string.concat(prefix, "operator2SubscriptionRole=", vm.toString(state.operator2SubscriptionRole)));
+        console2.log(string.concat(prefix, "paused=", vm.toString(state.paused)));
         console2.log(string.concat(prefix, "navHistoryLength=", vm.toString(state.navHistoryLength)));
         console2.log(string.concat(prefix, "latestNavAsOf=", vm.toString(state.latestNavAsOf)));
         console2.log(string.concat(prefix, "latestNavIsInitial=", vm.toString(state.latestNavIsInitial)));
+        console2.log(string.concat(prefix, "subscription0Amount=", vm.toString(state.subscription0Amount)));
         console2.log(string.concat(prefix, "subscription0Accepted=", vm.toString(state.subscription0Accepted)));
         console2.log(string.concat(prefix, "subscription0MintedShares=", vm.toString(state.subscription0MintedShares)));
         console2.log(string.concat(prefix, "redemption0Settled=", vm.toString(state.redemption0Settled)));

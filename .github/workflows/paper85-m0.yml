@@ -11,6 +11,7 @@ on:
       - 'experiments/paper85-evaluation/patches/**'
       - 'experiments/paper85-evaluation/scripts/**'
       - 'experiments/paper85-evaluation/spec/**'
+      - 'experiments/paper85-evaluation/spec-v2/**'
       - 'experiments/paper85-evaluation/docs/m0-runbook.md'
       - '.github/workflows/paper85-m0.yml'
   pull_request:
@@ -23,6 +24,7 @@ on:
       - 'experiments/paper85-evaluation/patches/**'
       - 'experiments/paper85-evaluation/scripts/**'
       - 'experiments/paper85-evaluation/spec/**'
+      - 'experiments/paper85-evaluation/spec-v2/**'
       - 'experiments/paper85-evaluation/docs/m0-runbook.md'
       - '.github/workflows/paper85-m0.yml'
 
@@ -58,6 +60,11 @@ jobs:
           node experiments/paper85-evaluation/scripts/prereg-lock.mjs --check
           node experiments/paper85-evaluation/scripts/generate-experimental-contracts.mjs --check
           node experiments/paper85-evaluation/scripts/generate-m0-tests.mjs --check
+          node experiments/paper85-evaluation/scripts/generate-state-assertions.mjs --check
+          node experiments/paper85-evaluation/scripts/evaluation-lock.mjs --check
+
+      - name: Test manifest and state-assertion integrity guards
+        run: node --test experiments/paper85-evaluation/scripts/*.test.mjs
 
       - name: Check Solidity formatting
         working-directory: experiments/paper85-evaluation/contracts
