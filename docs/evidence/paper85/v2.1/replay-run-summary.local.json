@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "preregistration": {
+    "tag": "paper85-prereg-v1",
+    "commitSha": "f3ff71de8fd4634cf37f2c9b980e0c7d92e436a2",
+    "manifestSha256": "97eabdaab3de5cc4d3cb41bbce1b82e445edfa7c8ea060618dc7b51fa5be4c69"
+  },
+  "sourceArtifact": {
+    "tag": "chapter3-artifact-v1.4.0",
+    "commitSha": "e5b1e126e5e7ff37f5fe47307d945447724a17d1",
+    "evidenceAnchor": "b5fe1c8ec2153d1e84e0492012be44a45182dfe2"
+  },
+  "run": {
+    "runId": "replay-20260808T125104531Z",
+    "startedAt": "2026-08-08T12:51:04.531Z",
+    "chainId": 31337,
+    "genesisTimestamp": 1710000000,
+    "repository": {
+      "headCommit": "d27d99067f4f03f81b6e72ff2cc0744e05316edd",
+      "branch": "test/paper85-v21-evidence",
+      "dirty": false
+    },
+    "toolchain": {
+      "foundry": "forge Version: 1.7.1"
+    },
+    "measurement": {
+      "protocol": "closed-input-event-replay-v1",
+      "preregistrationLockSha256": "1cf0cabc595610693f74929dccaa9369b18dca9024a6af3f12ba9dc73d18c28b",
+      "evaluationLockSha256": "758687070f521d83225da36db79867ce612007f07c25fbffe5e642a2f49e0090"
+    }
+  },
+  "counts": {
+    "acceptedOperations": 14,
+    "replayedOperations": 14,
+    "acceptedEvents": 22,
+    "replayedEvents": 22,
+    "navReferences": 2,
+    "validNavReferences": 2,
+    "projectionCheckpoints": 14,
+    "matchingProjections": 14
+  },
+  "metrics": {
+    "arc": 1,
+    "nri": 1,
+    "subscriptionNri": 1,
+    "redemptionNri": 1,
+    "pcr": 1,
+    "repeatedSemanticEvidenceMatches": true,
+    "semanticEvidenceSha256": "22b4025eb3ce32809b32c4060bcaff26b6001078f41060d6e971d4e8cfa4a953"
+  },
+  "evidenceManifestSha256": "8345a939c7a821eb47f4255b00f84abe3531f91bdbb2820a5e67bd5b80938a0d"
+}

@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "repository": "Charlie-Uni/otc-prototype",
+  "branch": "test/paper85-v21-evidence",
+  "headCommit": "d27d99067f4f03f81b6e72ff2cc0744e05316edd",
+  "runs": [
+    {
+      "name": "Paper 8.5 Preregistration Checks",
+      "workflowRunId": 31258227666,
+      "conclusion": "success"
+    },
+    {
+      "name": "Paper 8.5 M0 Equivalence",
+      "workflowRunId": 31258227662,
+      "conclusion": "success",
+      "artifactId": 9022015629,
+      "artifactName": "paper85-m0-evidence-31258227662",
+      "artifactSha256": "ea7176be0255f3fa0ef496e6e141fcae22004e1a9323db9862868000b4fefa5c",
+      "expiresAt": "2026-11-06T12:52:15Z"
+    },
+    {
+      "name": "Paper 8.5 Predicate Ablation",
+      "workflowRunId": 31258227695,
+      "conclusion": "success",
+      "artifactId": 9022017518,
+      "artifactName": "paper85-ablation-evidence-31258227695",
+      "artifactSha256": "f54c46bbfcf8c829ba87f69dc23cd4ea13a2d100e49fa13aec0e98830e69cafe",
+      "expiresAt": "2026-11-06T12:52:15Z"
+    },
+    {
+      "name": "Paper 8.5 Replay and Gas",
+      "workflowRunId": 31258227700,
+      "conclusion": "success",
+      "artifactId": 9022018299,
+      "artifactName": "paper85-replay-gas-evidence-31258227700",
+      "artifactSha256": "3831ab0de71492c89d257fa8a370d9149f644ce9bb05a0af973c4d21830fcb91",
+      "expiresAt": "2026-11-06T12:52:15Z"
+    },
+    {
+      "name": "Chapter 3 Artifact Tests",
+      "workflowRunId": 31258227663,
+      "conclusion": "success",
+      "artifactId": 9022023418,
+      "artifactName": "chapter3-test-evidence",
+      "artifactSha256": "cef4487bd1de66f192496e8fd036b307fa7c492a72311731f7ac6db89404ffcc",
+      "expiresAt": "2026-11-06T12:52:15Z"
+    },
+    {
+      "name": "Static Analysis",
+      "workflowRunId": 31258227676,
+      "conclusion": "success"
+    }
+  ]
+}

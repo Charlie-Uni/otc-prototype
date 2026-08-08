@@ -1,0 +1,191 @@
+{
+  "runCount": 5,
+  "methodology": {
+    "source": "chapter3-artifact-v1.4.0 production contracts",
+    "environment": "local deterministic Anvil EVM",
+    "categoryUnit": "gas per lifecycle operation; multi-transaction categories are summed per run",
+    "excludes": "deployment, bootstrap configuration, and feature-flagged experimental contracts"
+  },
+  "categories": {
+    "qualificationUpdate": {
+      "label": "Qualification Update",
+      "transactionCountPerSample": 1,
+      "samples": 10,
+      "averageGas": 50158,
+      "minGas": 50152,
+      "maxGas": 50164
+    },
+    "navSubmission": {
+      "label": "NAV Submission",
+      "transactionCountPerSample": 1,
+      "samples": 10,
+      "averageGas": 163810,
+      "minGas": 149233,
+      "maxGas": 178387
+    },
+    "subscription": {
+      "label": "Subscription (request + acceptance)",
+      "transactionCountPerSample": 2,
+      "samples": 5,
+      "averageGas": 333834,
+      "minGas": 333834,
+      "maxGas": 333834
+    },
+    "redemption": {
+      "label": "Redemption (request + settlement)",
+      "transactionCountPerSample": 2,
+      "samples": 5,
+      "averageGas": 332253,
+      "minGas": 332253,
+      "maxGas": 332253
+    },
+    "restrictedTransfer": {
+      "label": "Restricted Transfer",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 67074,
+      "minGas": 67074,
+      "maxGas": 67074
+    },
+    "pauseResume": {
+      "label": "Pause / Resume",
+      "transactionCountPerSample": 1,
+      "samples": 10,
+      "averageGas": 36464,
+      "minGas": 25534,
+      "maxGas": 47394
+    },
+    "roleUpdate": {
+      "label": "Role Update",
+      "transactionCountPerSample": 1,
+      "samples": 10,
+      "averageGas": 41129.5,
+      "minGas": 30147,
+      "maxGas": 52112
+    }
+  },
+  "optionalComponents": {
+    "settlementDelay": {
+      "label": "Settlement delay flag",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 83006,
+      "minGas": 83006,
+      "maxGas": 83006
+    }
+  },
+  "components": {
+    "O01": {
+      "label": "Qualification update: Alice",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 50152,
+      "minGas": 50152,
+      "maxGas": 50152
+    },
+    "O02": {
+      "label": "Qualification update: Bob",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 50164,
+      "minGas": 50164,
+      "maxGas": 50164
+    },
+    "O03": {
+      "label": "Initial NAV submission",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 149233,
+      "minGas": 149233,
+      "maxGas": 149233
+    },
+    "O04": {
+      "label": "Subscription request",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 147060,
+      "minGas": 147060,
+      "maxGas": 147060
+    },
+    "O05": {
+      "label": "Subscription acceptance",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 186774,
+      "minGas": 186774,
+      "maxGas": 186774
+    },
+    "O06": {
+      "label": "Restricted transfer",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 67074,
+      "minGas": 67074,
+      "maxGas": 67074
+    },
+    "O07": {
+      "label": "Formula NAV submission",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 178387,
+      "minGas": 178387,
+      "maxGas": 178387
+    },
+    "O08": {
+      "label": "Redemption request",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 188103,
+      "minGas": 188103,
+      "maxGas": 188103
+    },
+    "O09": {
+      "label": "Settlement delay flag",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 83006,
+      "minGas": 83006,
+      "maxGas": 83006
+    },
+    "O10": {
+      "label": "Redemption settlement",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 144150,
+      "minGas": 144150,
+      "maxGas": 144150
+    },
+    "O11": {
+      "label": "Pause",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 47394,
+      "minGas": 47394,
+      "maxGas": 47394
+    },
+    "O12": {
+      "label": "Resume",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 25534,
+      "minGas": 25534,
+      "maxGas": 25534
+    },
+    "O13": {
+      "label": "Role grant",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 52112,
+      "minGas": 52112,
+      "maxGas": 52112
+    },
+    "O14": {
+      "label": "Role revoke",
+      "transactionCountPerSample": 1,
+      "samples": 5,
+      "averageGas": 30147,
+      "minGas": 30147,
+      "maxGas": 30147
+    }
+  }
+}

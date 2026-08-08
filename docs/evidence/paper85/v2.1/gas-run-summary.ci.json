@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "preregistration": {
+    "tag": "paper85-prereg-v1",
+    "commitSha": "f3ff71de8fd4634cf37f2c9b980e0c7d92e436a2",
+    "manifestSha256": "97eabdaab3de5cc4d3cb41bbce1b82e445edfa7c8ea060618dc7b51fa5be4c69"
+  },
+  "sourceArtifact": {
+    "tag": "chapter3-artifact-v1.4.0",
+    "commitSha": "e5b1e126e5e7ff37f5fe47307d945447724a17d1",
+    "evidenceAnchor": "b5fe1c8ec2153d1e84e0492012be44a45182dfe2"
+  },
+  "run": {
+    "runId": "gas-20260808T125240924Z",
+    "startedAt": "2026-08-08T12:52:40.924Z",
+    "chainId": 31337,
+    "genesisTimestamp": 1710000000,
+    "repository": {
+      "headCommit": "d27d99067f4f03f81b6e72ff2cc0744e05316edd",
+      "branch": "test/paper85-v21-evidence",
+      "dirty": false
+    },
+    "toolchain": {
+      "foundry": "forge Version: 1.7.1"
+    },
+    "replicatesPerBatch": 5,
+    "repeatedBatches": 2,
+    "measurement": {
+      "evaluationLockSha256": "758687070f521d83225da36db79867ce612007f07c25fbffe5e642a2f49e0090",
+      "experimentalVariant": false,
+      "interpretation": "descriptive local-EVM gas cost, not a production fee or causal overhead estimate"
+    }
+  },
+  "counts": {
+    "batches": 2,
+    "replicatesPerBatch": 5,
+    "operationsPerReplicate": 14,
+    "measuredTransactions": 140
+  },
+  "metrics": {
+    "repeatedBatchMatches": true,
+    "gasTableSha256": "920f4022e6eeb8c2295820da59e8a7214c8b17a91336f528da8e97f4afc5ee4f",
+    "categories": {
+      "qualificationUpdate": {
+        "label": "Qualification Update",
+        "transactionCountPerSample": 1,
+        "samples": 10,
+        "averageGas": 50158,
+        "minGas": 50152,
+        "maxGas": 50164
+      },
+      "navSubmission": {
+        "label": "NAV Submission",
+        "transactionCountPerSample": 1,
+        "samples": 10,
+        "averageGas": 163810,
+        "minGas": 149233,
+        "maxGas": 178387
+      },
+      "subscription": {
+        "label": "Subscription (request + acceptance)",
+        "transactionCountPerSample": 2,
+        "samples": 5,
+        "averageGas": 333834,
+        "minGas": 333834,
+        "maxGas": 333834
+      },
+      "redemption": {
+        "label": "Redemption (request + settlement)",
+        "transactionCountPerSample": 2,
+        "samples": 5,
+        "averageGas": 332253,
+        "minGas": 332253,
+        "maxGas": 332253
+      },
+      "restrictedTransfer": {
+        "label": "Restricted Transfer",
+        "transactionCountPerSample": 1,
+        "samples": 5,
+        "averageGas": 67074,
+        "minGas": 67074,
+        "maxGas": 67074
+      },
+      "pauseResume": {
+        "label": "Pause / Resume",
+        "transactionCountPerSample": 1,
+        "samples": 10,
+        "averageGas": 36464,
+        "minGas": 25534,
+        "maxGas": 47394
+      },
+      "roleUpdate": {
+        "label": "Role Update",
+        "transactionCountPerSample": 1,
+        "samples": 10,
+        "averageGas": 41129.5,
+        "minGas": 30147,
+        "maxGas": 52112
+      }
+    }
+  },
+  "evidenceManifestSha256": "c07c6167715a3a12f11658fdfdf3d20108f32896710a5e998fcaa1ed3ffaf0d2"
+}

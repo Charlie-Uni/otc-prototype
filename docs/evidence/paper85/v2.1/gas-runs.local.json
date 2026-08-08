@@ -1,0 +1,362 @@
+[
+  [
+    {
+      "operationId": "O01",
+      "label": "whitelist Alice",
+      "gasUsed": "50152"
+    },
+    {
+      "operationId": "O02",
+      "label": "whitelist Bob",
+      "gasUsed": "50164"
+    },
+    {
+      "operationId": "O03",
+      "label": "post initial NAV",
+      "gasUsed": "149233"
+    },
+    {
+      "operationId": "O04",
+      "label": "request subscription",
+      "gasUsed": "147060"
+    },
+    {
+      "operationId": "O05",
+      "label": "accept subscription",
+      "gasUsed": "186774"
+    },
+    {
+      "operationId": "O06",
+      "label": "restricted transfer",
+      "gasUsed": "67074"
+    },
+    {
+      "operationId": "O07",
+      "label": "post formula NAV",
+      "gasUsed": "178387"
+    },
+    {
+      "operationId": "O08",
+      "label": "request redemption",
+      "gasUsed": "188103"
+    },
+    {
+      "operationId": "O09",
+      "label": "flag settlement delayed",
+      "gasUsed": "83006"
+    },
+    {
+      "operationId": "O10",
+      "label": "settle redemption",
+      "gasUsed": "144150"
+    },
+    {
+      "operationId": "O11",
+      "label": "pause lifecycle",
+      "gasUsed": "47394"
+    },
+    {
+      "operationId": "O12",
+      "label": "resume lifecycle",
+      "gasUsed": "25534"
+    },
+    {
+      "operationId": "O13",
+      "label": "grant subscription role",
+      "gasUsed": "52112"
+    },
+    {
+      "operationId": "O14",
+      "label": "revoke subscription role",
+      "gasUsed": "30147"
+    }
+  ],
+  [
+    {
+      "operationId": "O01",
+      "label": "whitelist Alice",
+      "gasUsed": "50152"
+    },
+    {
+      "operationId": "O02",
+      "label": "whitelist Bob",
+      "gasUsed": "50164"
+    },
+    {
+      "operationId": "O03",
+      "label": "post initial NAV",
+      "gasUsed": "149233"
+    },
+    {
+      "operationId": "O04",
+      "label": "request subscription",
+      "gasUsed": "147060"
+    },
+    {
+      "operationId": "O05",
+      "label": "accept subscription",
+      "gasUsed": "186774"
+    },
+    {
+      "operationId": "O06",
+      "label": "restricted transfer",
+      "gasUsed": "67074"
+    },
+    {
+      "operationId": "O07",
+      "label": "post formula NAV",
+      "gasUsed": "178387"
+    },
+    {
+      "operationId": "O08",
+      "label": "request redemption",
+      "gasUsed": "188103"
+    },
+    {
+      "operationId": "O09",
+      "label": "flag settlement delayed",
+      "gasUsed": "83006"
+    },
+    {
+      "operationId": "O10",
+      "label": "settle redemption",
+      "gasUsed": "144150"
+    },
+    {
+      "operationId": "O11",
+      "label": "pause lifecycle",
+      "gasUsed": "47394"
+    },
+    {
+      "operationId": "O12",
+      "label": "resume lifecycle",
+      "gasUsed": "25534"
+    },
+    {
+      "operationId": "O13",
+      "label": "grant subscription role",
+      "gasUsed": "52112"
+    },
+    {
+      "operationId": "O14",
+      "label": "revoke subscription role",
+      "gasUsed": "30147"
+    }
+  ],
+  [
+    {
+      "operationId": "O01",
+      "label": "whitelist Alice",
+      "gasUsed": "50152"
+    },
+    {
+      "operationId": "O02",
+      "label": "whitelist Bob",
+      "gasUsed": "50164"
+    },
+    {
+      "operationId": "O03",
+      "label": "post initial NAV",
+      "gasUsed": "149233"
+    },
+    {
+      "operationId": "O04",
+      "label": "request subscription",
+      "gasUsed": "147060"
+    },
+    {
+      "operationId": "O05",
+      "label": "accept subscription",
+      "gasUsed": "186774"
+    },
+    {
+      "operationId": "O06",
+      "label": "restricted transfer",
+      "gasUsed": "67074"
+    },
+    {
+      "operationId": "O07",
+      "label": "post formula NAV",
+      "gasUsed": "178387"
+    },
+    {
+      "operationId": "O08",
+      "label": "request redemption",
+      "gasUsed": "188103"
+    },
+    {
+      "operationId": "O09",
+      "label": "flag settlement delayed",
+      "gasUsed": "83006"
+    },
+    {
+      "operationId": "O10",
+      "label": "settle redemption",
+      "gasUsed": "144150"
+    },
+    {
+      "operationId": "O11",
+      "label": "pause lifecycle",
+      "gasUsed": "47394"
+    },
+    {
+      "operationId": "O12",
+      "label": "resume lifecycle",
+      "gasUsed": "25534"
+    },
+    {
+      "operationId": "O13",
+      "label": "grant subscription role",
+      "gasUsed": "52112"
+    },
+    {
+      "operationId": "O14",
+      "label": "revoke subscription role",
+      "gasUsed": "30147"
+    }
+  ],
+  [
+    {
+      "operationId": "O01",
+      "label": "whitelist Alice",
+      "gasUsed": "50152"
+    },
+    {
+      "operationId": "O02",
+      "label": "whitelist Bob",
+      "gasUsed": "50164"
+    },
+    {
+      "operationId": "O03",
+      "label": "post initial NAV",
+      "gasUsed": "149233"
+    },
+    {
+      "operationId": "O04",
+      "label": "request subscription",
+      "gasUsed": "147060"
+    },
+    {
+      "operationId": "O05",
+      "label": "accept subscription",
+      "gasUsed": "186774"
+    },
+    {
+      "operationId": "O06",
+      "label": "restricted transfer",
+      "gasUsed": "67074"
+    },
+    {
+      "operationId": "O07",
+      "label": "post formula NAV",
+      "gasUsed": "178387"
+    },
+    {
+      "operationId": "O08",
+      "label": "request redemption",
+      "gasUsed": "188103"
+    },
+    {
+      "operationId": "O09",
+      "label": "flag settlement delayed",
+      "gasUsed": "83006"
+    },
+    {
+      "operationId": "O10",
+      "label": "settle redemption",
+      "gasUsed": "144150"
+    },
+    {
+      "operationId": "O11",
+      "label": "pause lifecycle",
+      "gasUsed": "47394"
+    },
+    {
+      "operationId": "O12",
+      "label": "resume lifecycle",
+      "gasUsed": "25534"
+    },
+    {
+      "operationId": "O13",
+      "label": "grant subscription role",
+      "gasUsed": "52112"
+    },
+    {
+      "operationId": "O14",
+      "label": "revoke subscription role",
+      "gasUsed": "30147"
+    }
+  ],
+  [
+    {
+      "operationId": "O01",
+      "label": "whitelist Alice",
+      "gasUsed": "50152"
+    },
+    {
+      "operationId": "O02",
+      "label": "whitelist Bob",
+      "gasUsed": "50164"
+    },
+    {
+      "operationId": "O03",
+      "label": "post initial NAV",
+      "gasUsed": "149233"
+    },
+    {
+      "operationId": "O04",
+      "label": "request subscription",
+      "gasUsed": "147060"
+    },
+    {
+      "operationId": "O05",
+      "label": "accept subscription",
+      "gasUsed": "186774"
+    },
+    {
+      "operationId": "O06",
+      "label": "restricted transfer",
+      "gasUsed": "67074"
+    },
+    {
+      "operationId": "O07",
+      "label": "post formula NAV",
+      "gasUsed": "178387"
+    },
+    {
+      "operationId": "O08",
+      "label": "request redemption",
+      "gasUsed": "188103"
+    },
+    {
+      "operationId": "O09",
+      "label": "flag settlement delayed",
+      "gasUsed": "83006"
+    },
+    {
+      "operationId": "O10",
+      "label": "settle redemption",
+      "gasUsed": "144150"
+    },
+    {
+      "operationId": "O11",
+      "label": "pause lifecycle",
+      "gasUsed": "47394"
+    },
+    {
+      "operationId": "O12",
+      "label": "resume lifecycle",
+      "gasUsed": "25534"
+    },
+    {
+      "operationId": "O13",
+      "label": "grant subscription role",
+      "gasUsed": "52112"
+    },
+    {
+      "operationId": "O14",
+      "label": "revoke subscription role",
+      "gasUsed": "30147"
+    }
+  ]
+]

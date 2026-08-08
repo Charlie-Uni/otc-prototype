@@ -1,0 +1,2157 @@
+{
+  "metrics": {
+    "acceptedOperations": 14,
+    "replayedOperations": 14,
+    "acceptedEvents": 22,
+    "replayedEvents": 22,
+    "arc": 1,
+    "navReferences": 2,
+    "validNavReferences": 2,
+    "nri": 1,
+    "subscriptionNri": 1,
+    "redemptionNri": 1,
+    "projectionCheckpoints": 14,
+    "matchingProjections": 14,
+    "pcr": 1
+  },
+  "navReferences": [
+    {
+      "eventName": "SubscriptionAccepted",
+      "requestId": "0",
+      "blockNumber": "12",
+      "latestRecoverableNavIndex": 0,
+      "referencedNav": "1000000000000000000",
+      "referencedNavAsOf": "1710000120",
+      "latestRecoverableNav": "1000000000000000000",
+      "latestRecoverableNavAsOf": "1710000120",
+      "valid": true,
+      "validAtExecution": true,
+      "recoverableAtEnd": true
+    },
+    {
+      "eventName": "RedemptionSettled",
+      "requestId": "0",
+      "blockNumber": "17",
+      "latestRecoverableNavIndex": 1,
+      "referencedNav": "1200000000000000000",
+      "referencedNavAsOf": "1710000160",
+      "latestRecoverableNav": "1200000000000000000",
+      "latestRecoverableNavAsOf": "1710000160",
+      "valid": true,
+      "validAtExecution": true,
+      "recoverableAtEnd": true
+    }
+  ],
+  "checkpoints": [
+    {
+      "operationId": "O01",
+      "eventNames": [
+        "FundToken.InvestorWhitelisted"
+      ],
+      "replayProjection": {
+        "totalSupply": "0",
+        "subscriptionRequestCount": "0",
+        "redemptionRequestCount": "0",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": false,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [],
+        "subscriptions": [],
+        "redemptions": []
+      },
+      "chainProjection": {
+        "totalSupply": "0",
+        "subscriptionRequestCount": "0",
+        "redemptionRequestCount": "0",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": false,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [],
+        "subscriptions": [],
+        "redemptions": []
+      },
+      "projectionMatches": true
+    },
+    {
+      "operationId": "O02",
+      "eventNames": [
+        "FundToken.InvestorWhitelisted"
+      ],
+      "replayProjection": {
+        "totalSupply": "0",
+        "subscriptionRequestCount": "0",
+        "redemptionRequestCount": "0",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [],
+        "subscriptions": [],
+        "redemptions": []
+      },
+      "chainProjection": {
+        "totalSupply": "0",
+        "subscriptionRequestCount": "0",
+        "redemptionRequestCount": "0",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [],
+        "subscriptions": [],
+        "redemptions": []
+      },
+      "projectionMatches": true
+    },
+    {
+      "operationId": "O03",
+      "eventNames": [
+        "NAVRegistry.NAVUpdatedEvent"
+      ],
+      "replayProjection": {
+        "totalSupply": "0",
+        "subscriptionRequestCount": "0",
+        "redemptionRequestCount": "0",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          }
+        ],
+        "subscriptions": [],
+        "redemptions": []
+      },
+      "chainProjection": {
+        "totalSupply": "0",
+        "subscriptionRequestCount": "0",
+        "redemptionRequestCount": "0",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          }
+        ],
+        "subscriptions": [],
+        "redemptions": []
+      },
+      "projectionMatches": true
+    },
+    {
+      "operationId": "O04",
+      "eventNames": [
+        "FundToken.SubscriptionRequested"
+      ],
+      "replayProjection": {
+        "totalSupply": "0",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "0",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "0",
+            "navUsed": "0",
+            "navAsOf": "0",
+            "requestedAt": "1710000130",
+            "acceptedAt": "0",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": false
+          }
+        ],
+        "redemptions": []
+      },
+      "chainProjection": {
+        "totalSupply": "0",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "0",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "0",
+            "navUsed": "0",
+            "navAsOf": "0",
+            "requestedAt": "1710000130",
+            "acceptedAt": "0",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": false
+          }
+        ],
+        "redemptions": []
+      },
+      "projectionMatches": true
+    },
+    {
+      "operationId": "O05",
+      "eventNames": [
+        "FundToken.SubscriptionAccepted",
+        "FundToken.Transfer",
+        "FundToken.ShareBalanceUpdated"
+      ],
+      "replayProjection": {
+        "totalSupply": "100000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "0",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "100000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": []
+      },
+      "chainProjection": {
+        "totalSupply": "100000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "0",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "100000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": []
+      },
+      "projectionMatches": true
+    },
+    {
+      "operationId": "O06",
+      "eventNames": [
+        "FundToken.Transfer",
+        "FundToken.ShareBalanceUpdated",
+        "FundToken.ShareBalanceUpdated"
+      ],
+      "replayProjection": {
+        "totalSupply": "100000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "0",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "20000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": []
+      },
+      "chainProjection": {
+        "totalSupply": "100000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "0",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "20000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": []
+      },
+      "projectionMatches": true
+    },
+    {
+      "operationId": "O07",
+      "eventNames": [
+        "NAVRegistry.NAVUpdatedEvent"
+      ],
+      "replayProjection": {
+        "totalSupply": "100000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "0",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "20000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": []
+      },
+      "chainProjection": {
+        "totalSupply": "100000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "0",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "20000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": []
+      },
+      "projectionMatches": true
+    },
+    {
+      "operationId": "O08",
+      "eventNames": [
+        "FundToken.RedemptionRequested",
+        "FundToken.RedemptionQueueUpdated"
+      ],
+      "replayProjection": {
+        "totalSupply": "100000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "1",
+        "totalQueuedRedemption": "10000000000000000000",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "20000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "10000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": [
+          {
+            "investor": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+            "redeemedShares": "10000000000000000000",
+            "redemptionAmount": "0",
+            "settlementNav": "0",
+            "settlementNavAsOf": "0",
+            "requestedAt": "1710000170",
+            "settledAt": "0",
+            "delayedAt": "0",
+            "delayReasonHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "settled": false,
+            "delayed": false
+          }
+        ]
+      },
+      "chainProjection": {
+        "totalSupply": "100000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "1",
+        "totalQueuedRedemption": "10000000000000000000",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "20000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "10000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": [
+          {
+            "investor": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+            "redeemedShares": "10000000000000000000",
+            "redemptionAmount": "0",
+            "settlementNav": "0",
+            "settlementNavAsOf": "0",
+            "requestedAt": "1710000170",
+            "settledAt": "0",
+            "delayedAt": "0",
+            "delayReasonHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "settled": false,
+            "delayed": false
+          }
+        ]
+      },
+      "projectionMatches": true
+    },
+    {
+      "operationId": "O09",
+      "eventNames": [
+        "FundToken.SettlementDelayed"
+      ],
+      "replayProjection": {
+        "totalSupply": "100000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "1",
+        "totalQueuedRedemption": "10000000000000000000",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "20000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "10000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": [
+          {
+            "investor": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+            "redeemedShares": "10000000000000000000",
+            "redemptionAmount": "0",
+            "settlementNav": "0",
+            "settlementNavAsOf": "0",
+            "requestedAt": "1710000170",
+            "settledAt": "0",
+            "delayedAt": "1710000180",
+            "delayReasonHash": "0x052f767bc9b0834cd546c5fe859b83101844071d3f5bc5928ef6264b5a9edc6f",
+            "settled": false,
+            "delayed": true
+          }
+        ]
+      },
+      "chainProjection": {
+        "totalSupply": "100000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "1",
+        "totalQueuedRedemption": "10000000000000000000",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "20000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "10000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": [
+          {
+            "investor": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+            "redeemedShares": "10000000000000000000",
+            "redemptionAmount": "0",
+            "settlementNav": "0",
+            "settlementNavAsOf": "0",
+            "requestedAt": "1710000170",
+            "settledAt": "0",
+            "delayedAt": "1710000180",
+            "delayReasonHash": "0x052f767bc9b0834cd546c5fe859b83101844071d3f5bc5928ef6264b5a9edc6f",
+            "settled": false,
+            "delayed": true
+          }
+        ]
+      },
+      "projectionMatches": true
+    },
+    {
+      "operationId": "O10",
+      "eventNames": [
+        "FundToken.Transfer",
+        "FundToken.ShareBalanceUpdated",
+        "FundToken.RedemptionSettled",
+        "FundToken.RedemptionQueueUpdated"
+      ],
+      "replayProjection": {
+        "totalSupply": "90000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "1",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "10000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": [
+          {
+            "investor": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+            "redeemedShares": "10000000000000000000",
+            "redemptionAmount": "12000000000000000000",
+            "settlementNav": "1200000000000000000",
+            "settlementNavAsOf": "1710000160",
+            "requestedAt": "1710000170",
+            "settledAt": "1710000190",
+            "delayedAt": "1710000180",
+            "delayReasonHash": "0x052f767bc9b0834cd546c5fe859b83101844071d3f5bc5928ef6264b5a9edc6f",
+            "settled": true,
+            "delayed": true
+          }
+        ]
+      },
+      "chainProjection": {
+        "totalSupply": "90000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "1",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "10000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": [
+          {
+            "investor": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+            "redeemedShares": "10000000000000000000",
+            "redemptionAmount": "12000000000000000000",
+            "settlementNav": "1200000000000000000",
+            "settlementNavAsOf": "1710000160",
+            "requestedAt": "1710000170",
+            "settledAt": "1710000190",
+            "delayedAt": "1710000180",
+            "delayReasonHash": "0x052f767bc9b0834cd546c5fe859b83101844071d3f5bc5928ef6264b5a9edc6f",
+            "settled": true,
+            "delayed": true
+          }
+        ]
+      },
+      "projectionMatches": true
+    },
+    {
+      "operationId": "O11",
+      "eventNames": [
+        "FundToken.Paused"
+      ],
+      "replayProjection": {
+        "totalSupply": "90000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "1",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "10000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": true,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": [
+          {
+            "investor": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+            "redeemedShares": "10000000000000000000",
+            "redemptionAmount": "12000000000000000000",
+            "settlementNav": "1200000000000000000",
+            "settlementNavAsOf": "1710000160",
+            "requestedAt": "1710000170",
+            "settledAt": "1710000190",
+            "delayedAt": "1710000180",
+            "delayReasonHash": "0x052f767bc9b0834cd546c5fe859b83101844071d3f5bc5928ef6264b5a9edc6f",
+            "settled": true,
+            "delayed": true
+          }
+        ]
+      },
+      "chainProjection": {
+        "totalSupply": "90000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "1",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "10000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": true,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": [
+          {
+            "investor": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+            "redeemedShares": "10000000000000000000",
+            "redemptionAmount": "12000000000000000000",
+            "settlementNav": "1200000000000000000",
+            "settlementNavAsOf": "1710000160",
+            "requestedAt": "1710000170",
+            "settledAt": "1710000190",
+            "delayedAt": "1710000180",
+            "delayReasonHash": "0x052f767bc9b0834cd546c5fe859b83101844071d3f5bc5928ef6264b5a9edc6f",
+            "settled": true,
+            "delayed": true
+          }
+        ]
+      },
+      "projectionMatches": true
+    },
+    {
+      "operationId": "O12",
+      "eventNames": [
+        "FundToken.Unpaused"
+      ],
+      "replayProjection": {
+        "totalSupply": "90000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "1",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "10000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": [
+          {
+            "investor": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+            "redeemedShares": "10000000000000000000",
+            "redemptionAmount": "12000000000000000000",
+            "settlementNav": "1200000000000000000",
+            "settlementNavAsOf": "1710000160",
+            "requestedAt": "1710000170",
+            "settledAt": "1710000190",
+            "delayedAt": "1710000180",
+            "delayReasonHash": "0x052f767bc9b0834cd546c5fe859b83101844071d3f5bc5928ef6264b5a9edc6f",
+            "settled": true,
+            "delayed": true
+          }
+        ]
+      },
+      "chainProjection": {
+        "totalSupply": "90000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "1",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "10000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": [
+          {
+            "investor": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+            "redeemedShares": "10000000000000000000",
+            "redemptionAmount": "12000000000000000000",
+            "settlementNav": "1200000000000000000",
+            "settlementNavAsOf": "1710000160",
+            "requestedAt": "1710000170",
+            "settledAt": "1710000190",
+            "delayedAt": "1710000180",
+            "delayReasonHash": "0x052f767bc9b0834cd546c5fe859b83101844071d3f5bc5928ef6264b5a9edc6f",
+            "settled": true,
+            "delayed": true
+          }
+        ]
+      },
+      "projectionMatches": true
+    },
+    {
+      "operationId": "O13",
+      "eventNames": [
+        "FundToken.RoleGranted"
+      ],
+      "replayProjection": {
+        "totalSupply": "90000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "1",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "10000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": [
+          {
+            "investor": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+            "redeemedShares": "10000000000000000000",
+            "redemptionAmount": "12000000000000000000",
+            "settlementNav": "1200000000000000000",
+            "settlementNavAsOf": "1710000160",
+            "requestedAt": "1710000170",
+            "settledAt": "1710000190",
+            "delayedAt": "1710000180",
+            "delayReasonHash": "0x052f767bc9b0834cd546c5fe859b83101844071d3f5bc5928ef6264b5a9edc6f",
+            "settled": true,
+            "delayed": true
+          }
+        ]
+      },
+      "chainProjection": {
+        "totalSupply": "90000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "1",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "10000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": [
+          {
+            "investor": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+            "redeemedShares": "10000000000000000000",
+            "redemptionAmount": "12000000000000000000",
+            "settlementNav": "1200000000000000000",
+            "settlementNavAsOf": "1710000160",
+            "requestedAt": "1710000170",
+            "settledAt": "1710000190",
+            "delayedAt": "1710000180",
+            "delayReasonHash": "0x052f767bc9b0834cd546c5fe859b83101844071d3f5bc5928ef6264b5a9edc6f",
+            "settled": true,
+            "delayed": true
+          }
+        ]
+      },
+      "projectionMatches": true
+    },
+    {
+      "operationId": "O14",
+      "eventNames": [
+        "FundToken.RoleRevoked"
+      ],
+      "replayProjection": {
+        "totalSupply": "90000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "1",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "10000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": [
+          {
+            "investor": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+            "redeemedShares": "10000000000000000000",
+            "redemptionAmount": "12000000000000000000",
+            "settlementNav": "1200000000000000000",
+            "settlementNavAsOf": "1710000160",
+            "requestedAt": "1710000170",
+            "settledAt": "1710000190",
+            "delayedAt": "1710000180",
+            "delayReasonHash": "0x052f767bc9b0834cd546c5fe859b83101844071d3f5bc5928ef6264b5a9edc6f",
+            "settled": true,
+            "delayed": true
+          }
+        ]
+      },
+      "chainProjection": {
+        "totalSupply": "90000000000000000000",
+        "subscriptionRequestCount": "1",
+        "redemptionRequestCount": "1",
+        "totalQueuedRedemption": "0",
+        "balances": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "80000000000000000000",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "10000000000000000000",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "whitelist": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": true,
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": false,
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": true,
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": false
+        },
+        "queuedRedemption": {
+          "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": "0",
+          "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc": "0",
+          "0x70997970c51812dc3a010c7d01b50e0d17dc79c8": "0",
+          "0x90f79bf6eb2c4f870365e785982e1f101e93b906": "0",
+          "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": "0"
+        },
+        "paused": false,
+        "roles": {
+          "FundToken:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x26c2e45786b0efa3b3925ff939e5a91b68ce43b4b8b5f8f818a5d6f32a0c231f:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0x15d34aaf54267db7d7c367839aaf71a00a2c6a65": false,
+          "FundToken:0xb7c19c4897e038440c53ecfaa804a0f8d20573cb698f85962cd7515a77441064:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x0000000000000000000000000000000000000000000000000000000000000000:0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": true,
+          "NAVRegistry:0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08:0x70997970c51812dc3a010c7d01b50e0d17dc79c8": true
+        },
+        "navHistory": [
+          {
+            "nav": "1000000000000000000",
+            "netAssetValue": "0",
+            "totalSharesSnapshot": "0",
+            "asOf": "1710000120",
+            "storedAt": "1710000120",
+            "navAdjustmentBps": "0",
+            "payloadHash": "0x19422b1b4cb0c84527502cb2366c31360d71acb870b77188d897ae70911724f0",
+            "isInitial": true
+          },
+          {
+            "nav": "1200000000000000000",
+            "netAssetValue": "120000000000000000000",
+            "totalSharesSnapshot": "100000000000000000000",
+            "asOf": "1710000160",
+            "storedAt": "1710000160",
+            "navAdjustmentBps": "2000",
+            "payloadHash": "0x477cbe7d090d2524cc1b09aafd33e4bdd1c2120804f4424263995d2f1a89d1e6",
+            "isInitial": false
+          }
+        ],
+        "subscriptions": [
+          {
+            "investor": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+            "subscriptionAmount": "100000000000000000000",
+            "mintedShares": "100000000000000000000",
+            "navUsed": "1000000000000000000",
+            "navAsOf": "1710000120",
+            "requestedAt": "1710000130",
+            "acceptedAt": "1710000140",
+            "requestHash": "0x9ad3fb1564d51b7f484bcefdf4d945a9df477246ca5f81da5b4a6d56d279faf7",
+            "accepted": true
+          }
+        ],
+        "redemptions": [
+          {
+            "investor": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+            "redeemedShares": "10000000000000000000",
+            "redemptionAmount": "12000000000000000000",
+            "settlementNav": "1200000000000000000",
+            "settlementNavAsOf": "1710000160",
+            "requestedAt": "1710000170",
+            "settledAt": "1710000190",
+            "delayedAt": "1710000180",
+            "delayReasonHash": "0x052f767bc9b0834cd546c5fe859b83101844071d3f5bc5928ef6264b5a9edc6f",
+            "settled": true,
+            "delayed": true
+          }
+        ]
+      },
+      "projectionMatches": true
+    }
+  ]
+}

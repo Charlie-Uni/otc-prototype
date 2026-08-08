@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "preregistration": {
+    "tag": "paper85-prereg-v1",
+    "commitSha": "f3ff71de8fd4634cf37f2c9b980e0c7d92e436a2",
+    "manifestSha256": "97eabdaab3de5cc4d3cb41bbce1b82e445edfa7c8ea060618dc7b51fa5be4c69"
+  },
+  "sourceArtifact": {
+    "tag": "chapter3-artifact-v1.4.0",
+    "commitSha": "e5b1e126e5e7ff37f5fe47307d945447724a17d1",
+    "evidenceAnchor": "b5fe1c8ec2153d1e84e0492012be44a45182dfe2"
+  },
+  "run": {
+    "runId": "ablation-20260808T125027027Z",
+    "startedAt": "2026-08-08T12:50:27.027Z",
+    "chainId": 31337,
+    "genesisTimestamp": 1710000000,
+    "toolchain": {
+      "foundry": "forge Version: 1.7.1"
+    },
+    "repository": {
+      "headCommit": "d27d99067f4f03f81b6e72ff2cc0744e05316edd",
+      "branch": "test/paper85-v21-evidence",
+      "dirty": false
+    },
+    "measurement": {
+      "preregistrationLockSha256": "1cf0cabc595610693f74929dccaa9369b18dca9024a6af3f12ba9dc73d18c28b",
+      "evaluationLockSha256": "758687070f521d83225da36db79867ce612007f07c25fbffe5e642a2f49e0090",
+      "stateAssertionSpecSha256": "9d3a94b32a0481e937be2f4bbc539b692e3dc5748d4191f5242f6defaa258057"
+    }
+  },
+  "counts": {
+    "total": 210,
+    "perVariant": {
+      "M1": 42,
+      "M2": 42,
+      "M3": 42,
+      "M4": 42,
+      "M5": 42
+    },
+    "targeted": 24,
+    "nonTargeted": 186,
+    "classifications": {
+      "expected_accept": 90,
+      "expected_reject": 96,
+      "invalid_transition_accepted": 22,
+      "rejected_by_residual_guard": 1,
+      "runtime_revert": 1
+    },
+    "targetedClassifications": {
+      "invalid_transition_accepted": 22,
+      "rejected_by_residual_guard": 1,
+      "runtime_revert": 1
+    },
+    "stateAssertionsVerified": 24,
+    "failed": 0
+  },
+  "metrics": {
+    "preregisteredClassificationMatchRate": 1,
+    "targetedAnomalyMatchRate": 1,
+    "repeatedDigestMatches": 210,
+    "repeatedDigestMismatches": 0,
+    "targetedStateDivergences": 22,
+    "targetedEventDivergences": 22,
+    "semanticEvidenceSha256": "5305b11b2953d28f1fb8ea00fff573aec6e35367e9a521f84cc73815360ae6a5"
+  },
+  "evidenceManifestSha256": "83b1612c3b2f8c8cd01760aed7d0500fe843303a3d1d9bdcbc27070692aa74aa"
+}
