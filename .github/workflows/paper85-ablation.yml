@@ -1,0 +1,75 @@
+name: Paper 8.5 Predicate Ablation
+
+on:
+  push:
+    paths:
+      - 'experiments/paper85-evaluation/contracts/test/Ablation*.sol'
+      - 'experiments/paper85-evaluation/contracts/test/M0DifferentialHarness.sol'
+      - 'experiments/paper85-evaluation/contracts/test/AblationM*.t.sol'
+      - 'experiments/paper85-evaluation/scripts/generate-m0-tests.mjs'
+      - 'experiments/paper85-evaluation/scripts/run-m0.mjs'
+      - 'experiments/paper85-evaluation/scripts/run-ablation.mjs'
+      - 'experiments/paper85-evaluation/docs/ablation-runbook.md'
+      - '.github/workflows/paper85-ablation.yml'
+  pull_request:
+    paths:
+      - 'experiments/paper85-evaluation/contracts/test/Ablation*.sol'
+      - 'experiments/paper85-evaluation/contracts/test/M0DifferentialHarness.sol'
+      - 'experiments/paper85-evaluation/contracts/test/AblationM*.t.sol'
+      - 'experiments/paper85-evaluation/scripts/generate-m0-tests.mjs'
+      - 'experiments/paper85-evaluation/scripts/run-m0.mjs'
+      - 'experiments/paper85-evaluation/scripts/run-ablation.mjs'
+      - 'experiments/paper85-evaluation/docs/ablation-runbook.md'
+      - '.github/workflows/paper85-ablation.yml'
+
+jobs:
+  predicate-ablation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.7.1
+
+      - name: Install source-locked Foundry dependencies
+        working-directory: contracts
+        run: |
+          mkdir -p lib
+          git clone --branch v1.10.0 --depth 1 https://github.com/foundry-rs/forge-std.git lib/forge-std
+          git clone --branch v5.4.0 --depth 1 https://github.com/OpenZeppelin/openzeppelin-contracts.git lib/openzeppelin-contracts
+
+      - name: Verify preregistration and generated sources
+        run: |
+          node experiments/paper85-evaluation/scripts/validate-manifest.mjs
+          node experiments/paper85-evaluation/scripts/prereg-lock.mjs --check
+          node experiments/paper85-evaluation/scripts/generate-experimental-contracts.mjs --check
+          node experiments/paper85-evaluation/scripts/generate-m0-tests.mjs --check
+
+      - name: Check Solidity formatting
+        working-directory: experiments/paper85-evaluation/contracts
+        run: forge fmt --check
+
+      - name: Re-run M0 quality gate
+        run: node experiments/paper85-evaluation/scripts/run-m0.mjs
+
+      - name: Run five single-predicate ablations twice
+        run: node experiments/paper85-evaluation/scripts/run-ablation.mjs
+
+      - name: Upload M0 and ablation evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: paper85-ablation-evidence-${{ github.run_id }}
+          path: experiments/paper85-evaluation/results
+          if-no-files-found: error
+          retention-days: 90

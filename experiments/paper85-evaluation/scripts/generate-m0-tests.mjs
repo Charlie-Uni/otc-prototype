@@ -8,6 +8,9 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(SCRIPT_DIR, '..');
 const MANIFEST_PATH = resolve(ROOT, 'spec/scenarios.v1.json');
 const OUTPUT_PATH = resolve(ROOT, 'contracts/test/M0Differential.t.sol');
+const ABLATION_OUTPUT_PATHS = [1, 2, 3, 4, 5].map((variant) =>
+  resolve(ROOT, `contracts/test/AblationM${variant}.t.sol`)
+);
 
 const manifestBytes = await readFile(MANIFEST_PATH);
 const manifest = JSON.parse(manifestBytes);
@@ -139,8 +142,7 @@ function fixtureFunction(name, id) {
   return `        if (fixtureId == ${id}) {\n${body}${body ? '\n' : ''}            return;\n        }`;
 }
 
-function expectedRevert(scenario) {
-  const expected = scenario.baselineExpected;
+function encodedError(expected, context) {
   if (expected.outcome === 'accept') return 'bytes("")';
   if (expected.errorKind === 'string') {
     return `abi.encodeWithSignature("Error(string)", "${expected.errorCode}")`;
@@ -149,14 +151,58 @@ function expectedRevert(scenario) {
     const [actor, role] = expected.errorArgs;
     return `abi.encodeWithSelector(bytes4(keccak256("AccessControlUnauthorizedAccount(address,bytes32)")), ${actorConstants[actor]}, ${roles[role]})`;
   }
-  throw new Error(`unsupported baseline error for ${scenario.id}`);
+  if (expected.errorKind === 'panic' && expected.errorCode === 'Panic(0x11)') {
+    return 'abi.encodeWithSelector(bytes4(keccak256("Panic(uint256)")), uint256(0x11))';
+  }
+  throw new Error(`unsupported error for ${context}`);
 }
 
-function scenarioTest(scenario) {
+function expectedRevert(scenario) {
+  return encodedError(scenario.baselineExpected, `${scenario.id} baseline`);
+}
+
+function scenarioExpression(scenario) {
   const target = targetFor(scenario.action.call, scenario.action.args);
   const caller = scalar(scenario.action.caller, 'caller');
   const fixtureId = fixtureIds.get(scenario.fixture);
-  return `    function testM0_${scenario.id}() public {\n        _assertM0(\n            Scenario({\n                id: bytes32("${scenario.id}"),\n                fixtureId: ${fixtureId},\n                target: ${target},\n                caller: ${caller},\n                actionData: ${callDataFor(scenario.action.call, scenario.action.args)},\n                actionAtSec: ${scenario.actionAtSec},\n                shouldAccept: ${scenario.baselineExpected.outcome === 'accept'},\n                expectedRevert: ${expectedRevert(scenario)}\n            })\n        );\n    }`;
+  return `Scenario({
+                id: bytes32("${scenario.id}"),
+                fixtureId: ${fixtureId},
+                target: ${target},
+                caller: ${caller},
+                actionData: ${callDataFor(scenario.action.call, scenario.action.args)},
+                actionAtSec: ${scenario.actionAtSec},
+                shouldAccept: ${scenario.baselineExpected.outcome === 'accept'},
+                expectedRevert: ${expectedRevert(scenario)}
+            })`;
+}
+
+function scenarioTest(scenario) {
+  return `    function testM0_${scenario.id}() public {\n        _assertM0(\n            ${scenarioExpression(scenario)}\n        );\n    }`;
+}
+
+const resultClassExpressions = {
+  expected_accept: 'ResultClass.ExpectedAccept',
+  expected_reject: 'ResultClass.ExpectedReject',
+  invalid_transition_accepted: 'ResultClass.InvalidTransitionAccepted',
+  rejected_by_residual_guard: 'ResultClass.RejectedByResidualGuard',
+  runtime_revert: 'ResultClass.RuntimeRevert',
+  state_divergence: 'ResultClass.StateDivergence',
+  event_divergence: 'ResultClass.EventDivergence',
+};
+
+function ablationTest(scenario, variant) {
+  const variantName = `M${variant}`;
+  const targeted = scenario.class === 'invalid' && scenario.ablationHypothesis.variant === variantName;
+  const classification = targeted
+    ? scenario.ablationHypothesis.classification
+    : scenario.baselineExpected.outcome === 'accept' ? 'expected_accept' : 'expected_reject';
+  const expectedClass = resultClassExpressions[classification];
+  if (!expectedClass) throw new Error(`unknown result class ${classification}`);
+  const expectedError = targeted && scenario.ablationHypothesis.expectedOutcome === 'reject'
+    ? encodedError(scenario.ablationHypothesis.expectedError, `${scenario.id} ${variantName}`)
+    : expectedRevert(scenario);
+  return `    function testAblation_${variantName}_${scenario.id}() public {\n        _assertAblation(\n            ${scenarioExpression(scenario)},\n            ${variant},\n            ${targeted},\n            ${expectedClass},\n            ${expectedError}\n        );\n    }`;
 }
 
 const unformattedOutput = `// SPDX-License-Identifier: MIT
@@ -176,24 +222,49 @@ ${manifest.scenarios.map(scenarioTest).join('\n\n')}
 }
 `;
 
-const formatResult = spawnSync('forge', ['fmt', '--raw', '-'], {
-  cwd: resolve(ROOT, 'contracts'),
-  encoding: 'utf8',
-  input: unformattedOutput,
-});
-if (formatResult.status !== 0) {
-  throw new Error(`forge fmt failed: ${formatResult.stderr || formatResult.stdout}`);
+function formatSolidity(source) {
+  const result = spawnSync('forge', ['fmt', '--raw', '-'], {
+    cwd: resolve(ROOT, 'contracts'),
+    encoding: 'utf8',
+    input: source,
+  });
+  if (result.status !== 0) {
+    throw new Error(`forge fmt failed: ${result.stderr || result.stdout}`);
+  }
+  return result.stdout;
 }
-const output = formatResult.stdout;
+
+const output = formatSolidity(unformattedOutput);
+const ablationOutputs = [1, 2, 3, 4, 5].map((variant) => formatSolidity(`// SPDX-License-Identifier: MIT
+// Generated from scenarios.v1.json; do not edit by hand.
+// Manifest-SHA256: ${manifestHash}
+pragma solidity ^0.8.30;
+
+import {AblationDifferentialHarness} from "./AblationDifferentialHarness.sol";
+
+contract AblationM${variant}Test is AblationDifferentialHarness {
+    function _applyFixture(uint8 fixtureId) internal override {
+${fixtureNames.map(fixtureFunction).join(' else ')}
+        revert("UNKNOWN_FIXTURE");
+    }
+
+${manifest.scenarios.map((scenario) => ablationTest(scenario, variant)).join('\n\n')}
+}
+`));
 
 const mode = process.argv[2] ?? '--write';
 if (mode === '--write') {
   await writeFile(OUTPUT_PATH, output);
-  process.stdout.write(`${JSON.stringify({ status: 'written', scenarios: manifest.scenarios.length, manifestHash })}\n`);
+  await Promise.all(ABLATION_OUTPUT_PATHS.map((path, index) => writeFile(path, ablationOutputs[index])));
+  process.stdout.write(`${JSON.stringify({ status: 'written', m0Scenarios: manifest.scenarios.length, ablationScenarios: manifest.scenarios.length * 5, manifestHash })}\n`);
 } else if (mode === '--check') {
   const existing = await readFile(OUTPUT_PATH, 'utf8');
   if (existing !== output) throw new Error('M0Differential.t.sol is stale');
-  process.stdout.write(`${JSON.stringify({ status: 'verified', scenarios: manifest.scenarios.length, manifestHash })}\n`);
+  const existingAblations = await Promise.all(ABLATION_OUTPUT_PATHS.map((path) => readFile(path, 'utf8')));
+  existingAblations.forEach((contents, index) => {
+    if (contents !== ablationOutputs[index]) throw new Error(`AblationM${index + 1}.t.sol is stale`);
+  });
+  process.stdout.write(`${JSON.stringify({ status: 'verified', m0Scenarios: manifest.scenarios.length, ablationScenarios: manifest.scenarios.length * 5, manifestHash })}\n`);
 } else {
   throw new Error(`unknown mode ${mode}`);
 }

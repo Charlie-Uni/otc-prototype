@@ -56,6 +56,14 @@ abstract contract M0DifferentialHarness is Test {
         bytes32 eventDigest;
     }
 
+    struct PredicateFlags {
+        bool authorized;
+        bool compliance;
+        bool navValidity;
+        bool lifecycleStatus;
+        bool parameterConsistency;
+    }
+
     address internal riskRegistry;
     address internal navRegistry;
     address internal fundToken;
@@ -69,9 +77,10 @@ abstract contract M0DifferentialHarness is Test {
         vm.warp(GENESIS_TIMESTAMP);
         vm.roll(1);
         uint256 cleanState = vm.snapshotState();
-        ArmResult memory production = _runArm(false, scenario);
+        PredicateFlags memory allEnabled = _allPredicatesEnabled();
+        ArmResult memory production = _runArm(false, allEnabled, scenario);
         assertTrue(vm.revertToState(cleanState), "PRODUCTION_SNAPSHOT_RESTORE_FAILED");
-        ArmResult memory experimental = _runArm(true, scenario);
+        ArmResult memory experimental = _runArm(true, allEnabled, scenario);
 
         assertEq(experimental.riskRegistry, production.riskRegistry, "RISK_REGISTRY_ADDRESS_DIVERGENCE");
         assertEq(experimental.navRegistry, production.navRegistry, "NAV_REGISTRY_ADDRESS_DIVERGENCE");
@@ -92,8 +101,11 @@ abstract contract M0DifferentialHarness is Test {
         console2.log(string.concat("m0.eventDigest=", vm.toString(production.eventDigest)));
     }
 
-    function _runArm(bool experimental, Scenario memory scenario) private returns (ArmResult memory result) {
-        _deployArm(experimental);
+    function _runArm(bool experimental, PredicateFlags memory flags, Scenario memory scenario)
+        internal
+        returns (ArmResult memory result)
+    {
+        _deployArm(experimental, flags);
         _applyFixture(scenario.fixtureId);
         bytes32 beforeDigest = _stateDigest();
 
@@ -118,7 +130,7 @@ abstract contract M0DifferentialHarness is Test {
         }
     }
 
-    function _deployArm(bool experimental) private {
+    function _deployArm(bool experimental, PredicateFlags memory flags) private {
         uint16[6] memory weights = [uint16(1667), 1667, 1667, 1667, 1666, 1666];
 
         _advanceTo(10);
@@ -126,7 +138,9 @@ abstract contract M0DifferentialHarness is Test {
 
         _advanceTo(20);
         if (experimental) {
-            navRegistry = address(new ExperimentalNAVRegistry(ADMIN, true, true, true));
+            navRegistry = address(
+                new ExperimentalNAVRegistry(ADMIN, flags.authorized, flags.navValidity, flags.parameterConsistency)
+            );
         } else {
             navRegistry = address(new NAVRegistry(ADMIN));
         }
@@ -135,7 +149,16 @@ abstract contract M0DifferentialHarness is Test {
         if (experimental) {
             fundToken = address(
                 new ExperimentalFundToken(
-                    ADMIN, "OTC Fund Share", "OTCF", FUND_ID, navRegistry, true, true, true, true, true
+                    ADMIN,
+                    "OTC Fund Share",
+                    "OTCF",
+                    FUND_ID,
+                    navRegistry,
+                    flags.authorized,
+                    flags.compliance,
+                    flags.navValidity,
+                    flags.lifecycleStatus,
+                    flags.parameterConsistency
                 )
             );
         } else {
@@ -287,5 +310,11 @@ abstract contract M0DifferentialHarness is Test {
             BOB,
             STRANGER
         ];
+    }
+
+    function _allPredicatesEnabled() internal pure returns (PredicateFlags memory) {
+        return PredicateFlags({
+            authorized: true, compliance: true, navValidity: true, lifecycleStatus: true, parameterConsistency: true
+        });
     }
 }
