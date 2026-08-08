@@ -3,16 +3,26 @@ name: Paper 8.5 M0 Equivalence
 on:
   push:
     paths:
+      - 'contracts/src/**'
+      - 'experiments/paper85-evaluation/contracts/generated/**'
       - 'experiments/paper85-evaluation/contracts/test/M0Differential*.sol'
-      - 'experiments/paper85-evaluation/scripts/generate-m0-tests.mjs'
-      - 'experiments/paper85-evaluation/scripts/run-m0.mjs'
+      - 'experiments/paper85-evaluation/contracts/test/ScenarioFixtures.sol'
+      - 'experiments/paper85-evaluation/contracts/test/M0Differential.t.sol'
+      - 'experiments/paper85-evaluation/patches/**'
+      - 'experiments/paper85-evaluation/scripts/**'
+      - 'experiments/paper85-evaluation/spec/**'
       - 'experiments/paper85-evaluation/docs/m0-runbook.md'
       - '.github/workflows/paper85-m0.yml'
   pull_request:
     paths:
+      - 'contracts/src/**'
+      - 'experiments/paper85-evaluation/contracts/generated/**'
       - 'experiments/paper85-evaluation/contracts/test/M0Differential*.sol'
-      - 'experiments/paper85-evaluation/scripts/generate-m0-tests.mjs'
-      - 'experiments/paper85-evaluation/scripts/run-m0.mjs'
+      - 'experiments/paper85-evaluation/contracts/test/ScenarioFixtures.sol'
+      - 'experiments/paper85-evaluation/contracts/test/M0Differential.t.sol'
+      - 'experiments/paper85-evaluation/patches/**'
+      - 'experiments/paper85-evaluation/scripts/**'
+      - 'experiments/paper85-evaluation/spec/**'
       - 'experiments/paper85-evaluation/docs/m0-runbook.md'
       - '.github/workflows/paper85-m0.yml'
 

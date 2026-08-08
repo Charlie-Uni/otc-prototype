@@ -40,4 +40,11 @@ digests to match across repetitions. Results are written under `results/`,
 which is intentionally ignored by Git and uploaded by the dedicated CI job.
 The SHA manifest covers both raw Forge JSON files and both normalized
 observation files; `run-summary.json` records the SHA of that evidence
-manifest and is excluded from it to avoid a circular digest.
+manifest and is excluded from it to avoid a circular digest. The runner also
+records the executing HEAD, branch, dirty-worktree flag, and a stable
+`semanticEvidenceSha256` over normalized observations. Failed runs retain a
+`failure.json` and their own evidence manifest.
+
+Canonical normalized evidence is committed under `docs/evidence/paper85/`.
+Complete raw Forge output must also be attached to a non-expiring GitHub
+Release; a 90-day Actions artifact alone is not a permanent evidence anchor.

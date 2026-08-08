@@ -3,22 +3,28 @@ name: Paper 8.5 Predicate Ablation
 on:
   push:
     paths:
+      - 'contracts/src/**'
+      - 'experiments/paper85-evaluation/contracts/generated/**'
       - 'experiments/paper85-evaluation/contracts/test/Ablation*.sol'
       - 'experiments/paper85-evaluation/contracts/test/M0DifferentialHarness.sol'
       - 'experiments/paper85-evaluation/contracts/test/AblationM*.t.sol'
-      - 'experiments/paper85-evaluation/scripts/generate-m0-tests.mjs'
-      - 'experiments/paper85-evaluation/scripts/run-m0.mjs'
-      - 'experiments/paper85-evaluation/scripts/run-ablation.mjs'
+      - 'experiments/paper85-evaluation/contracts/test/ScenarioFixtures.sol'
+      - 'experiments/paper85-evaluation/patches/**'
+      - 'experiments/paper85-evaluation/scripts/**'
+      - 'experiments/paper85-evaluation/spec/**'
       - 'experiments/paper85-evaluation/docs/ablation-runbook.md'
       - '.github/workflows/paper85-ablation.yml'
   pull_request:
     paths:
+      - 'contracts/src/**'
+      - 'experiments/paper85-evaluation/contracts/generated/**'
       - 'experiments/paper85-evaluation/contracts/test/Ablation*.sol'
       - 'experiments/paper85-evaluation/contracts/test/M0DifferentialHarness.sol'
       - 'experiments/paper85-evaluation/contracts/test/AblationM*.t.sol'
-      - 'experiments/paper85-evaluation/scripts/generate-m0-tests.mjs'
-      - 'experiments/paper85-evaluation/scripts/run-m0.mjs'
-      - 'experiments/paper85-evaluation/scripts/run-ablation.mjs'
+      - 'experiments/paper85-evaluation/contracts/test/ScenarioFixtures.sol'
+      - 'experiments/paper85-evaluation/patches/**'
+      - 'experiments/paper85-evaluation/scripts/**'
+      - 'experiments/paper85-evaluation/spec/**'
       - 'experiments/paper85-evaluation/docs/ablation-runbook.md'
       - '.github/workflows/paper85-ablation.yml'
 

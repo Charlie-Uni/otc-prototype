@@ -2,9 +2,11 @@
 pragma solidity ^0.8.30;
 
 import {console2} from "forge-std/console2.sol";
-import {M0DifferentialHarness} from "./M0DifferentialHarness.sol";
+import {StateObservation} from "./M0DifferentialHarness.sol";
+import {ScenarioFixtures} from "./ScenarioFixtures.sol";
+import {AblationStateAssertions} from "./AblationStateAssertions.sol";
 
-abstract contract AblationDifferentialHarness is M0DifferentialHarness {
+abstract contract AblationDifferentialHarness is ScenarioFixtures {
     enum ResultClass {
         ExpectedAccept,
         ExpectedReject,
@@ -14,16 +16,6 @@ abstract contract AblationDifferentialHarness is M0DifferentialHarness {
         StateDivergence,
         EventDivergence
     }
-
-    event AblationClassified(
-        bytes32 indexed scenarioId,
-        uint8 indexed variant,
-        ResultClass classification,
-        bool stateDivergence,
-        bool eventDivergence,
-        bytes32 stateDigest,
-        bytes32 eventDigest
-    );
 
     function _assertAblation(
         Scenario memory scenario,
@@ -59,9 +51,15 @@ abstract contract AblationDifferentialHarness is M0DifferentialHarness {
             assertEq(ablated.resultData, expectedAblationError, "PREREGISTERED_ABLATION_ERROR_MISMATCH");
         }
 
-        emit AblationClassified(
-            scenario.id, variant, observed, stateDivergence, eventDivergence, ablated.stateDigest, ablated.eventDigest
-        );
+        if (targeted) {
+            AblationStateAssertions.verify(
+                scenario.id, baseline.state, ablated.state, baseline.stateDigest, ablated.stateDigest
+            );
+            _logStateObservation("baseline", baseline.state);
+            _logStateObservation("ablated", ablated.state);
+            console2.log("ablation.stateAssertionVerified=true");
+        }
+
         console2.log(string.concat("ablation.scenario=", vm.toString(scenario.id)));
         console2.log(string.concat("ablation.variant=M", vm.toString(variant)));
         console2.log(string.concat("ablation.classification=", _className(observed)));
@@ -69,6 +67,27 @@ abstract contract AblationDifferentialHarness is M0DifferentialHarness {
         console2.log(string.concat("ablation.eventDivergence=", vm.toString(eventDivergence)));
         console2.log(string.concat("ablation.stateDigest=", vm.toString(ablated.stateDigest)));
         console2.log(string.concat("ablation.eventDigest=", vm.toString(ablated.eventDigest)));
+    }
+
+    function _logStateObservation(string memory arm, StateObservation memory state) private pure {
+        string memory prefix = string.concat("ablation.", arm, ".");
+        console2.log(string.concat(prefix, "totalSupply=", vm.toString(state.totalSupply)));
+        console2.log(string.concat(prefix, "subscriptionRequestCount=", vm.toString(state.subscriptionRequestCount)));
+        console2.log(string.concat(prefix, "redemptionRequestCount=", vm.toString(state.redemptionRequestCount)));
+        console2.log(string.concat(prefix, "totalQueuedRedemption=", vm.toString(state.totalQueuedRedemption)));
+        console2.log(string.concat(prefix, "aliceBalance=", vm.toString(state.aliceBalance)));
+        console2.log(string.concat(prefix, "bobBalance=", vm.toString(state.bobBalance)));
+        console2.log(string.concat(prefix, "aliceQueued=", vm.toString(state.aliceQueued)));
+        console2.log(string.concat(prefix, "bobQueued=", vm.toString(state.bobQueued)));
+        console2.log(string.concat(prefix, "aliceWhitelisted=", vm.toString(state.aliceWhitelisted)));
+        console2.log(string.concat(prefix, "bobWhitelisted=", vm.toString(state.bobWhitelisted)));
+        console2.log(string.concat(prefix, "operator2SubscriptionRole=", vm.toString(state.operator2SubscriptionRole)));
+        console2.log(string.concat(prefix, "navHistoryLength=", vm.toString(state.navHistoryLength)));
+        console2.log(string.concat(prefix, "latestNavAsOf=", vm.toString(state.latestNavAsOf)));
+        console2.log(string.concat(prefix, "latestNavIsInitial=", vm.toString(state.latestNavIsInitial)));
+        console2.log(string.concat(prefix, "subscription0Accepted=", vm.toString(state.subscription0Accepted)));
+        console2.log(string.concat(prefix, "subscription0MintedShares=", vm.toString(state.subscription0MintedShares)));
+        console2.log(string.concat(prefix, "redemption0Settled=", vm.toString(state.redemption0Settled)));
     }
 
     function _classify(

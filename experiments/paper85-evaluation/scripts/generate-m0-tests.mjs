@@ -3,10 +3,12 @@ import { spawnSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { expectedClassification } from './run-common.mjs';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(SCRIPT_DIR, '..');
 const MANIFEST_PATH = resolve(ROOT, 'spec/scenarios.v1.json');
+const FIXTURES_OUTPUT_PATH = resolve(ROOT, 'contracts/test/ScenarioFixtures.sol');
 const OUTPUT_PATH = resolve(ROOT, 'contracts/test/M0Differential.t.sol');
 const ABLATION_OUTPUT_PATHS = [1, 2, 3, 4, 5].map((variant) =>
   resolve(ROOT, `contracts/test/AblationM${variant}.t.sol`)
@@ -129,11 +131,26 @@ function flattenFixture(name, visiting = new Set()) {
   ];
 }
 
+const bootstrapSteps = manifest.fixtures.bare.steps;
+
+function runtimeFixtureSteps(name) {
+  const steps = flattenFixture(name);
+  const prefix = steps.slice(0, bootstrapSteps.length);
+  if (JSON.stringify(prefix) !== JSON.stringify(bootstrapSteps)) {
+    throw new Error(`${name} does not begin with the registered bare deployment sequence`);
+  }
+  const runtimeSteps = steps.slice(bootstrapSteps.length);
+  if (runtimeSteps.some((step) => step.call.startsWith('deploy') || step.atSec <= 48)) {
+    throw new Error(`${name} contains an unregistered deployment/bootstrap step`);
+  }
+  return runtimeSteps;
+}
+
 const fixtureNames = Object.keys(manifest.fixtures);
 const fixtureIds = new Map(fixtureNames.map((name, index) => [name, index]));
 
 function fixtureFunction(name, id) {
-  const steps = flattenFixture(name).filter((step) => !step.call.startsWith('deploy') && step.atSec > 48);
+  const steps = runtimeFixtureSteps(name);
   const body = steps.map((step) => {
     const target = targetFor(step.call, step.args);
     const caller = scalar(step.caller, 'caller');
@@ -178,7 +195,11 @@ function scenarioExpression(scenario) {
 }
 
 function scenarioTest(scenario) {
-  return `    function testM0_${scenario.id}() public {\n        _assertM0(\n            ${scenarioExpression(scenario)}\n        );\n    }`;
+  return `    function testM0_${scenario.id}() public {\n        _assertM0(_scenario${scenario.id}());\n    }`;
+}
+
+function scenarioFunction(scenario) {
+  return `    function _scenario${scenario.id}() internal pure returns (Scenario memory) {\n        return ${scenarioExpression(scenario)};\n    }`;
 }
 
 const resultClassExpressions = {
@@ -194,30 +215,40 @@ const resultClassExpressions = {
 function ablationTest(scenario, variant) {
   const variantName = `M${variant}`;
   const targeted = scenario.class === 'invalid' && scenario.ablationHypothesis.variant === variantName;
-  const classification = targeted
-    ? scenario.ablationHypothesis.classification
-    : scenario.baselineExpected.outcome === 'accept' ? 'expected_accept' : 'expected_reject';
+  const classification = expectedClassification(scenario, variantName);
   const expectedClass = resultClassExpressions[classification];
   if (!expectedClass) throw new Error(`unknown result class ${classification}`);
   const expectedError = targeted && scenario.ablationHypothesis.expectedOutcome === 'reject'
     ? encodedError(scenario.ablationHypothesis.expectedError, `${scenario.id} ${variantName}`)
     : expectedRevert(scenario);
-  return `    function testAblation_${variantName}_${scenario.id}() public {\n        _assertAblation(\n            ${scenarioExpression(scenario)},\n            ${variant},\n            ${targeted},\n            ${expectedClass},\n            ${expectedError}\n        );\n    }`;
+  return `    function testAblation_${variantName}_${scenario.id}() public {\n        _assertAblation(\n            _scenario${scenario.id}(),\n            ${variant},\n            ${targeted},\n            ${expectedClass},\n            ${expectedError}\n        );\n    }`;
 }
 
-const unformattedOutput = `// SPDX-License-Identifier: MIT
+const unformattedFixturesOutput = `// SPDX-License-Identifier: MIT
 // Generated from scenarios.v1.json; do not edit by hand.
 // Manifest-SHA256: ${manifestHash}
 pragma solidity ^0.8.30;
 
 import {M0DifferentialHarness} from "./M0DifferentialHarness.sol";
 
-contract M0DifferentialTest is M0DifferentialHarness {
+abstract contract ScenarioFixtures is M0DifferentialHarness {
     function _applyFixture(uint8 fixtureId) internal override {
 ${fixtureNames.map(fixtureFunction).join(' else ')}
         revert("UNKNOWN_FIXTURE");
     }
 
+${manifest.scenarios.map(scenarioFunction).join('\n\n')}
+}
+`;
+
+const unformattedOutput = `// SPDX-License-Identifier: MIT
+// Generated from scenarios.v1.json; do not edit by hand.
+// Manifest-SHA256: ${manifestHash}
+pragma solidity ^0.8.30;
+
+import {ScenarioFixtures} from "./ScenarioFixtures.sol";
+
+contract M0DifferentialTest is ScenarioFixtures {
 ${manifest.scenarios.map(scenarioTest).join('\n\n')}
 }
 `;
@@ -234,6 +265,7 @@ function formatSolidity(source) {
   return result.stdout;
 }
 
+const fixturesOutput = formatSolidity(unformattedFixturesOutput);
 const output = formatSolidity(unformattedOutput);
 const ablationOutputs = [1, 2, 3, 4, 5].map((variant) => formatSolidity(`// SPDX-License-Identifier: MIT
 // Generated from scenarios.v1.json; do not edit by hand.
@@ -243,21 +275,19 @@ pragma solidity ^0.8.30;
 import {AblationDifferentialHarness} from "./AblationDifferentialHarness.sol";
 
 contract AblationM${variant}Test is AblationDifferentialHarness {
-    function _applyFixture(uint8 fixtureId) internal override {
-${fixtureNames.map(fixtureFunction).join(' else ')}
-        revert("UNKNOWN_FIXTURE");
-    }
-
 ${manifest.scenarios.map((scenario) => ablationTest(scenario, variant)).join('\n\n')}
 }
 `));
 
 const mode = process.argv[2] ?? '--write';
 if (mode === '--write') {
+  await writeFile(FIXTURES_OUTPUT_PATH, fixturesOutput);
   await writeFile(OUTPUT_PATH, output);
   await Promise.all(ABLATION_OUTPUT_PATHS.map((path, index) => writeFile(path, ablationOutputs[index])));
   process.stdout.write(`${JSON.stringify({ status: 'written', m0Scenarios: manifest.scenarios.length, ablationScenarios: manifest.scenarios.length * 5, manifestHash })}\n`);
 } else if (mode === '--check') {
+  const existingFixtures = await readFile(FIXTURES_OUTPUT_PATH, 'utf8');
+  if (existingFixtures !== fixturesOutput) throw new Error('ScenarioFixtures.sol is stale');
   const existing = await readFile(OUTPUT_PATH, 'utf8');
   if (existing !== output) throw new Error('M0Differential.t.sol is stale');
   const existingAblations = await Promise.all(ABLATION_OUTPUT_PATHS.map((path) => readFile(path, 'utf8')));

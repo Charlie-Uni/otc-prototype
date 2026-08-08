@@ -1,43 +1,58 @@
-import { createHash } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import {
+  CONTRACT_ROOT,
+  command,
+  countBy,
+  createRunContext,
+  decodedMap,
+  expectedClassification,
+  loadRunInputs,
+  sha256,
+  writeEvidence,
+  writeFailure,
+} from './run-common.mjs';
 
-const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(SCRIPT_DIR, '..');
-const REPO_ROOT = resolve(ROOT, '..', '..');
-const CONTRACT_ROOT = resolve(ROOT, 'contracts');
-const MANIFEST_PATH = resolve(ROOT, 'spec/scenarios.v1.json');
-const EXPECTED_MANIFEST_HASH = '97eabdaab3de5cc4d3cb41bbce1b82e445edfa7c8ea060618dc7b51fa5be4c69';
 const VARIANTS = ['M1', 'M2', 'M3', 'M4', 'M5'];
+const STATE_FIELDS = [
+  'totalSupply',
+  'subscriptionRequestCount',
+  'redemptionRequestCount',
+  'totalQueuedRedemption',
+  'aliceBalance',
+  'bobBalance',
+  'aliceQueued',
+  'bobQueued',
+  'aliceWhitelisted',
+  'bobWhitelisted',
+  'operator2SubscriptionRole',
+  'navHistoryLength',
+  'latestNavAsOf',
+  'latestNavIsInitial',
+  'subscription0Accepted',
+  'subscription0MintedShares',
+  'redemption0Settled',
+];
+const BOOLEAN_STATE_FIELDS = new Set([
+  'aliceWhitelisted',
+  'bobWhitelisted',
+  'operator2SubscriptionRole',
+  'latestNavIsInitial',
+  'subscription0Accepted',
+  'redemption0Settled',
+]);
 
-function sha256(bytes) {
-  return createHash('sha256').update(bytes).digest('hex');
-}
-
-function command(commandName, args, options = {}) {
-  const result = spawnSync(commandName, args, {
-    cwd: REPO_ROOT,
-    encoding: 'utf8',
-    maxBuffer: 128 * 1024 * 1024,
-    ...options,
-  });
-  if (result.status !== 0) {
-    throw new Error(`${commandName} ${args.join(' ')} failed:\n${result.stderr || result.stdout}`);
-  }
-  return result.stdout.trim();
-}
-
-function decodedMap(result) {
-  return new Map(
-    result.decoded_logs
-      .filter((line) => line.startsWith('ablation.'))
-      .map((line) => {
-        const separator = line.indexOf('=');
-        return [line.slice(0, separator), line.slice(separator + 1)];
-      }),
-  );
+function parseStateObservation(decoded, arm, context) {
+  return Object.fromEntries(STATE_FIELDS.map((field) => {
+    const value = decoded.get(`ablation.${arm}.${field}`);
+    if (value === undefined) throw new Error(`${context} is missing ${arm}.${field}`);
+    if (BOOLEAN_STATE_FIELDS.has(field)) {
+      if (value !== 'true' && value !== 'false') throw new Error(`${context} has invalid ${arm}.${field}`);
+      return [field, value === 'true'];
+    }
+    if (!/^[0-9]+$/.test(value)) throw new Error(`${context} has invalid ${arm}.${field}`);
+    return [field, value];
+  }));
 }
 
 function parseObservation(testName, result, scenarioById) {
@@ -48,7 +63,7 @@ function parseObservation(testName, result, scenarioById) {
   if (!scenario) throw new Error(`test result has no preregistered scenario ${scenarioId}`);
   if (result.status !== 'Success') throw new Error(`${variant}/${scenarioId} failed: ${result.reason ?? 'unknown'}`);
 
-  const decoded = decodedMap(result);
+  const decoded = decodedMap(result, 'ablation.');
   if (decoded.get('ablation.variant') !== variant) {
     throw new Error(`${variant}/${scenarioId} emitted the wrong variant`);
   }
@@ -60,11 +75,15 @@ function parseObservation(testName, result, scenarioById) {
   }
 
   const targeted = scenario.class === 'invalid' && scenario.ablationHypothesis.variant === variant;
-  const expectedClassification = targeted
-    ? scenario.ablationHypothesis.classification
-    : scenario.baselineExpected.outcome === 'accept' ? 'expected_accept' : 'expected_reject';
-  if (classification !== expectedClassification) {
-    throw new Error(`${variant}/${scenarioId}: ${classification} != ${expectedClassification}`);
+  const preregisteredClassification = expectedClassification(scenario, variant);
+  if (classification !== preregisteredClassification) {
+    throw new Error(`${variant}/${scenarioId}: ${classification} != ${preregisteredClassification}`);
+  }
+  const stateAssertionVerified = targeted
+    ? decoded.get('ablation.stateAssertionVerified') === 'true'
+    : null;
+  if (targeted && !stateAssertionVerified) {
+    throw new Error(`${variant}/${scenarioId} did not verify its preregistered state assertion`);
   }
 
   return {
@@ -74,10 +93,15 @@ function parseObservation(testName, result, scenarioById) {
     targetPredicate: scenario.targetPredicate ?? null,
     targeted,
     classification,
+    preregisteredClassification,
+    classificationMatches: classification === preregisteredClassification,
     stateDivergence: decoded.get('ablation.stateDivergence') === 'true',
     eventDivergence: decoded.get('ablation.eventDivergence') === 'true',
     stateDigest,
     eventDigest,
+    stateAssertionVerified,
+    baselineState: targeted ? parseStateObservation(decoded, 'baseline', `${variant}/${scenarioId}`) : null,
+    ablatedState: targeted ? parseStateObservation(decoded, 'ablated', `${variant}/${scenarioId}`) : null,
   };
 }
 
@@ -102,112 +126,98 @@ function runForge() {
   );
 }
 
-function countBy(items, key) {
-  return Object.fromEntries(
-    [...new Set(items.map((item) => item[key]))]
-      .sort()
-      .map((value) => [value, items.filter((item) => item[key] === value).length]),
-  );
+const context = await createRunContext('ablation');
+
+try {
+  const inputs = await loadRunInputs();
+  const scenarioById = new Map(inputs.manifest.scenarios.map((scenario) => [scenario.id, scenario]));
+  const rawRun1 = runForge();
+  const rawRun2 = runForge();
+  const observations1 = parseForgeRun(rawRun1, scenarioById);
+  const observations2 = parseForgeRun(rawRun2, scenarioById);
+  const expectedTotal = inputs.manifest.counts.total * VARIANTS.length;
+  if (observations1.length !== expectedTotal) {
+    throw new Error(`expected ${expectedTotal} observations, found ${observations1.length}`);
+  }
+  const repeatedMatches = observations1.filter(
+    (observation, index) => JSON.stringify(observation) === JSON.stringify(observations2[index]),
+  ).length;
+  if (repeatedMatches !== observations1.length) {
+    throw new Error('ablation repeated-run classifications or semantic digests are not deterministic');
+  }
+
+  const normalizedObservations = `${JSON.stringify(observations1, null, 2)}\n`;
+  const evidenceFiles = {
+    'forge-run-1.json': `${rawRun1}\n`,
+    'forge-run-2.json': `${rawRun2}\n`,
+    'observations-run-1.json': normalizedObservations,
+    'observations-run-2.json': `${JSON.stringify(observations2, null, 2)}\n`,
+  };
+  for (const variant of VARIANTS) {
+    const rows = observations1
+      .filter((observation) => observation.variant === variant)
+      .map((observation) => JSON.stringify(observation));
+    evidenceFiles[`${variant}.jsonl`] = `${rows.join('\n')}\n`;
+  }
+  const evidenceManifestSha256 = await writeEvidence({
+    outputDirectory: context.outputDirectory,
+    title: 'Paper 8.5 ablation evidence SHA-256 manifest',
+    metadata: {
+      preregistrationCommit: inputs.preregistrationCommit,
+      manifestSha256: inputs.manifestHash,
+      headCommit: inputs.repository.headCommit,
+    },
+    files: evidenceFiles,
+  });
+
+  const targeted = observations1.filter((observation) => observation.targeted);
+  const classificationMatches = observations1.filter((item) => item.classificationMatches).length;
+  const stateAssertionsVerified = targeted.filter((item) => item.stateAssertionVerified).length;
+  const perVariant = countBy(observations1, 'variant');
+  const summary = {
+    schemaVersion: 1,
+    preregistration: {
+      tag: 'paper85-prereg-v1',
+      commitSha: inputs.preregistrationCommit,
+      manifestSha256: inputs.manifestHash,
+    },
+    sourceArtifact: {
+      tag: 'chapter3-artifact-v1.4.0',
+      commitSha: inputs.sourceCommit,
+      evidenceAnchor: inputs.manifest.sourceArtifact.evidenceAnchor,
+    },
+    run: {
+      runId: context.runId,
+      startedAt: context.startedAt,
+      chainId: inputs.manifest.determinism.chainId,
+      genesisTimestamp: inputs.manifest.determinism.genesisTimestamp,
+      toolchain: { foundry: inputs.forgeVersion },
+      repository: inputs.repository,
+    },
+    counts: {
+      total: observations1.length,
+      perVariant,
+      targeted: targeted.length,
+      nonTargeted: observations1.length - targeted.length,
+      classifications: countBy(observations1, 'classification'),
+      targetedClassifications: countBy(targeted, 'classification'),
+      stateAssertionsVerified,
+      failed: expectedTotal - observations1.length,
+    },
+    metrics: {
+      preregisteredClassificationMatchRate: classificationMatches / observations1.length,
+      targetedAnomalyMatchRate: stateAssertionsVerified / targeted.length,
+      repeatedDigestMatches: repeatedMatches,
+      repeatedDigestMismatches: observations1.length - repeatedMatches,
+      targetedStateDivergences: targeted.filter((item) => item.stateDivergence).length,
+      targetedEventDivergences: targeted.filter((item) => item.eventDivergence).length,
+      semanticEvidenceSha256: sha256(normalizedObservations),
+    },
+    evidenceManifestSha256,
+  };
+  await writeFile(join(context.outputDirectory, 'run-summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
+  process.stdout.write(`${JSON.stringify({ outputDirectory: context.outputDirectory, summary }, null, 2)}\n`);
+} catch (error) {
+  await writeFailure(context, error);
+  throw error;
 }
-
-const manifestBytes = await readFile(MANIFEST_PATH);
-const manifestHash = sha256(manifestBytes);
-if (manifestHash !== EXPECTED_MANIFEST_HASH) {
-  throw new Error(`manifest hash ${manifestHash} does not match preregistered ${EXPECTED_MANIFEST_HASH}`);
-}
-const manifest = JSON.parse(manifestBytes);
-const scenarioById = new Map(manifest.scenarios.map((scenario) => [scenario.id, scenario]));
-
-command('node', [resolve(SCRIPT_DIR, 'generate-m0-tests.mjs'), '--check']);
-const preregistrationCommit = command('git', ['rev-parse', 'paper85-prereg-v1^{commit}']);
-const sourceCommit = command('git', ['rev-parse', 'chapter3-artifact-v1.4.0^{commit}']);
-const forgeVersion = command('forge', ['--version']);
-
-const startedAt = new Date().toISOString();
-const runId = `ablation-${startedAt.replace(/[-:.]/g, '')}`;
-const outputDirectory = resolve(ROOT, 'results', runId);
-await mkdir(resolve(ROOT, 'results'), { recursive: true });
-await mkdir(outputDirectory, { recursive: false });
-
-const rawRun1 = runForge();
-const rawRun2 = runForge();
-const observations1 = parseForgeRun(rawRun1, scenarioById);
-const observations2 = parseForgeRun(rawRun2, scenarioById);
-const expectedTotal = manifest.counts.total * VARIANTS.length;
-if (observations1.length !== expectedTotal) {
-  throw new Error(`expected ${expectedTotal} observations, found ${observations1.length}`);
-}
-if (JSON.stringify(observations1) !== JSON.stringify(observations2)) {
-  throw new Error('ablation repeated-run classifications or semantic digests are not deterministic');
-}
-
-const evidenceFiles = {
-  'forge-run-1.json': `${rawRun1}\n`,
-  'forge-run-2.json': `${rawRun2}\n`,
-  'observations-run-2.json': `${JSON.stringify(observations2, null, 2)}\n`,
-};
-for (const variant of VARIANTS) {
-  const rows = observations1
-    .filter((observation) => observation.variant === variant)
-    .map((observation) => JSON.stringify(observation));
-  evidenceFiles[`${variant}.jsonl`] = `${rows.join('\n')}\n`;
-}
-for (const [name, contents] of Object.entries(evidenceFiles)) {
-  await writeFile(join(outputDirectory, name), contents);
-}
-
-const evidenceManifestLines = Object.entries(evidenceFiles)
-  .sort(([a], [b]) => a.localeCompare(b))
-  .map(([name, contents]) => `${sha256(contents)}  ${name}`);
-const evidenceManifest = [
-  '# Paper 8.5 ablation evidence SHA-256 manifest',
-  `# preregistrationCommit=${preregistrationCommit}`,
-  `# manifestSha256=${manifestHash}`,
-  ...evidenceManifestLines,
-  '',
-].join('\n');
-await writeFile(join(outputDirectory, 'evidence-sha256.txt'), evidenceManifest);
-const evidenceManifestSha256 = sha256(evidenceManifest);
-
-const targeted = observations1.filter((observation) => observation.targeted);
-const summary = {
-  schemaVersion: 1,
-  preregistration: {
-    tag: 'paper85-prereg-v1',
-    commitSha: preregistrationCommit,
-    manifestSha256: manifestHash,
-  },
-  sourceArtifact: {
-    tag: 'chapter3-artifact-v1.4.0',
-    commitSha: sourceCommit,
-    evidenceAnchor: manifest.sourceArtifact.evidenceAnchor,
-  },
-  run: {
-    runId,
-    startedAt,
-    chainId: manifest.determinism.chainId,
-    genesisTimestamp: manifest.determinism.genesisTimestamp,
-    toolchain: { foundry: forgeVersion.split('\n')[0] },
-  },
-  counts: {
-    total: observations1.length,
-    perVariant: Object.fromEntries(VARIANTS.map((variant) => [variant, 42])),
-    targeted: targeted.length,
-    nonTargeted: observations1.length - targeted.length,
-    classifications: countBy(observations1, 'classification'),
-    targetedClassifications: countBy(targeted, 'classification'),
-    failed: 0,
-  },
-  metrics: {
-    preregisteredClassificationMatchRate: 1,
-    targetedAnomalyMatchRate: 1,
-    repeatedDigestMatches: observations1.length,
-    repeatedDigestMismatches: 0,
-    targetedStateDivergences: targeted.filter((item) => item.stateDivergence).length,
-    targetedEventDivergences: targeted.filter((item) => item.eventDivergence).length,
-  },
-  evidenceManifestSha256,
-};
-await writeFile(join(outputDirectory, 'run-summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
-
-process.stdout.write(`${JSON.stringify({ outputDirectory, summary }, null, 2)}\n`);

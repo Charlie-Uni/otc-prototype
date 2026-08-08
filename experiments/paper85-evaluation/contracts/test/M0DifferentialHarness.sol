@@ -9,6 +9,26 @@ import {RiskRegistry} from "production/RiskRegistry.sol";
 import {ExperimentalFundToken} from "../generated/ExperimentalFundToken.sol";
 import {ExperimentalNAVRegistry} from "../generated/ExperimentalNAVRegistry.sol";
 
+struct StateObservation {
+    uint256 totalSupply;
+    uint256 subscriptionRequestCount;
+    uint256 redemptionRequestCount;
+    uint256 totalQueuedRedemption;
+    uint256 aliceBalance;
+    uint256 bobBalance;
+    uint256 aliceQueued;
+    uint256 bobQueued;
+    bool aliceWhitelisted;
+    bool bobWhitelisted;
+    bool operator2SubscriptionRole;
+    uint256 navHistoryLength;
+    uint64 latestNavAsOf;
+    bool latestNavIsInitial;
+    bool subscription0Accepted;
+    uint256 subscription0MintedShares;
+    bool redemption0Settled;
+}
+
 abstract contract M0DifferentialHarness is Test {
     uint256 internal constant GENESIS_TIMESTAMP = 1_710_000_000;
     bytes32 internal constant FUND_ID = 0xac4a93645b61f4f102884f40e6a589263b542e97cda3dd28d1de825f80f90169;
@@ -54,6 +74,7 @@ abstract contract M0DifferentialHarness is Test {
         bytes resultData;
         bytes32 stateDigest;
         bytes32 eventDigest;
+        StateObservation state;
     }
 
     struct PredicateFlags {
@@ -67,8 +88,6 @@ abstract contract M0DifferentialHarness is Test {
     address internal riskRegistry;
     address internal navRegistry;
     address internal fundToken;
-
-    event M0Equivalent(bytes32 indexed scenarioId, bool accepted, bytes32 stateDigest, bytes32 eventDigest);
 
     function _applyFixture(uint8 fixtureId) internal virtual;
 
@@ -95,7 +114,6 @@ abstract contract M0DifferentialHarness is Test {
             assertEq(production.resultData, scenario.expectedRevert, "PREREGISTERED_ERROR_MISMATCH");
         }
 
-        emit M0Equivalent(scenario.id, production.accepted, production.stateDigest, production.eventDigest);
         console2.log(string.concat("m0.scenario=", vm.toString(scenario.id)));
         console2.log(string.concat("m0.stateDigest=", vm.toString(production.stateDigest)));
         console2.log(string.concat("m0.eventDigest=", vm.toString(production.eventDigest)));
@@ -125,6 +143,7 @@ abstract contract M0DifferentialHarness is Test {
         result.fundToken = fundToken;
         result.stateDigest = _stateDigest();
         result.eventDigest = _eventDigest(logs);
+        result.state = _stateObservation();
         if (!result.accepted) {
             assertEq(result.stateDigest, beforeDigest, "REJECTED_OPERATION_MUTATED_STATE");
         }
@@ -225,6 +244,7 @@ abstract contract M0DifferentialHarness is Test {
                 projection,
                 _read(fundToken, abi.encodeWithSignature("balanceOf(address)", actors[i])),
                 _read(fundToken, abi.encodeWithSignature("whitelist(address)", actors[i])),
+                _read(fundToken, abi.encodeWithSignature("queuedRedemptionOf(address)", actors[i])),
                 _roleProjection(fundToken, actors[i]),
                 _roleProjection(navRegistry, actors[i])
             );
@@ -235,12 +255,6 @@ abstract contract M0DifferentialHarness is Test {
                 );
             }
         }
-
-        projection = bytes.concat(
-            projection,
-            _read(fundToken, abi.encodeWithSignature("queuedRedemptionOf(address)", ALICE)),
-            _read(fundToken, abi.encodeWithSignature("queuedRedemptionOf(address)", BOB))
-        );
 
         uint256 subscriptionCount =
             abi.decode(_read(fundToken, abi.encodeWithSignature("subscriptionRequestCount()")), (uint256));
@@ -268,6 +282,50 @@ abstract contract M0DifferentialHarness is Test {
         return keccak256(projection);
     }
 
+    function _stateObservation() private view returns (StateObservation memory state) {
+        state.totalSupply = _readUint(fundToken, abi.encodeWithSignature("totalSupply()"));
+        state.subscriptionRequestCount = _readUint(fundToken, abi.encodeWithSignature("subscriptionRequestCount()"));
+        state.redemptionRequestCount = _readUint(fundToken, abi.encodeWithSignature("redemptionRequestCount()"));
+        state.totalQueuedRedemption = _readUint(fundToken, abi.encodeWithSignature("totalQueuedRedemption()"));
+        state.aliceBalance = _readUint(fundToken, abi.encodeWithSignature("balanceOf(address)", ALICE));
+        state.bobBalance = _readUint(fundToken, abi.encodeWithSignature("balanceOf(address)", BOB));
+        state.aliceQueued = _readUint(fundToken, abi.encodeWithSignature("queuedRedemptionOf(address)", ALICE));
+        state.bobQueued = _readUint(fundToken, abi.encodeWithSignature("queuedRedemptionOf(address)", BOB));
+        state.aliceWhitelisted = _readBool(fundToken, abi.encodeWithSignature("whitelist(address)", ALICE));
+        state.bobWhitelisted = _readBool(fundToken, abi.encodeWithSignature("whitelist(address)", BOB));
+        state.operator2SubscriptionRole =
+            _readBool(fundToken, abi.encodeWithSignature("hasRole(bytes32,address)", SUBSCRIPTION_ROLE, OPERATOR_2));
+        state.navHistoryLength = _readUint(navRegistry, abi.encodeWithSignature("historyLength(bytes32)", FUND_ID));
+
+        if (state.navHistoryLength > 0) {
+            NAVRegistry.NavRecord memory nav = abi.decode(
+                _read(
+                    navRegistry, abi.encodeWithSignature("navAt(bytes32,uint256)", FUND_ID, state.navHistoryLength - 1)
+                ),
+                (NAVRegistry.NavRecord)
+            );
+            state.latestNavAsOf = nav.asOf;
+            state.latestNavIsInitial = nav.isInitial;
+        }
+
+        if (state.subscriptionRequestCount > 0) {
+            FundToken.SubscriptionRequest memory request = abi.decode(
+                _read(fundToken, abi.encodeWithSignature("subscriptionRequestAt(uint256)", 0)),
+                (FundToken.SubscriptionRequest)
+            );
+            state.subscription0Accepted = request.accepted;
+            state.subscription0MintedShares = request.mintedShares;
+        }
+
+        if (state.redemptionRequestCount > 0) {
+            FundToken.RedemptionRequest memory request = abi.decode(
+                _read(fundToken, abi.encodeWithSignature("redemptionRequestAt(uint256)", 0)),
+                (FundToken.RedemptionRequest)
+            );
+            state.redemption0Settled = request.settled;
+        }
+    }
+
     function _roleProjection(address target, address actor) private view returns (bytes memory) {
         if (target == fundToken) {
             return abi.encode(
@@ -281,6 +339,14 @@ abstract contract M0DifferentialHarness is Test {
             _read(target, abi.encodeWithSignature("hasRole(bytes32,address)", DEFAULT_ADMIN_ROLE, actor)),
             _read(target, abi.encodeWithSignature("hasRole(bytes32,address)", MANAGER_ROLE, actor))
         );
+    }
+
+    function _readUint(address target, bytes memory callData) private view returns (uint256) {
+        return abi.decode(_read(target, callData), (uint256));
+    }
+
+    function _readBool(address target, bytes memory callData) private view returns (bool) {
+        return abi.decode(_read(target, callData), (bool));
     }
 
     function _read(address target, bytes memory callData) private view returns (bytes memory returnData) {
