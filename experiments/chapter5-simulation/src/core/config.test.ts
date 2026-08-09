@@ -27,6 +27,9 @@ test('accepts the mentor-approved pilot baseline', () => {
   assert.equal(config.oracle.baselineExecutionFailureBps, 0);
   assert.deepEqual(config.observation.pollingIntervalsSec, [3_600, 21_600, 86_400]);
   assert.equal(config.observation.synchronicityBucketSec, 86_400);
+  assert.equal(config.behavior.initialRiskPriorBps, 2_000);
+  assert.deepEqual(config.behavior.expectedOthersWeightsBps, [4_000, 3_000, 3_000]);
+  assert.equal(config.behavior.coefficients.publicness, 0.25);
   assert.equal(config.thresholds.baselineKappaBps, 7_000);
 });
 
@@ -93,4 +96,17 @@ test('rejects duplicate or unordered observation intervals', () => {
   const unordered = structuredClone(baseline) as Record<string, Record<string, unknown>>;
   unordered.observation.pollingIntervalsSec = [86_400, 3_600];
   assert.throws(() => parseSimulationConfig(unordered), /OBSERVATION_INTERVALS_NOT_ASCENDING/);
+});
+
+test('rejects invalid behavioral weights and coefficient signs', () => {
+  const weights = structuredClone(baseline) as Record<string, Record<string, unknown>>;
+  weights.behavior.expectedOthersWeightsBps = [1, 1, 1];
+  assert.throws(() => parseSimulationConfig(weights), /EXPECTATION_WEIGHTS_MUST_SUM_10000/);
+
+  const coefficient = structuredClone(baseline) as Record<string, Record<string, unknown>>;
+  coefficient.behavior.coefficients = {
+    ...(coefficient.behavior.coefficients as Record<string, unknown>),
+    expectedOthersRedeem: -1,
+  };
+  assert.throws(() => parseSimulationConfig(coefficient), /greater than or equal to 0/);
 });

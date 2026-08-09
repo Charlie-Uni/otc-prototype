@@ -69,6 +69,19 @@
     "pollingIntervalsSec": [3600, 21600, 86400],
     "synchronicityBucketSec": 86400
   },
+  "behavior": {
+    "seed": 20260813,
+    "initialRiskPriorBps": 2000,
+    "expectedOthersWeightsBps": [4000, 3000, 3000],
+    "coefficients": {
+      "interceptLogOdds": -4.59511985013459,
+      "perceivedRisk": 1,
+      "publicness": 0.25,
+      "signalSynchronicity": 0.5,
+      "expectedOthersRedeem": 1,
+      "firstMoverAdvantage": 1
+    }
+  },
   "thresholds": {
     "detectionBps": 6000,
     "baselineKappaBps": 7000,

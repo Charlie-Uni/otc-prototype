@@ -19,6 +19,8 @@ The foundation phase provides:
 - runtime share registration with a holder-balance-to-total-supply conservation invariant.
 - R0-R4 public/regulator disclosure events produced by the vendored policy engine;
 - paired heterogeneous investor polling schedules and observation-derived signal synchronicity.
+- prior-preserving investor beliefs and a monotone `ExpectedOthersRedeem` coordination signal;
+- configurable Logistic redemption probabilities with paired counter-based decision draws.
 
 `calc.ts`, `regimes.ts`, and `sensitivity.ts` are byte-identical copies from `chapter3-artifact-v1.4.0`. The observation helper is the pure scheduling subset of `detection.ts`; the complete source file is hash-locked and its observable behavior is covered by golden tests, avoiding unrelated ABI and indexer code in the simulation package.
 

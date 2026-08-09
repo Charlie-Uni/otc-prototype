@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test src/artifact/*.test.ts src/core/*.test.ts src/disclosure/*.test.ts src/network/*.test.ts src/observation/*.test.ts src/oracle/*.test.ts src/risk/*.test.ts src/shocks/*.test.ts src/state/*.test.ts",
+    "test": "node --import tsx --test src/artifact/*.test.ts src/behavior/*.test.ts src/core/*.test.ts src/disclosure/*.test.ts src/network/*.test.ts src/observation/*.test.ts src/oracle/*.test.ts src/risk/*.test.ts src/shocks/*.test.ts src/state/*.test.ts",
     "lock:write": "node scripts/foundation-lock.mjs --write",
     "lock:check": "node scripts/foundation-lock.mjs --check",
     "check": "pnpm typecheck && pnpm test && pnpm lock:check"

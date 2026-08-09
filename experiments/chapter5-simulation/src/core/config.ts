@@ -5,6 +5,8 @@ const nonNegativeInteger = z.number().int().nonnegative().safe();
 const bps = z.number().int().min(0).max(10_000);
 const positiveBps = z.number().int().min(1).max(10_000);
 const fractionalLossBps = z.number().int().min(1).max(9_999);
+const boundedCoefficient = z.number().finite().min(0).max(20);
+const boundedIntercept = z.number().finite().min(-20).max(20);
 const riskTierValues = z.object({
   low: positiveInteger,
   medium: positiveInteger,
@@ -76,6 +78,19 @@ export const simulationConfigSchema = z.object({
     pollingIntervalsSec: z.array(positiveInteger).min(1),
     synchronicityBucketSec: positiveInteger,
   }).strict(),
+  behavior: z.object({
+    seed: positiveInteger,
+    initialRiskPriorBps: bps,
+    expectedOthersWeightsBps: z.tuple([bps, bps, bps]),
+    coefficients: z.object({
+      interceptLogOdds: boundedIntercept,
+      perceivedRisk: boundedCoefficient,
+      publicness: boundedCoefficient,
+      signalSynchronicity: boundedCoefficient,
+      expectedOthersRedeem: boundedCoefficient,
+      firstMoverAdvantage: boundedCoefficient,
+    }).strict(),
+  }).strict(),
   thresholds: z.object({
     detectionBps: bps,
     baselineKappaBps: bps,
@@ -113,6 +128,12 @@ export const simulationConfigSchema = z.object({
     (value, index, values) => index > 0 && value <= values[index - 1]!,
   )) {
     context.addIssue({ code: 'custom', message: 'OBSERVATION_INTERVALS_NOT_ASCENDING' });
+  }
+  if (config.behavior.expectedOthersWeightsBps.reduce(
+    (sum, weight) => sum + weight,
+    0,
+  ) !== 10_000) {
+    context.addIssue({ code: 'custom', message: 'EXPECTATION_WEIGHTS_MUST_SUM_10000' });
   }
   if (new Set(config.shock.navDropBps).size !== config.shock.navDropBps.length) {
     context.addIssue({ code: 'custom', message: 'DUPLICATE_SHOCK_MAGNITUDES' });

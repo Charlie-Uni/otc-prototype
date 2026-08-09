@@ -68,6 +68,10 @@ Each draw is identified by `(masterSeed, replicateId, entityId, moduleId, tick, 
 - Risk disclosure events are absent before their policy time; this absence is `unknown`, not a zero-risk signal.
 - Same-fund snapshots that share one disclosure boundary are coalesced to the latest submitted snapshot.
 - Observation schedules are paired across regimes because their random identity contains no regime label.
+- Investor-fund beliefs use a 2000-bps pilot prior. Unknown information retains the existing belief; an available exact or band observation replaces it without smoothing.
+- The pilot `ExpectedOthersRedeem` function is a 4000/3000/3000 convex combination of public risk, realized synchronicity, and lagged request pressure. It is an operationalization of the thesis `g(.)`, not an empirical estimate.
+- Individual redemption uses the thesis Logistic form with configurable `a0`-`a5`. Pilot slopes are nonnegative and formal ranges remain subject to preregistration and sensitivity analysis.
+- Redemption decisions use a fixed counter-based draw for each investor, fund, replicate, and tick. Control stages may override execution but cannot skip or redraw that slot.
 
 ## Control boundary
 

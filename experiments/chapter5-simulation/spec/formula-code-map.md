@@ -10,8 +10,8 @@ Formula IDs below are stable implementation IDs. Final thesis equation numbers w
 | F-SHOCK-1 | Valuation shock loss | `shocks/valuation.ts::applyValuationShock` | pre-shock economic AUM, navDropBps | integer value | 10/20/30% loss monotonicity and exact accounting |
 | F-DETECT-1 | Detection condition | `risk/metrics.ts::evaluateRiskThresholds` | raw score, tau | boolean | `risk/metrics.test.ts`: equality at tau detects |
 | F-CONTROL-1 | Gate trigger indication | `risk/metrics.ts::evaluateRiskThresholds` | raw score, kappa | boolean | `risk/metrics.test.ts`: equality at kappa does not trigger |
-| F-REDEEM-1 | Individual P(Redeem) | `behavior/redemption.ts::redemptionProbability` | behavior coefficients and beliefs | probability | Range and coefficient signs |
-| F-EXPECT-1 | ExpectedOthersRedeem | `behavior/expectations.ts::expectedOthersRedeem` | public signal, synchronicity, lagged pressure | normalized score | Input monotonicity |
+| F-REDEEM-1 | Individual P(Redeem) | `behavior/redemption.ts::redemptionProbability` and `evaluateInvestorRedemption` | normalized behavior inputs and configurable `a0`-`a5` | probability | `behavior/redemption.test.ts`: range, coefficient signs, prior wiring, paired draw |
+| F-EXPECT-1 | ExpectedOthersRedeem | `behavior/expectations.ts::expectedOthersRedeemBps` | public signal, synchronicity, lagged request pressure, convex weights | bps | `behavior/expectations.test.ts`: exact value, range, input monotonicity |
 | F-SYNC-1 | SignalSynchronicity | `observation/schedule.ts::computeSignalSynchronicityBps` | realized observation times, bucket anchor and width | bps HHI | `observation/schedule.test.ts`: schedule-derived and order invariant |
 | F-PRESSURE-1 | RedemptionRequestPressure | `metrics/redemption.ts::requestPressure` | requested shares, prior shares | bps | Request-flow artifact consistency |
 | F-NET-1 | FundNetworkProximity | `network/proximity.ts::fundNetworkProximity` | asset, investor, provider, valuation weights | normalized score | Component removal |

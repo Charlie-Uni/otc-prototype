@@ -20,7 +20,7 @@ Public aggregate and tiered bands map to deterministic integer midpoints: green 
 
 When several snapshots for one fund share one disclosure boundary, only the latest submitted snapshot is released at that boundary. This is essential for R0: intraperiod submissions remain unavailable and do not leak through duplicate public observations.
 
-The timeline contains scheduled disclosure events. Before an event's `disclosedAt`, the available information state is `unknown`; no zero-risk observation is manufactured. T11 must preserve the investor's prior belief while no event is available.
+The timeline contains scheduled disclosure events. Before an event's `disclosedAt`, the available information state is `unknown`; no zero-risk observation is manufactured. The T11 belief module preserves the investor's prior while no event is available.
 
 ## Threshold identification and censoring
 
