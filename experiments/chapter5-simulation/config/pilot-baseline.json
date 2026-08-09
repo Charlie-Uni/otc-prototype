@@ -9,7 +9,33 @@
   "network": {
     "fundCount": 10,
     "investorCount": 200,
-    "assetClassCount": 5
+    "assetClassCount": 5,
+    "managerCount": 2,
+    "serviceProviderCount": 3,
+    "valuationMethodCount": 2,
+    "networkSeed": 20260809,
+    "sharedInvestorCoreBps": 3000
+  },
+  "heterogeneity": {
+    "holderCountPerFund": 20,
+    "initialAum": 100000000,
+    "initialTotalShares": 100000000,
+    "expectedRedemptionClaimsBps": 3000,
+    "liquidAssetShareBpsByLiquidityMismatchTier": {
+      "low": 4500,
+      "medium": 3000,
+      "high": 1500
+    },
+    "navUpdateIntervalDaysByStalePricingTier": {
+      "low": 1,
+      "medium": 7,
+      "high": 14
+    },
+    "topHolderShareBpsByConcentrationTier": {
+      "low": 500,
+      "medium": 3000,
+      "high": 5000
+    }
   },
   "monteCarlo": {
     "pilotReplicatesPerCell": 100,

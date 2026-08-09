@@ -32,6 +32,7 @@ const localFiles = [
   'spec/analysis-plan-draft.md',
   'spec/formula-code-map.md',
   'spec/model-semantics.md',
+  'spec/network-design.md',
   'spec/requirements-traceability.md',
   'src/artifact/golden.test.ts',
   'src/artifact/risk/calc.ts',
@@ -45,6 +46,10 @@ const localFiles = [
   'src/core/rng.test.ts',
   'src/core/rng.ts',
   'src/index.ts',
+  'src/network/generator.test.ts',
+  'src/network/generator.ts',
+  'src/network/types.ts',
+  'src/network/validation.ts',
   'tsconfig.json',
 ];
 

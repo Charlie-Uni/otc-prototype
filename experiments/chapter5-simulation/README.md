@@ -9,8 +9,12 @@ The foundation phase provides:
 - counter-based random draws keyed by replicate, entity, module, tick, purpose, and ordinal;
 - a hash-locked snapshot of the Chapter 3 disclosure and risk-calculation semantics;
 - golden tests that reproduce the Chapter 3 score, threshold, disclosure, and observation results.
+- a deterministic 10-fund, 200-investor, 5-asset initial network with conserved holdings and exposures;
+- independently varied liquidity-mismatch, stale-pricing, and investor-concentration fund tiers.
 
 `calc.ts`, `regimes.ts`, and `sensitivity.ts` are byte-identical copies from `chapter3-artifact-v1.4.0`. The observation helper is the pure scheduling subset of `detection.ts`; the complete source file is hash-locked and its observable behavior is covered by golden tests, avoiding unrelated ABI and indexer code in the simulation package.
+
+The network generator creates model inputs only. It does not encode redemption outcomes, losses, or a preferred transparency-regime ranking.
 
 Commands:
 
