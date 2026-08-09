@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Chapter 5 foundation source and semantics lock; not a formal experiment preregistration",
+  "artifact": {
+    "tag": "chapter3-artifact-v1.4.0",
+    "commit": "e5b1e126e5e7ff37f5fe47307d945447724a17d1"
+  },
+  "sourceFiles": {
+    "apps/api/src/risk/calc.ts": "be09f8f27437250058ed87a98ccbf68050b91be2e71abfd68727b6e3c9ccfcb9",
+    "apps/api/src/risk/regimes.ts": "a44e10bf9ee1e926e8a62b1a5c2670d78d4d64fef7b615702c19663845a205a7",
+    "apps/api/src/simulation/detection.ts": "9d8037fde5e7ff91de9ce2a6285fcae3a3c14a68c4dc125d4e0e75b34ea99718",
+    "apps/api/src/simulation/sensitivity.ts": "b556726d65da5e4922069f734494ebea55a9a57c242e193f1672ef78e201ccf3"
+  },
+  "sourceAdapters": {
+    "apps/api/src/simulation/detection.ts": {
+      "localPath": "src/artifact/simulation/observation.ts",
+      "extractedFunctions": [
+        "firstScheduledObservationAt",
+        "publicThresholdIsIdentifiable"
+      ],
+      "validation": "src/artifact/golden.test.ts"
+    }
+  },
+  "repositoryFiles": {
+    ".github/workflows/chapter5-simulation.yml": "4c059fe5ecc293503cc1dc8d7c84fcff31ad967ebae3b1c17380e479aedf2452",
+    "docs/evidence/chapter3-summary.json": "a3102e4e9a4d3ded8a4f1aa9c82396fd34f834baa67fc57d1e62c6edb06be712",
+    "package.json": "fc9fc63f467dce0a21f3b333b1cfbc49775c1336fa3de84e9782745623c911c3",
+    "pnpm-lock.yaml": "09a1e41a18df6fa30756d7577bef781e4d766a5acbfde966b644ddd72a347b6a",
+    "pnpm-workspace.yaml": "cd499b10207d0b20ffcdd734bbc2224319333835c76e6b608bc81a117e6a5b0e"
+  },
+  "localFiles": {
+    "README.md": "a75370ccfe43555bbe8da373064f83f96dc8b471d3a64b68ff6b831bc14fd6a9",
+    "config/pilot-baseline.json": "b88b4b4e5c2cb519c2bfacd9ae74f15562a7ea8114a33822b34d0bdff1fcb9c5",
+    "package.json": "1303655bedfb5e1befb10a8d708d15e2171119d3c39ecf1cf2967f828e9e5940",
+    "scripts/foundation-lock.mjs": "5f30f6bf7373f5d7cee45393b8be50010ea73ca0ae625de255896af3483468f8",
+    "spec/analysis-plan-draft.md": "9d008835f5d7bf1cdc70adb7afae8c06d4dc3c92b55dbfa5ec045b8166acc8af",
+    "spec/formula-code-map.md": "2232729ec49317a6fcafe9d6ffbaff949499c092abd2960ee6258d40adb9cd3e",
+    "spec/model-semantics.md": "299a7fc088290a47d151f177930e2a30eba2c21053c4a2647ccc73372e730967",
+    "spec/requirements-traceability.md": "c0db8496961ef3043086e9a32fe6866b9edd772fb4b31bf7d01647006a224f16",
+    "src/artifact/golden.test.ts": "192edee6a11ee59beecce6d5a3bb04b730cc8e885069abed9ae6a5ca640cae60",
+    "src/artifact/risk/calc.ts": "be09f8f27437250058ed87a98ccbf68050b91be2e71abfd68727b6e3c9ccfcb9",
+    "src/artifact/risk/regimes.ts": "a44e10bf9ee1e926e8a62b1a5c2670d78d4d64fef7b615702c19663845a205a7",
+    "src/artifact/simulation/observation.ts": "c7e8c5969de7085e93f9ade2b21337ff102610be6afcd11f5b73cab03ffc5ba2",
+    "src/artifact/simulation/sensitivity.ts": "b556726d65da5e4922069f734494ebea55a9a57c242e193f1672ef78e201ccf3",
+    "src/core/config.test.ts": "cc41c3873e7e6781c3fd5c13339f8d50c9370146c8e505adc84ad2ee52cda213",
+    "src/core/config.ts": "4a73e3f8529140e80f14656ca7bc0aa283a36cd9e80e297b2d640177c130489f",
+    "src/core/pipeline.test.ts": "2be85cd4742bdc06b9f6d4a396e13b7eb104cf15b079219b7da7cb6042cd04aa",
+    "src/core/pipeline.ts": "2a6b31a56a6d0c374c3bdc842fc0c10cd8d80a9a1af96e6c8873939510931622",
+    "src/core/rng.test.ts": "b165eb89b801d83f45641987dd970e7aea302d4ef64ae6ec81e5567195087ae6",
+    "src/core/rng.ts": "40690769313f984e6ed8369c34ffb1764d9866f7cb3e70e3bcce811a485dce44",
+    "src/index.ts": "28582049c15099578556d405ebfc711f7602b3b6183c565b80e3ba89e262a0e5",
+    "tsconfig.json": "88c4695c50ca9fe6178302ad532eff614e756ef190877315fd0f04372050b5a2"
+  }
+}

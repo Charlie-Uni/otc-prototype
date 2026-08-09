@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "time": {
+    "tickSec": 86400,
+    "horizonDays": 90,
+    "primaryWindowDays": 30,
+    "robustnessWindowDays": [60, 90]
+  },
+  "network": {
+    "fundCount": 10,
+    "investorCount": 200,
+    "assetClassCount": 5
+  },
+  "monteCarlo": {
+    "pilotReplicatesPerCell": 100,
+    "formalMinimumReplicatesPerCell": 500,
+    "keyRobustnessReplicatesPerCell": 1000
+  },
+  "shock": {
+    "baselineType": "valuation",
+    "navDropBps": [1000, 2000, 3000],
+    "r0CycleSec": 604800,
+    "shockAtMode": "uniform_within_r0_cycle"
+  },
+  "thresholds": {
+    "detectionBps": 6000,
+    "kappaScanBps": [5000, 6000, 7000, 8000]
+  }
+}

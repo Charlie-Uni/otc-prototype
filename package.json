@@ -6,6 +6,8 @@
     "dev:anvil": "anvil -p 8545",
     "dev:contracts": "cd contracts && forge build && forge test",
     "dev:api": "pnpm --filter @ots/api dev",
-    "test:chapter3": "bash scripts/test-chapter3.sh"
+    "test:chapter3": "bash scripts/test-chapter3.sh",
+    "test:chapter5": "pnpm --filter @ots/chapter5-simulation test",
+    "check:chapter5": "pnpm --filter @ots/chapter5-simulation check"
   }
 }

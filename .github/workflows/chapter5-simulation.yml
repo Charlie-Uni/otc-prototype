@@ -1,0 +1,49 @@
+name: Chapter 5 Simulation Foundation
+
+on:
+  push:
+    paths:
+      - '.github/workflows/chapter5-simulation.yml'
+      - 'apps/api/src/risk/calc.ts'
+      - 'apps/api/src/risk/regimes.ts'
+      - 'apps/api/src/simulation/detection.ts'
+      - 'apps/api/src/simulation/sensitivity.ts'
+      - 'experiments/chapter5-simulation/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+  pull_request:
+    paths:
+      - '.github/workflows/chapter5-simulation.yml'
+      - 'apps/api/src/risk/calc.ts'
+      - 'apps/api/src/risk/regimes.ts'
+      - 'apps/api/src/simulation/detection.ts'
+      - 'apps/api/src/simulation/sensitivity.ts'
+      - 'experiments/chapter5-simulation/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9.6.0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check Chapter 5 foundation
+        run: pnpm check:chapter5

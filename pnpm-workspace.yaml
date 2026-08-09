@@ -1,5 +1,6 @@
 packages:
   - apps/api
+  - experiments/chapter5-simulation
 
 overrides:
   ajv: 8.20.0

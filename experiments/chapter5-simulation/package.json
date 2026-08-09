@@ -1,0 +1,20 @@
+{
+  "name": "@ots/chapter5-simulation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/artifact/*.test.ts src/core/*.test.ts",
+    "lock:write": "node scripts/foundation-lock.mjs --write",
+    "lock:check": "node scripts/foundation-lock.mjs --check",
+    "check": "pnpm typecheck && pnpm test && pnpm lock:check"
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
