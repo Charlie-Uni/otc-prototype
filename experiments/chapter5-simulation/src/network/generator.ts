@@ -1,6 +1,6 @@
 import { computeInvestorConcentrationBps, MAX_BPS } from '../artifact/risk/calc';
 import type { SimulationConfig } from '../core/config';
-import { randomUint64, type RandomDrawKey } from '../core/rng';
+import { deterministicShuffle, type RandomDrawKey } from '../core/rng';
 import { RISK_TIERS, type NetworkModel, type NetworkSummary, type RiskTier } from './types';
 import { validateNetworkModel } from './validation';
 
@@ -8,15 +8,6 @@ const ILLIQUID_EXPOSURE_SPLIT_BPS = 6_000;
 
 function indexedId(prefix: string, index: number): string {
   return `${prefix}-${String(index + 1).padStart(3, '0')}`;
-}
-
-function shuffle<T>(values: readonly T[], key: RandomDrawKey): T[] {
-  const shuffled = [...values];
-  for (let index = shuffled.length - 1, ordinal = 0; index > 0; index -= 1, ordinal += 1) {
-    const selected = Number(randomUint64(key, ordinal) % BigInt(index + 1));
-    [shuffled[index], shuffled[selected]] = [shuffled[selected]!, shuffled[index]!];
-  }
-  return shuffled;
 }
 
 function holderWeights(holderCount: number, topHolderShareBps: number): number[] {
@@ -68,7 +59,7 @@ export function generateNetworkModel(config: SimulationConfig): NetworkModel {
   const investors = Array.from({ length: config.network.investorCount }, (_, index) => ({
     id: indexedId('investor', index),
   }));
-  const investorOrder = shuffle(
+  const investorOrder = deterministicShuffle(
     investors.map(({ id }) => id),
     randomKey(masterSeed, 'investor-universe', 'holder-permutation'),
   );
@@ -106,7 +97,7 @@ export function generateNetworkModel(config: SimulationConfig): NetworkModel {
     const uniqueHolderCount = config.heterogeneity.holderCountPerFund - sharedHolderCount;
     const uniqueHolders = uniqueInvestorIds.slice(uniqueInvestorOffset, uniqueInvestorOffset + uniqueHolderCount);
     uniqueInvestorOffset += uniqueHolderCount;
-    const holderIds = shuffle(
+    const holderIds = deterministicShuffle(
       [...sharedInvestorCoreIds, ...uniqueHolders],
       randomKey(masterSeed, fundId, 'holder-weight-assignment'),
     );

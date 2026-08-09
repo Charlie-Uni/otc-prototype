@@ -19,6 +19,8 @@ test('accepts the mentor-approved pilot baseline', () => {
   assert.equal(config.heterogeneity.holderCountPerFund, 20);
   assert.equal(config.monteCarlo.formalMinimumReplicatesPerCell, 500);
   assert.equal(config.shock.r0CycleSec, 604_800);
+  assert.deepEqual(config.shock.navDropBps, [1_000, 2_000, 3_000]);
+  assert.equal(config.shock.cycleStartAt % config.shock.r0CycleSec, 0);
 });
 
 test('rejects formal and robustness replication counts below the approved minima', () => {
@@ -48,4 +50,14 @@ test('rejects a network without enough investors for the declared overlap design
   const value = structuredClone(baseline) as Record<string, Record<string, unknown>>;
   value.network.investorCount = 145;
   assert.throws(() => parseSimulationConfig(value), /INSUFFICIENT_INVESTORS_FOR_OVERLAP_DESIGN/);
+});
+
+test('rejects unordered magnitudes and a shock cycle not aligned to the R0 epoch', () => {
+  const unordered = structuredClone(baseline) as Record<string, Record<string, unknown>>;
+  unordered.shock.navDropBps = [2_000, 1_000];
+  assert.throws(() => parseSimulationConfig(unordered), /SHOCK_MAGNITUDES_NOT_ASCENDING/);
+
+  const unaligned = structuredClone(baseline) as Record<string, Record<string, unknown>>;
+  unaligned.shock.cycleStartAt = 1_799_884_801;
+  assert.throws(() => parseSimulationConfig(unaligned), /SHOCK_CYCLE_START_NOT_R0_ALIGNED/);
 });

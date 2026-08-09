@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { RandomDrawKey, randomUint64, randomUnitInterval } from './rng';
+import {
+  deterministicShuffle,
+  RandomDrawKey,
+  randomIntegerBelow,
+  randomUint64,
+  randomUnitInterval,
+} from './rng';
 
 const baseKey: RandomDrawKey = {
   masterSeed: 20260809n,
@@ -51,4 +57,12 @@ test('rejects incomplete or invalid random identities', () => {
   assert.throws(() => randomUint64({ ...baseKey, tick: -1 }), /INVALID_TICK/);
   assert.throws(() => randomUint64({ ...baseKey, drawPurpose: '' }), /INVALID_DRAW_PURPOSE/);
   assert.throws(() => randomUint64(baseKey, -1), /INVALID_DRAW_ORDINAL/);
+});
+
+test('draws bounded integers and deterministic permutations', () => {
+  const draws = Array.from({ length: 64 }, (_, ordinal) => randomIntegerBelow(baseKey, 7, ordinal));
+  assert.ok(draws.every((value) => value >= 0 && value < 7));
+  assert.deepEqual(deterministicShuffle([1, 2, 3, 4, 5], baseKey), [2, 5, 4, 3, 1]);
+  assert.deepEqual(deterministicShuffle([1, 2, 3, 4, 5], baseKey), [2, 5, 4, 3, 1]);
+  assert.throws(() => randomIntegerBelow(baseKey, 0), /INVALID_RANDOM_UPPER_BOUND/);
 });

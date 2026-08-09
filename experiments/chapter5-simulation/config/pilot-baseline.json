@@ -44,9 +44,12 @@
   },
   "shock": {
     "baselineType": "valuation",
+    "seed": 20260810,
+    "cycleStartAt": 1799884800,
     "navDropBps": [1000, 2000, 3000],
     "r0CycleSec": 604800,
-    "shockAtMode": "uniform_within_r0_cycle"
+    "shockAtMode": "uniform_within_r0_cycle",
+    "targetFundMode": "balanced_single_fund"
   },
   "thresholds": {
     "detectionBps": 6000,

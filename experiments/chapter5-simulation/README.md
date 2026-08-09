@@ -11,6 +11,8 @@ The foundation phase provides:
 - golden tests that reproduce the Chapter 3 score, threshold, disclosure, and observation results.
 - a deterministic 10-fund, 200-investor, 5-asset initial network with conserved holdings and exposures;
 - independently varied liquidity-mismatch, stale-pricing, and investor-concentration fund tiers.
+- paired single-fund valuation shocks at 10%, 20%, and 30%, sampled at second resolution within R0;
+- separate economic and Oracle-reported state so shock visibility follows the frozen tick pipeline.
 
 `calc.ts`, `regimes.ts`, and `sensitivity.ts` are byte-identical copies from `chapter3-artifact-v1.4.0`. The observation helper is the pure scheduling subset of `detection.ts`; the complete source file is hash-locked and its observable behavior is covered by golden tests, avoiding unrelated ABI and indexer code in the simulation package.
 

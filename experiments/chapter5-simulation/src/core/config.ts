@@ -1,8 +1,10 @@
 import { z } from 'zod';
 
-const positiveInteger = z.number().int().positive();
+const positiveInteger = z.number().int().positive().safe();
+const nonNegativeInteger = z.number().int().nonnegative().safe();
 const bps = z.number().int().min(0).max(10_000);
 const positiveBps = z.number().int().min(1).max(10_000);
+const fractionalLossBps = z.number().int().min(1).max(9_999);
 const riskTierValues = z.object({
   low: positiveInteger,
   medium: positiveInteger,
@@ -48,9 +50,12 @@ export const simulationConfigSchema = z.object({
   }).strict(),
   shock: z.object({
     baselineType: z.literal('valuation'),
-    navDropBps: z.array(bps).min(1),
+    seed: positiveInteger,
+    cycleStartAt: nonNegativeInteger,
+    navDropBps: z.array(fractionalLossBps).min(1),
     r0CycleSec: z.literal(604_800),
     shockAtMode: z.literal('uniform_within_r0_cycle'),
+    targetFundMode: z.literal('balanced_single_fund'),
   }).strict(),
   thresholds: z.object({
     detectionBps: bps,
@@ -71,6 +76,15 @@ export const simulationConfigSchema = z.object({
   }
   if (new Set(config.thresholds.kappaScanBps).size !== config.thresholds.kappaScanBps.length) {
     context.addIssue({ code: 'custom', message: 'DUPLICATE_KAPPA_VALUES' });
+  }
+  if (new Set(config.shock.navDropBps).size !== config.shock.navDropBps.length) {
+    context.addIssue({ code: 'custom', message: 'DUPLICATE_SHOCK_MAGNITUDES' });
+  }
+  if (config.shock.navDropBps.some((value, index, values) => index > 0 && value <= values[index - 1]!)) {
+    context.addIssue({ code: 'custom', message: 'SHOCK_MAGNITUDES_NOT_ASCENDING' });
+  }
+  if (config.shock.cycleStartAt % config.shock.r0CycleSec !== 0) {
+    context.addIssue({ code: 'custom', message: 'SHOCK_CYCLE_START_NOT_R0_ALIGNED' });
   }
 
   const liquidShares = config.heterogeneity.liquidAssetShareBpsByLiquidityMismatchTier;
