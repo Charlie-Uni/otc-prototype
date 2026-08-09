@@ -64,6 +64,8 @@ export function createInitialSimulationState(network: NetworkModel, atSec: numbe
       queuedRedemptionShares: 0,
       cumulativeRequestedShares: 0,
       cumulativeSettledShares: 0,
+      cumulativeSettlementAmount: 0,
+      cumulativeFireSaleDiscountLoss: 0,
       lastValuationAsOf: atSec,
       lastValuationUpdateAt: atSec,
       gated: false,
@@ -74,6 +76,8 @@ export function createInitialSimulationState(network: NetworkModel, atSec: numbe
     })),
     holderBalances,
     assetPositions,
+    redemptionRequests: [],
+    assetSales: [],
     appliedValuationShocks: [],
     oracleRiskSnapshots: [],
   };

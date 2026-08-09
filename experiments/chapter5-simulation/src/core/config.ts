@@ -7,6 +7,7 @@ const positiveBps = z.number().int().min(1).max(10_000);
 const fractionalLossBps = z.number().int().min(1).max(9_999);
 const boundedCoefficient = z.number().finite().min(0).max(20);
 const boundedIntercept = z.number().finite().min(-20).max(20);
+const priceImpactGamma = z.number().finite().gt(0).max(4);
 const riskTierValues = z.object({
   low: positiveInteger,
   medium: positiveInteger,
@@ -91,6 +92,13 @@ export const simulationConfigSchema = z.object({
       firstMoverAdvantage: boundedCoefficient,
     }).strict(),
   }).strict(),
+  liquidity: z.object({
+    redemptionRequestFractionBps: positiveBps,
+    baselineSettlementDelayDays: nonNegativeInteger,
+    priceImpactLambdaBps: z.number().int().min(0).max(9_999),
+    priceImpactGamma,
+    marketDepthMultipleBps: z.number().int().min(10_000).safe(),
+  }).strict(),
   thresholds: z.object({
     detectionBps: bps,
     baselineKappaBps: bps,
@@ -134,6 +142,13 @@ export const simulationConfigSchema = z.object({
     0,
   ) !== 10_000) {
     context.addIssue({ code: 'custom', message: 'EXPECTATION_WEIGHTS_MUST_SUM_10000' });
+  }
+  const maximumSaleToDepthRatio = 10_000 / config.liquidity.marketDepthMultipleBps;
+  const maximumImpactSlope = (config.liquidity.priceImpactLambdaBps / 10_000)
+    * (1 + config.liquidity.priceImpactGamma)
+    * (maximumSaleToDepthRatio ** config.liquidity.priceImpactGamma);
+  if (maximumImpactSlope >= 1) {
+    context.addIssue({ code: 'custom', message: 'NON_MONOTONE_PRICE_IMPACT_REGION' });
   }
   if (new Set(config.shock.navDropBps).size !== config.shock.navDropBps.length) {
     context.addIssue({ code: 'custom', message: 'DUPLICATE_SHOCK_MAGNITUDES' });

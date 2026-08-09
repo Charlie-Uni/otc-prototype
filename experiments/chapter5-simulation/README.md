@@ -21,6 +21,9 @@ The foundation phase provides:
 - paired heterogeneous investor polling schedules and observation-derived signal synchronicity.
 - prior-preserving investor beliefs and a monotone `ExpectedOthersRedeem` coordination signal;
 - configurable Logistic redemption probabilities with paired counter-based decision draws.
+- dual investor-count and share-flow redemption-pressure measures;
+- FIFO whole-request settlement with share locking, cash-first liquidity use, and explicit pending states;
+- continuous first-mover advantage and deterministic price-impact asset sales with reconciled discount loss.
 
 `calc.ts`, `regimes.ts`, and `sensitivity.ts` are byte-identical copies from `chapter3-artifact-v1.4.0`. The observation helper is the pure scheduling subset of `detection.ts`; the complete source file is hash-locked and its observable behavior is covered by golden tests, avoiding unrelated ABI and indexer code in the simulation package.
 

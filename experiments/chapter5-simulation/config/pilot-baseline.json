@@ -82,6 +82,13 @@
       "firstMoverAdvantage": 1
     }
   },
+  "liquidity": {
+    "redemptionRequestFractionBps": 10000,
+    "baselineSettlementDelayDays": 0,
+    "priceImpactLambdaBps": 500,
+    "priceImpactGamma": 1,
+    "marketDepthMultipleBps": 20000
+  },
   "thresholds": {
     "detectionBps": 6000,
     "baselineKappaBps": 7000,

@@ -13,11 +13,11 @@ Formula IDs below are stable implementation IDs. Final thesis equation numbers w
 | F-REDEEM-1 | Individual P(Redeem) | `behavior/redemption.ts::redemptionProbability` and `evaluateInvestorRedemption` | normalized behavior inputs and configurable `a0`-`a5` | probability | `behavior/redemption.test.ts`: range, coefficient signs, prior wiring, paired draw |
 | F-EXPECT-1 | ExpectedOthersRedeem | `behavior/expectations.ts::expectedOthersRedeemBps` | public signal, synchronicity, lagged request pressure, convex weights | bps | `behavior/expectations.test.ts`: exact value, range, input monotonicity |
 | F-SYNC-1 | SignalSynchronicity | `observation/schedule.ts::computeSignalSynchronicityBps` | realized observation times, bucket anchor and width | bps HHI | `observation/schedule.test.ts`: schedule-derived and order invariant |
-| F-PRESSURE-1 | RedemptionRequestPressure | `metrics/redemption.ts::requestPressure` | requested shares, prior shares | bps | Request-flow artifact consistency |
+| F-PRESSURE-1 | Redemption pressure, investor and share-flow definitions | `metrics/redemption.ts::redemptionDecisionPressureBps`; `redemptionRequestPressureBps` | redeeming/eligible investors; requested/pre-request shares | bps | `metrics/redemption.test.ts`; queue integration in `redemption/lifecycle.test.ts` |
 | F-NET-1 | FundNetworkProximity | `network/proximity.ts::fundNetworkProximity` | asset, investor, provider, valuation weights | normalized score | Component removal |
 | F-SPILL-1 | SpilloverRedemption | `metrics/spillover.ts::spilloverRedemption` | network and paired no-channel run | rate difference | Paired subtraction |
-| F-FMA-1 | First-mover advantage | `liquidity/fma.ts::firstMoverAdvantage` | remaining liquidity ratio | normalized score | Nonnegative and monotone |
-| F-PRICE-1 | PriceImpact | `liquidity/price-impact.ts::priceImpact` | lambda, sale amount, depth, gamma | price fraction | Gamma=1 baseline |
+| F-FMA-1 | First-mover advantage | `liquidity/fma.ts::firstMoverAdvantageBps` | runtime liquidity-buffer ratio | bps | `liquidity/fma.test.ts`; runtime tiers in `liquidity/buffer.test.ts` |
+| F-PRICE-1 | PriceImpact and sale proceeds | `liquidity/price-impact.ts::priceImpactBps`; `discountedSaleProceeds` | lambda, sale amount, depth, gamma | bps/value | `liquidity/price-impact.test.ts`; settlement integration in `redemption/lifecycle.test.ts` |
 | F-LOSS-1 | LossMagnitude | `metrics/loss.ts::lossMagnitude` | initial and current AUM | rate | Zero and sign boundaries |
 | F-LOSS-2 | LossReduction | `metrics/loss.ts::lossReduction` | control/no-control paired loss | absolute and relative | Zero denominator |
 | F-GATE-1 | Control attenuation | `controls/gate.ts::controlledOutflow` | phi, requested outflow | amount | Higher phi weakly lowers outflow |

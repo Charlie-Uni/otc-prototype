@@ -30,10 +30,14 @@ test('creates a complete pre-shock state from the generated network', () => {
     assert.equal(fund.queuedRedemptionShares, 0);
     assert.equal(fund.cumulativeRequestedShares, 0);
     assert.equal(fund.cumulativeSettledShares, 0);
+    assert.equal(fund.cumulativeSettlementAmount, 0);
+    assert.equal(fund.cumulativeFireSaleDiscountLoss, 0);
     assert.equal(fund.lastValuationAsOf, INITIAL_AT);
     assert.equal(fund.lastValuationUpdateAt, INITIAL_AT);
     assert.equal(fund.gated, false);
   }
+  assert.deepEqual(state.redemptionRequests, []);
+  assert.deepEqual(state.assetSales, []);
 });
 
 test('initializes risk metrics from network primitives without inventing flow or stale risk', () => {

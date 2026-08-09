@@ -45,11 +45,15 @@ Each draw is identified by `(masterSeed, replicateId, entityId, moduleId, tick, 
 
 ## Redemption and settlement
 
+- The binary redemption decision is converted to requested shares by configurable `redemptionRequestFractionBps`; the 10000-bps pilot value is a modeling input rather than a thesis-prescribed constant.
+- Investor decision pressure and requested-share pressure are retained as separate measures and are never substituted for each other.
 - RedemptionRequestPressure is the forward-looking behavioral signal and follows the Chapter 3 request-flow implementation.
 - Settled redemption pressure is exported separately and is not substituted for request pressure.
 - `pending` is reserved for an unsettled redemption request.
 - If cash is exhausted and assets cannot be sold, cash never becomes negative and the request remains pending.
 - Baseline settlement is whole-request settlement, matching the artifact state machine; no partial settlement is invented.
+- Settlement uses the reported NAV at settlement time and integer floor rounding. Cash is consumed before deterministic forced asset sales.
+- A request that would redeem all remaining shares stays pending because fund liquidation and terminal NAV accounting are outside the model scope.
 - At the 90-day horizon, pending count, shares, amount, and rates are reported explicitly.
 
 ## Loss accounting

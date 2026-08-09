@@ -6,7 +6,9 @@ import {
 import { computeWeightedRiskScoreBps } from '../artifact/simulation/sensitivity';
 import { TICK_SEC } from '../core/pipeline';
 import type { NetworkModel } from '../network/types';
-import type { SimulationState } from './types';
+import { PENDING_REDEMPTION_REASONS, type SimulationState } from './types';
+
+const pendingRedemptionReasons = new Set<string>(PENDING_REDEMPTION_REASONS);
 
 function requireSafeNonNegative(value: number, label: string): void {
   if (!Number.isSafeInteger(value) || value < 0) throw new Error(`INVALID_${label}`);
@@ -30,6 +32,11 @@ export function validateSimulationState(state: SimulationState, network: Network
     requireSafeNonNegative(fund.queuedRedemptionShares, 'QUEUED_REDEMPTION_SHARES');
     requireSafeNonNegative(fund.cumulativeRequestedShares, 'CUMULATIVE_REQUESTED_SHARES');
     requireSafeNonNegative(fund.cumulativeSettledShares, 'CUMULATIVE_SETTLED_SHARES');
+    requireSafeNonNegative(fund.cumulativeSettlementAmount, 'CUMULATIVE_SETTLEMENT_AMOUNT');
+    requireSafeNonNegative(
+      fund.cumulativeFireSaleDiscountLoss,
+      'CUMULATIVE_FIRE_SALE_DISCOUNT_LOSS',
+    );
     requireSafeNonNegative(fund.lastValuationAsOf, 'LAST_VALUATION_AS_OF');
     requireSafeNonNegative(fund.lastValuationUpdateAt, 'LAST_VALUATION_UPDATE_AT');
     if (fund.lastValuationAsOf > fund.lastValuationUpdateAt) {
@@ -74,6 +81,110 @@ export function validateSimulationState(state: SimulationState, network: Network
     }
   }
 
+  const requestIds = new Set<string>();
+  const requestedByFund = new Map<string, number>();
+  const pendingByFund = new Map<string, number>();
+  const settledByFund = new Map<string, number>();
+  const settlementAmountByFund = new Map<string, number>();
+  const fireSaleLossByFund = new Map<string, number>();
+  const pendingByHolder = new Map<string, number>();
+  for (const request of state.redemptionRequests) {
+    if (!request.requestId.trim()) throw new Error('INVALID_REDEMPTION_REQUEST_ID');
+    if (requestIds.has(request.requestId)) throw new Error('DUPLICATE_REDEMPTION_REQUEST');
+    requestIds.add(request.requestId);
+    const pair = `${request.fundId}\u0000${request.investorId}`;
+    if (!expectedHoldingPairs.has(pair)) throw new Error('UNKNOWN_REDEMPTION_REQUEST_HOLDER');
+    requireSafeNonNegative(request.tick, 'REDEMPTION_REQUEST_TICK');
+    requireSafeNonNegative(request.requestedAt, 'REDEMPTION_REQUESTED_AT');
+    if (request.requestedAt > state.nowSec) throw new Error('REDEMPTION_REQUEST_AFTER_STATE_TIME');
+    if (!Number.isSafeInteger(request.requestedShares) || request.requestedShares <= 0) {
+      throw new Error('INVALID_REDEMPTION_REQUEST_SHARES');
+    }
+    requestedByFund.set(
+      request.fundId,
+      (requestedByFund.get(request.fundId) ?? 0) + request.requestedShares,
+    );
+    if (request.status === 'pending') {
+      if (
+        request.pendingReason === null
+        || !pendingRedemptionReasons.has(request.pendingReason)
+        || request.settledAt !== null
+        || request.settlementAmount !== null
+        || request.settlementNavPerShareBps !== null
+        || request.fireSaleDiscountLoss !== null
+      ) {
+        throw new Error('INVALID_PENDING_REDEMPTION_STATE');
+      }
+      pendingByFund.set(
+        request.fundId,
+        (pendingByFund.get(request.fundId) ?? 0) + request.requestedShares,
+      );
+      pendingByHolder.set(pair, (pendingByHolder.get(pair) ?? 0) + request.requestedShares);
+      continue;
+    }
+    if (request.status !== 'settled' || request.pendingReason !== null) {
+      throw new Error('INVALID_REDEMPTION_STATUS');
+    }
+    if (
+      request.settledAt === null
+      || request.settlementAmount === null
+      || request.settlementNavPerShareBps === null
+      || request.fireSaleDiscountLoss === null
+    ) {
+      throw new Error('INCOMPLETE_SETTLED_REDEMPTION');
+    }
+    requireSafeNonNegative(request.settledAt, 'REDEMPTION_SETTLED_AT');
+    requireSafeNonNegative(request.settlementAmount, 'REDEMPTION_SETTLEMENT_AMOUNT');
+    requireSafeNonNegative(request.settlementNavPerShareBps, 'REDEMPTION_SETTLEMENT_NAV');
+    requireSafeNonNegative(request.fireSaleDiscountLoss, 'REDEMPTION_FIRE_SALE_LOSS');
+    if (request.settlementAmount === 0) throw new Error('ZERO_REDEMPTION_SETTLEMENT_AMOUNT');
+    if (request.settledAt < request.requestedAt || request.settledAt > state.nowSec) {
+      throw new Error('INVALID_REDEMPTION_SETTLEMENT_TIME');
+    }
+    const expectedSettlementAmount = Number(
+      (BigInt(request.requestedShares) * BigInt(request.settlementNavPerShareBps))
+        / BigInt(MAX_BPS),
+    );
+    if (request.settlementAmount !== expectedSettlementAmount) {
+      throw new Error('REDEMPTION_SETTLEMENT_AMOUNT_MISMATCH');
+    }
+    settledByFund.set(
+      request.fundId,
+      (settledByFund.get(request.fundId) ?? 0) + request.requestedShares,
+    );
+    settlementAmountByFund.set(
+      request.fundId,
+      (settlementAmountByFund.get(request.fundId) ?? 0) + request.settlementAmount,
+    );
+    fireSaleLossByFund.set(
+      request.fundId,
+      (fireSaleLossByFund.get(request.fundId) ?? 0) + request.fireSaleDiscountLoss,
+    );
+  }
+  for (const [pair, pendingShares] of pendingByHolder) {
+    const holding = state.holderBalances.find(
+      ({ fundId, investorId }) => `${fundId}\u0000${investorId}` === pair,
+    )!;
+    if (pendingShares > holding.shares) throw new Error('PENDING_REDEMPTION_EXCEEDS_HOLDING');
+  }
+  for (const fund of state.funds) {
+    if ((requestedByFund.get(fund.fundId) ?? 0) !== fund.cumulativeRequestedShares) {
+      throw new Error('CUMULATIVE_REQUESTED_SHARES_MISMATCH');
+    }
+    if ((pendingByFund.get(fund.fundId) ?? 0) !== fund.queuedRedemptionShares) {
+      throw new Error('QUEUED_REDEMPTION_SHARES_MISMATCH');
+    }
+    if ((settledByFund.get(fund.fundId) ?? 0) !== fund.cumulativeSettledShares) {
+      throw new Error('CUMULATIVE_SETTLED_SHARES_MISMATCH');
+    }
+    if ((settlementAmountByFund.get(fund.fundId) ?? 0) !== fund.cumulativeSettlementAmount) {
+      throw new Error('CUMULATIVE_SETTLEMENT_AMOUNT_MISMATCH');
+    }
+    if ((fireSaleLossByFund.get(fund.fundId) ?? 0) !== fund.cumulativeFireSaleDiscountLoss) {
+      throw new Error('CUMULATIVE_FIRE_SALE_LOSS_MISMATCH');
+    }
+  }
+
   const positionPairs = new Set<string>();
   const expectedPositionPairs = new Set(network.assetExposures.map(
     ({ fundId, assetClassId }) => `${fundId}\u0000${assetClassId}`,
@@ -95,6 +206,40 @@ export function validateSimulationState(state: SimulationState, network: Network
   for (const fund of state.funds) {
     if (positionTotals.get(fund.fundId) !== fund.economicAum) {
       throw new Error('ECONOMIC_AUM_POSITION_MISMATCH');
+    }
+  }
+
+  const saleIds = new Set<string>();
+  const saleLossByRequest = new Map<string, number>();
+  for (const sale of state.assetSales) {
+    if (!sale.saleId.trim()) throw new Error('INVALID_ASSET_SALE_ID');
+    if (saleIds.has(sale.saleId)) throw new Error('DUPLICATE_ASSET_SALE');
+    saleIds.add(sale.saleId);
+    const request = state.redemptionRequests.find(({ requestId }) => requestId === sale.requestId);
+    if (!request || request.status !== 'settled') throw new Error('ORPHAN_ASSET_SALE');
+    if (request.fundId !== sale.fundId) throw new Error('ASSET_SALE_FUND_MISMATCH');
+    if (!assetClassIds.has(sale.assetClassId)) throw new Error('UNKNOWN_ASSET_SALE_CLASS');
+    requireSafeNonNegative(sale.occurredAt, 'ASSET_SALE_OCCURRED_AT');
+    if (sale.occurredAt !== request.settledAt) throw new Error('ASSET_SALE_TIME_MISMATCH');
+    if (!Number.isSafeInteger(sale.grossAmount) || sale.grossAmount <= 0) {
+      throw new Error('INVALID_ASSET_SALE_GROSS_AMOUNT');
+    }
+    requireSafeNonNegative(sale.proceeds, 'ASSET_SALE_PROCEEDS');
+    if (sale.proceeds > sale.grossAmount) throw new Error('ASSET_SALE_PROCEEDS_EXCEED_GROSS');
+    if (!Number.isInteger(sale.priceImpactBps) || sale.priceImpactBps < 0 || sale.priceImpactBps >= MAX_BPS) {
+      throw new Error('INVALID_ASSET_SALE_PRICE_IMPACT');
+    }
+    saleLossByRequest.set(
+      sale.requestId,
+      (saleLossByRequest.get(sale.requestId) ?? 0) + sale.grossAmount - sale.proceeds,
+    );
+  }
+  for (const request of state.redemptionRequests) {
+    if (
+      request.status === 'settled'
+      && (saleLossByRequest.get(request.requestId) ?? 0) !== request.fireSaleDiscountLoss
+    ) {
+      throw new Error('REDEMPTION_FIRE_SALE_LOSS_MISMATCH');
     }
   }
 
