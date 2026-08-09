@@ -21,6 +21,7 @@
 9. Propagate real and signal-analogy effects across funds.
 
 The order is a versioned model contract and has a regression test.
+Step 2 publishes any due opening-of-tick valuation and risk snapshot. Step 8 updates post-settlement economic NAV and liquidity for the next tick; it does not publish a second Oracle snapshot.
 
 ## Randomness and paired counterfactuals
 
@@ -32,6 +33,15 @@ Each draw is identified by `(masterSeed, replicateId, entityId, moduleId, tick, 
 - Intervention occurs when `riskScoreBps > kappa`.
 - `RegulatorDetectionLag` is the main detection measure.
 - `censored` is reserved for a detection threshold that is not disclosed or not identifiable at the available granularity.
+
+## Oracle and risk updates
+
+- The six metrics and score reuse the frozen Chapter 3 calculation functions.
+- NAV cadence follows each fund's 1/7/14-day stale-pricing tier and is anchored to valuation `asOf` time.
+- Stale-pricing age uses the last successful NAV submission time; raw seconds and normalized risk are both retained.
+- Oracle latency and execution failure are deterministic paired treatments. Failed attempts do not mutate state.
+- Baseline zero latency and zero failure are pilot defaults, not preregistered formal values.
+- Investor concentration is recomputed from runtime registered balances, whose sum must equal total supply.
 
 ## Redemption and settlement
 

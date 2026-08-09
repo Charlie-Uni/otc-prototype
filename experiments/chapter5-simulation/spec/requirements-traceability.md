@@ -53,8 +53,8 @@ R0-R4 are policy packages. A1-A6 use custom experiment configurations in the ind
 | Risk-score weights and stale normalization | Equal/legacy weights and 7/14/30/45-day MaxStaleAge scan | Required |
 | Price-impact nonlinearity | Gamma=1 baseline plus nonlinear gamma sensitivity | Required |
 | Monte Carlo size | Pilot 100; formal at least 500; key robustness 1000 | Required |
-| Oracle latency | Configurable latency treatment; values frozen before preregistration | Required |
-| Contract execution failure | Configurable paired failure treatment; rates frozen before preregistration | Required |
+| Oracle latency | Implemented deterministic latency/retry hook; values frozen before preregistration | Implemented, not frozen |
+| Contract execution failure | Implemented paired failure hook with fail-no-state-change semantics; rates frozen before preregistration | Implemented, not frozen |
 | Network proximity weights | Chi component weight sensitivity | Required |
 | Composite stability weights | Alternative weights for supplementary index only | Supplementary |
 

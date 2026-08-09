@@ -15,6 +15,7 @@ const riskTierBps = z.object({
   medium: bps,
   high: bps,
 }).strict();
+const riskWeights = z.tuple([bps, bps, bps, bps, bps, bps]);
 
 export const simulationConfigSchema = z.object({
   schemaVersion: z.literal(1),
@@ -57,8 +58,21 @@ export const simulationConfigSchema = z.object({
     shockAtMode: z.literal('uniform_within_r0_cycle'),
     targetFundMode: z.literal('balanced_single_fund'),
   }).strict(),
+  risk: z.object({
+    weightSchemeId: z.literal('equal_weight_baseline'),
+    weightBps: riskWeights,
+    maxStaleAgeDays: positiveInteger,
+  }).strict(),
+  oracle: z.object({
+    seed: positiveInteger,
+    baselineLatencySec: nonNegativeInteger,
+    baselineExecutionFailureBps: bps,
+    maxAttempts: positiveInteger.max(16, 'ORACLE_MAX_ATTEMPTS_EXCEEDED'),
+    retryDelaySec: nonNegativeInteger,
+  }).strict(),
   thresholds: z.object({
     detectionBps: bps,
+    baselineKappaBps: bps,
     kappaScanBps: z.array(bps).min(1),
   }).strict(),
 }).strict().superRefine((config, context) => {
@@ -76,6 +90,12 @@ export const simulationConfigSchema = z.object({
   }
   if (new Set(config.thresholds.kappaScanBps).size !== config.thresholds.kappaScanBps.length) {
     context.addIssue({ code: 'custom', message: 'DUPLICATE_KAPPA_VALUES' });
+  }
+  if (config.risk.weightBps.reduce((sum, weight) => sum + weight, 0) !== 10_000) {
+    context.addIssue({ code: 'custom', message: 'RISK_WEIGHTS_MUST_SUM_10000' });
+  }
+  if (!config.thresholds.kappaScanBps.includes(config.thresholds.baselineKappaBps)) {
+    context.addIssue({ code: 'custom', message: 'BASELINE_KAPPA_NOT_IN_SCAN' });
   }
   if (new Set(config.shock.navDropBps).size !== config.shock.navDropBps.length) {
     context.addIssue({ code: 'custom', message: 'DUPLICATE_SHOCK_MAGNITUDES' });

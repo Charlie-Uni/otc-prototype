@@ -4,12 +4,12 @@ Formula IDs below are stable implementation IDs. Final thesis equation numbers w
 
 | Formula ID | Thesis concept | Planned implementation | Configuration/input | Unit | Required test |
 | --- | --- | --- | --- | --- | --- |
-| F-RISK-1 | FundLifecycleRiskScore | `artifact/sensitivity.ts::computeWeightedRiskScoreBps` | six metrics, weightBps | bps | Reproduce 3499 vector |
+| F-RISK-1 | FundLifecycleRiskScore | `risk/metrics.ts::deriveRiskSubmission` using `artifact/sensitivity.ts::computeWeightedRiskScoreBps` | six metrics, weightBps | bps | `risk/metrics.test.ts`; reproduce 3499 vector |
 | F-CONC-INIT | Initial InvestorConcentration | `artifact/risk/calc.ts::computeInvestorConcentrationBps` via `network/generator.ts::generateNetworkModel` | generated holder share bps | bps HHI | Recompute every fund from holdings |
 | F-LBR-INIT | Initial LiquidityBufferRatio | `network/generator.ts::generateNetworkModel` | liquid-asset share / expected-redemption-claims share | bps | Ordered 15000/10000/5000 tier values |
 | F-SHOCK-1 | Valuation shock loss | `shocks/valuation.ts::applyValuationShock` | pre-shock economic AUM, navDropBps | integer value | 10/20/30% loss monotonicity and exact accounting |
-| F-DETECT-1 | Detection condition | `metrics/detection.ts::isDetected` | score, tau | boolean | Equality at tau detects |
-| F-CONTROL-1 | Gate trigger | `controls/gate.ts::shouldTriggerGate` | score, kappa | boolean | Equality at kappa does not trigger |
+| F-DETECT-1 | Detection condition | `risk/metrics.ts::evaluateRiskThresholds` | raw score, tau | boolean | `risk/metrics.test.ts`: equality at tau detects |
+| F-CONTROL-1 | Gate trigger indication | `risk/metrics.ts::evaluateRiskThresholds` | raw score, kappa | boolean | `risk/metrics.test.ts`: equality at kappa does not trigger |
 | F-REDEEM-1 | Individual P(Redeem) | `behavior/redemption.ts::redemptionProbability` | behavior coefficients and beliefs | probability | Range and coefficient signs |
 | F-EXPECT-1 | ExpectedOthersRedeem | `behavior/expectations.ts::expectedOthersRedeem` | public signal, synchronicity, lagged pressure | normalized score | Input monotonicity |
 | F-SYNC-1 | SignalSynchronicity | `behavior/synchronicity.ts::signalSynchronicity` | realized observation times | normalized score | Schedule-derived, order invariant |

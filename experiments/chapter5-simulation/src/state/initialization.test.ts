@@ -17,8 +17,10 @@ test('creates a complete pre-shock state from the generated network', () => {
   const state = createInitialSimulationState(network, INITIAL_AT);
   assert.equal(state.nowSec, INITIAL_AT);
   assert.equal(state.funds.length, 10);
+  assert.equal(state.holderBalances.length, 200);
   assert.equal(state.assetPositions.length, 30);
   assert.deepEqual(state.appliedValuationShocks, []);
+  assert.deepEqual(state.oracleRiskSnapshots, []);
 
   for (const fund of state.funds) {
     assert.equal(fund.economicAum, 100_000_000);
@@ -28,6 +30,7 @@ test('creates a complete pre-shock state from the generated network', () => {
     assert.equal(fund.queuedRedemptionShares, 0);
     assert.equal(fund.cumulativeRequestedShares, 0);
     assert.equal(fund.cumulativeSettledShares, 0);
+    assert.equal(fund.lastValuationAsOf, INITIAL_AT);
     assert.equal(fund.lastValuationUpdateAt, INITIAL_AT);
     assert.equal(fund.gated, false);
   }
@@ -58,6 +61,16 @@ test('conserves economic AUM across exact integer asset positions', () => {
   }
 });
 
+test('materializes share registration balances that exactly equal total supply', () => {
+  const state = createInitialSimulationState(network, INITIAL_AT);
+  for (const fund of state.funds) {
+    const registeredShares = state.holderBalances
+      .filter(({ fundId }) => fundId === fund.fundId)
+      .reduce((sum, { shares }) => sum + shares, 0);
+    assert.equal(registeredShares, fund.totalShares);
+  }
+});
+
 test('rejects invalid initial times and inconsistent runtime state', () => {
   assert.throws(() => createInitialSimulationState(network, -1), /INVALID_INITIAL_STATE_TIME/);
   const invalid = createInitialSimulationState(network, INITIAL_AT);
@@ -69,5 +82,12 @@ test('rejects invalid initial times and inconsistent runtime state', () => {
   assert.throws(
     () => validateSimulationState(missingPosition, network),
     /ASSET_POSITION_COUNT_MISMATCH/,
+  );
+
+  const inconsistentRegister = createInitialSimulationState(network, INITIAL_AT);
+  inconsistentRegister.holderBalances[0]!.shares -= 1;
+  assert.throws(
+    () => validateSimulationState(inconsistentRegister, network),
+    /HOLDER_SHARES_TOTAL_SUPPLY_MISMATCH/,
   );
 });

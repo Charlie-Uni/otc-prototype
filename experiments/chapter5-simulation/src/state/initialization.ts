@@ -37,6 +37,18 @@ export function createInitialSimulationState(network: NetworkModel, atSec: numbe
       value: values[index]!,
     }));
   });
+  const holderBalances = network.funds.flatMap((fund) => {
+    const holdings = network.holdings.filter(({ fundId }) => fundId === fund.id);
+    const shares = allocateIntegerProportionally(
+      fund.initialTotalShares,
+      holdings.map(({ shareBps }) => shareBps),
+    );
+    return holdings.map(({ fundId, investorId }, index) => ({
+      fundId,
+      investorId,
+      shares: shares[index]!,
+    }));
+  });
 
   const state: SimulationState = {
     schemaVersion: 1,
@@ -46,12 +58,13 @@ export function createInitialSimulationState(network: NetworkModel, atSec: numbe
       economicAum: fund.initialAum,
       reportedAum: fund.initialAum,
       totalShares: fund.initialTotalShares,
-      reportedNavPerShareBps: Math.floor(
-        (fund.initialAum * MAX_BPS) / fund.initialTotalShares,
+      reportedNavPerShareBps: Number(
+        (BigInt(fund.initialAum) * BigInt(MAX_BPS)) / BigInt(fund.initialTotalShares),
       ),
       queuedRedemptionShares: 0,
       cumulativeRequestedShares: 0,
       cumulativeSettledShares: 0,
+      lastValuationAsOf: atSec,
       lastValuationUpdateAt: atSec,
       gated: false,
       reportedRiskMetrics: initialRiskMetrics(
@@ -59,8 +72,10 @@ export function createInitialSimulationState(network: NetworkModel, atSec: numbe
         fund.investorConcentrationBps,
       ),
     })),
+    holderBalances,
     assetPositions,
     appliedValuationShocks: [],
+    oracleRiskSnapshots: [],
   };
   validateSimulationState(state, network);
   return state;

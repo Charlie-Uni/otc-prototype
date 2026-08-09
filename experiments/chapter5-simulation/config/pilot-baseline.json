@@ -51,8 +51,21 @@
     "shockAtMode": "uniform_within_r0_cycle",
     "targetFundMode": "balanced_single_fund"
   },
+  "risk": {
+    "weightSchemeId": "equal_weight_baseline",
+    "weightBps": [1667, 1667, 1667, 1667, 1666, 1666],
+    "maxStaleAgeDays": 30
+  },
+  "oracle": {
+    "seed": 20260811,
+    "baselineLatencySec": 0,
+    "baselineExecutionFailureBps": 0,
+    "maxAttempts": 2,
+    "retryDelaySec": 300
+  },
   "thresholds": {
     "detectionBps": 6000,
+    "baselineKappaBps": 7000,
     "kappaScanBps": [5000, 6000, 7000, 8000]
   }
 }
