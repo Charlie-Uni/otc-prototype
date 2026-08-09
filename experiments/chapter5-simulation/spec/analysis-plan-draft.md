@@ -1,0 +1,22 @@
+# Analysis Plan Draft
+
+Status: foundation draft, not preregistered.
+
+This document records the analysis structure before model implementation. Pilot runs may calibrate numerical behavior ranges and estimate Monte Carlo standard errors. Pilot observations are excluded from formal thesis results.
+
+Before formal execution, a separate commit and annotated tag `chapter5-sim-prereg-v1` will freeze:
+
+- H1-H6 directional hypotheses without using them as model pass/fail gates;
+- primary and supplementary metrics;
+- paired counterfactual definitions;
+- censoring, pending, exclusion, and failure rules;
+- baseline and one-dimension sensitivity configurations;
+- behavior coefficient ranges and sampling design;
+- Oracle latency and execution-failure treatments;
+- random seeds and required replication counts;
+- confidence interval and multiple-comparison procedures;
+- planned tables and figures.
+
+Formal replication count is `max(500, count implied by the pilot confidence-interval half-width target)`. Key robustness cells use at least 1000 replications.
+
+Chapter 5 final prose begins after preregistration. Chapter 6 results prose begins only after formal outputs and figures pass evidence checks.

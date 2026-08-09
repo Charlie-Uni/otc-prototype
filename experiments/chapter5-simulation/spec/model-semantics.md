@@ -1,0 +1,67 @@
+# Chapter 5 Model Semantics
+
+## Time
+
+- One abstract tick equals 86400 Unix seconds.
+- A run lasts 90 days.
+- Main outcomes use `[shockAt, shockAt + 30 days)`.
+- Robustness windows use `[shockAt, shockAt + 60 days)` and `[shockAt, shockAt + 90 days)`.
+- R0 shocks are uniform over every second of a 604800-second reporting cycle and remain identical across paired runs.
+
+## Within-tick causal order
+
+1. Apply the exogenous shock.
+2. Submit Oracle state.
+3. Apply the disclosure regime.
+4. Execute investor observation schedules.
+5. Update investor beliefs.
+6. Draw redemption decisions.
+7. Queue and settle accepted redemptions.
+8. Update NAV and liquidity state.
+9. Propagate real and signal-analogy effects across funds.
+
+The order is a versioned model contract and has a regression test.
+
+## Randomness and paired counterfactuals
+
+Each draw is identified by `(masterSeed, replicateId, entityId, moduleId, tick, drawPurpose, ordinal)`. There is no mutable global random stream. A disabled mechanism cannot shift unrelated draws. Known decision slots remain addressable even if their output is overridden by a control.
+
+## Detection and intervention
+
+- Detection occurs when raw `riskScoreBps >= tau`.
+- Intervention occurs when `riskScoreBps > kappa`.
+- `RegulatorDetectionLag` is the main detection measure.
+- `censored` is reserved for a detection threshold that is not disclosed or not identifiable at the available granularity.
+
+## Redemption and settlement
+
+- RedemptionRequestPressure is the forward-looking behavioral signal and follows the Chapter 3 request-flow implementation.
+- Settled redemption pressure is exported separately and is not substituted for request pressure.
+- `pending` is reserved for an unsettled redemption request.
+- If cash is exhausted and assets cannot be sold, cash never becomes negative and the request remains pending.
+- Baseline settlement is whole-request settlement, matching the artifact state machine; no partial settlement is invented.
+- At the 90-day horizon, pending count, shares, amount, and rates are reported explicitly.
+
+## Loss accounting
+
+- `LossMagnitude` is the NAV/AUM loss relative to initial AUM and is the primary loss measure.
+- `FireSaleDiscountLoss` is the realized discount from forced asset sales and is a mechanism-decomposition measure.
+- The two measures are reported separately and are not added, because market-value loss may already contain the sale-price effect.
+
+## Disclosure and beliefs
+
+- Detailed disclosure supplies the exact score.
+- Aggregate and tiered disclosure supplies the disclosed band midpoint.
+- Unknown information preserves the previous belief; the first unknown observation uses the initial prior.
+- SignalSynchronicity is calculated from realized observation times, not assigned by regime label.
+- ExpectedOthersRedeem depends on the public signal, realized synchronicity, and lagged request pressure.
+
+## Control boundary
+
+The Chapter 3 artifact triggers Gate automatically and releases it through a regulator transaction carrying `reasonHash`. The simulation adds a rule-based release after the score remains below kappa for `k` consecutive periods plus a regulatory delay. This is a Stage 2 model extension, not a claim about the deployed artifact.
+
+## Pilot interpretation
+
+Mechanism-local checks are mandatory: no-shock stability, shock-to-score monotonicity, lower-buffer vulnerability, coefficient signs, and controlled-fund settlement/buffer monotonicity under increasing phi. R0-R4 outcome rankings, including R1 versus R0 redemption acceleration, are diagnostic results and never pass/fail gates.
+
+The model identifies mechanism direction and institutional tradeoffs. It does not claim empirical calibration or point prediction of real fund failure.

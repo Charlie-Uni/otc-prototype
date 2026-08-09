@@ -1,0 +1,73 @@
+# Chapter 5 Requirements Traceability
+
+## Source precedence
+
+1. `论文框架0630.docx`, Chapters 5 and 6.
+2. `第 3 章 区块链赋能的 OTC fund 生命周期可观测系统与透明度制度.docx`.
+3. Mentor-confirmed simulation specification in `副本待确认清单2(1).pdf`.
+4. Frozen implementation semantics from `chapter3-artifact-v1.4.0`.
+
+Paper 8.5 evaluation code and evidence are separate and are not simulation inputs.
+
+## Hypothesis mapping
+
+| Hypothesis | Mechanism implemented | Paired counterfactual | Primary outputs | Chapter 6 |
+| --- | --- | --- | --- | --- |
+| H1 | Frequency, visibility, and delay determine regulator disclosure time | Same shock and seed under R0-R4 | RegulatorDetectionLag, DetectionBenefit | 6.2 |
+| H2 | Public signal, observation synchronicity, prior redemption pressure, and first-mover advantage affect individual redemption probability | Same state with publicness or timing mechanism changed | RedemptionAcceleration, PeakRedemption | 6.2 |
+| H3 | Regulator-only and tiered disclosure preserve regulatory detection while limiting public coordination | R1 vs R2/R4 with matched mechanism settings | DetectionBenefit, RedemptionAcceleration, ControlCost | 6.2 |
+| H4a | Common illiquid assets and investor overlap transmit losses and redemption demand | Disable one real-transmission edge family | SpilloverRedemption, SpilloverScope, LossMagnitude | 6.3 |
+| H4b | Common providers, managers, and valuation methods transmit analogous public signals | Disable signal-analogy edges | SpilloverRedemption, PublicControlSpillover | 6.3 |
+| H5 | Programmable controls reduce settlement outflow, buffer depletion, and loss transmission | Same seed with control disabled or lower phi | LossReduction, ControlCost, LiquidityBufferDepletion | 6.4 |
+| H6 | Public control events change beliefs and redemption demand in proximate unshocked funds | Same control path with ControlDisclosure switched | PublicControlSpillover, SpilloverScope | 6.4 |
+
+## Required one-dimension ablations
+
+| ID | Fixed dimensions | Changed dimension | Identification target |
+| --- | --- | --- | --- |
+| A1 | Frequency, granularity, delay, control rule, seed, shock | public vs regulator-visible | Public information effect |
+| A2 | Visibility, granularity, control rule, seed, shock | immediate vs delayed | Disclosure timing effect |
+| A3 | Visibility, timing, control rule, seed, shock | detailed vs aggregate | Information granularity effect |
+| A4 | Network, regime, seed, shock | investor-overlap edges on vs off | Investor network effect |
+| A5 | Network, regime, seed, shock | common-asset edges on vs off | Asset overlap effect |
+| A6 | Control state, regime dimensions, seed, shock | public vs non-public control event | Control signal spillover |
+
+R0-R4 are policy packages. A1-A6 use custom experiment configurations in the independent runner and do not expose a production API.
+
+## Robustness coverage
+
+| Dimension required by Chapter 5.5 | Planned treatment | Status before formal run |
+| --- | --- | --- |
+| Network structure and size | Baseline 10 funds/200 investors/5 assets; larger network scan | Required |
+| Investor overlap | One-dimension overlap scan and A4 | Required |
+| Illiquid asset share | One-dimension share scan | Required |
+| NAV update frequency | One-dimension frequency scan | Required |
+| Redemption delay | One-dimension settlement-delay scan | Required |
+| Information granularity | A3 plus aggregate/tiered sensitivity | Required |
+| Visibility and publicness | A1 and A6 | Required |
+| Control threshold | kappa in 5000/6000/7000/8000 bps | Required |
+| Control strength | phi in 0/0.25/0.5/0.75/1 | Required |
+| Control release | k in 1/3/5 periods and delay in 0/1/3 days | Required |
+| Shock magnitude and type | Valuation -10/-20/-30%; liquidity and redemption robustness | Required |
+| Behavior coefficients | Parameter grid or Latin Hypercube sampling | Required |
+| Risk-score weights and stale normalization | Equal/legacy weights and 7/14/30/45-day MaxStaleAge scan | Required |
+| Price-impact nonlinearity | Gamma=1 baseline plus nonlinear gamma sensitivity | Required |
+| Monte Carlo size | Pilot 100; formal at least 500; key robustness 1000 | Required |
+| Oracle latency | Configurable latency treatment; values frozen before preregistration | Required |
+| Contract execution failure | Configurable paired failure treatment; rates frozen before preregistration | Required |
+| Network proximity weights | Chi component weight sensitivity | Required |
+| Composite stability weights | Alternative weights for supplementary index only | Supplementary |
+
+No silent omission is allowed. Any descope decision must be added to this table with a reason before formal preregistration.
+
+## Stage 1 to Stage 2 continuity gate
+
+Before model pilot execution, the simulation foundation must reproduce:
+
+- the exact R0-R4 parameter packages and disclosure boundaries;
+- the equal-weight score vector result `3499`;
+- detection comparison `score >= tau` and intervention comparison `score > kappa`;
+- the v1.4.0 detection evidence: R1/R2/R4 zero policy delay, R3 86400 seconds, and R0 aligned to a 604800-second epoch boundary;
+- `firstScheduledObservationAt(1101, 1000, 60) = 1120`.
+
+The canonical evidence source is `docs/evidence/chapter3-summary.json`: 88 contract tests, 99 API tests, and 98.54% production-contract line coverage.
