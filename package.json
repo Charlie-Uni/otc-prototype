@@ -7,12 +7,5 @@
     "dev:contracts": "cd contracts && forge build && forge test",
     "dev:api": "pnpm --filter @ots/api dev",
     "test:chapter3": "bash scripts/test-chapter3.sh"
-  },
-  "pnpm": {
-    "overrides": {
-      "ajv": "8.20.0",
-      "fast-uri@^3.0.0": "3.1.5",
-      "fast-uri@^4.0.0": "4.1.2"
-    }
   }
 }

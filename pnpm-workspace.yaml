@@ -1,2 +1,7 @@
 packages:
   - apps/api
+
+overrides:
+  ajv: 8.20.0
+  fast-uri@^3.0.0: 3.1.5
+  fast-uri@^4.0.0: 4.1.2
