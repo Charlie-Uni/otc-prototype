@@ -63,6 +63,12 @@
     "maxAttempts": 2,
     "retryDelaySec": 300
   },
+  "observation": {
+    "seed": 20260812,
+    "startOffsetUpperExclusiveSec": 86400,
+    "pollingIntervalsSec": [3600, 21600, 86400],
+    "synchronicityBucketSec": 86400
+  },
   "thresholds": {
     "detectionBps": 6000,
     "baselineKappaBps": 7000,

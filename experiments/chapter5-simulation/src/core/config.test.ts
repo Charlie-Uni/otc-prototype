@@ -25,6 +25,8 @@ test('accepts the mentor-approved pilot baseline', () => {
   assert.equal(config.risk.maxStaleAgeDays, 30);
   assert.equal(config.oracle.baselineLatencySec, 0);
   assert.equal(config.oracle.baselineExecutionFailureBps, 0);
+  assert.deepEqual(config.observation.pollingIntervalsSec, [3_600, 21_600, 86_400]);
+  assert.equal(config.observation.synchronicityBucketSec, 86_400);
   assert.equal(config.thresholds.baselineKappaBps, 7_000);
 });
 
@@ -81,4 +83,14 @@ test('bounds Oracle retries so one tick cannot create an unbounded attempt loop'
   const value = structuredClone(baseline) as Record<string, Record<string, unknown>>;
   value.oracle.maxAttempts = 17;
   assert.throws(() => parseSimulationConfig(value), /ORACLE_MAX_ATTEMPTS_EXCEEDED/);
+});
+
+test('rejects duplicate or unordered observation intervals', () => {
+  const duplicate = structuredClone(baseline) as Record<string, Record<string, unknown>>;
+  duplicate.observation.pollingIntervalsSec = [3_600, 3_600];
+  assert.throws(() => parseSimulationConfig(duplicate), /DUPLICATE_OBSERVATION_INTERVALS/);
+
+  const unordered = structuredClone(baseline) as Record<string, Record<string, unknown>>;
+  unordered.observation.pollingIntervalsSec = [86_400, 3_600];
+  assert.throws(() => parseSimulationConfig(unordered), /OBSERVATION_INTERVALS_NOT_ASCENDING/);
 });

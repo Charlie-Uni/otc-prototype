@@ -70,6 +70,12 @@ export const simulationConfigSchema = z.object({
     maxAttempts: positiveInteger.max(16, 'ORACLE_MAX_ATTEMPTS_EXCEEDED'),
     retryDelaySec: nonNegativeInteger,
   }).strict(),
+  observation: z.object({
+    seed: positiveInteger,
+    startOffsetUpperExclusiveSec: positiveInteger,
+    pollingIntervalsSec: z.array(positiveInteger).min(1),
+    synchronicityBucketSec: positiveInteger,
+  }).strict(),
   thresholds: z.object({
     detectionBps: bps,
     baselineKappaBps: bps,
@@ -96,6 +102,17 @@ export const simulationConfigSchema = z.object({
   }
   if (!config.thresholds.kappaScanBps.includes(config.thresholds.baselineKappaBps)) {
     context.addIssue({ code: 'custom', message: 'BASELINE_KAPPA_NOT_IN_SCAN' });
+  }
+  if (
+    new Set(config.observation.pollingIntervalsSec).size
+    !== config.observation.pollingIntervalsSec.length
+  ) {
+    context.addIssue({ code: 'custom', message: 'DUPLICATE_OBSERVATION_INTERVALS' });
+  }
+  if (config.observation.pollingIntervalsSec.some(
+    (value, index, values) => index > 0 && value <= values[index - 1]!,
+  )) {
+    context.addIssue({ code: 'custom', message: 'OBSERVATION_INTERVALS_NOT_ASCENDING' });
   }
   if (new Set(config.shock.navDropBps).size !== config.shock.navDropBps.length) {
     context.addIssue({ code: 'custom', message: 'DUPLICATE_SHOCK_MAGNITUDES' });

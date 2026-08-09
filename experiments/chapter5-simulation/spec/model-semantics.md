@@ -65,6 +65,9 @@ Each draw is identified by `(masterSeed, replicateId, entityId, moduleId, tick, 
 - Unknown information preserves the previous belief; the first unknown observation uses the initial prior.
 - SignalSynchronicity is calculated from realized observation times, not assigned by regime label.
 - ExpectedOthersRedeem depends on the public signal, realized synchronicity, and lagged request pressure.
+- Risk disclosure events are absent before their policy time; this absence is `unknown`, not a zero-risk signal.
+- Same-fund snapshots that share one disclosure boundary are coalesced to the latest submitted snapshot.
+- Observation schedules are paired across regimes because their random identity contains no regime label.
 
 ## Control boundary
 

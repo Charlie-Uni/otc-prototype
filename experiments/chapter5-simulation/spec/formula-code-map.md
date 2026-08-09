@@ -12,7 +12,7 @@ Formula IDs below are stable implementation IDs. Final thesis equation numbers w
 | F-CONTROL-1 | Gate trigger indication | `risk/metrics.ts::evaluateRiskThresholds` | raw score, kappa | boolean | `risk/metrics.test.ts`: equality at kappa does not trigger |
 | F-REDEEM-1 | Individual P(Redeem) | `behavior/redemption.ts::redemptionProbability` | behavior coefficients and beliefs | probability | Range and coefficient signs |
 | F-EXPECT-1 | ExpectedOthersRedeem | `behavior/expectations.ts::expectedOthersRedeem` | public signal, synchronicity, lagged pressure | normalized score | Input monotonicity |
-| F-SYNC-1 | SignalSynchronicity | `behavior/synchronicity.ts::signalSynchronicity` | realized observation times | normalized score | Schedule-derived, order invariant |
+| F-SYNC-1 | SignalSynchronicity | `observation/schedule.ts::computeSignalSynchronicityBps` | realized observation times, bucket anchor and width | bps HHI | `observation/schedule.test.ts`: schedule-derived and order invariant |
 | F-PRESSURE-1 | RedemptionRequestPressure | `metrics/redemption.ts::requestPressure` | requested shares, prior shares | bps | Request-flow artifact consistency |
 | F-NET-1 | FundNetworkProximity | `network/proximity.ts::fundNetworkProximity` | asset, investor, provider, valuation weights | normalized score | Component removal |
 | F-SPILL-1 | SpilloverRedemption | `metrics/spillover.ts::spilloverRedemption` | network and paired no-channel run | rate difference | Paired subtraction |
