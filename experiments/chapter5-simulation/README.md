@@ -31,6 +31,7 @@ The foundation phase provides:
 - a deterministic full-replicate runner that composes the frozen ten-stage tick pipeline;
 - machine-checked paired-treatment differences, complete tick evidence, and canonical semantic digests.
 - mechanism-local pilot sanity gates separated from non-gating R0-R4 calibration diagnostics.
+- deterministic single-run and paired-counterfactual outcome metrics for Chapter 6 analysis.
 
 `calc.ts`, `regimes.ts`, and `sensitivity.ts` are byte-identical copies from `chapter3-artifact-v1.4.0`. The observation helper is the pure scheduling subset of `detection.ts`; the complete source file is hash-locked and its observable behavior is covered by golden tests, avoiding unrelated ABI and indexer code in the simulation package.
 

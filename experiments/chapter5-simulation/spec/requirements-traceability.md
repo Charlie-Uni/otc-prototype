@@ -66,6 +66,8 @@ T15 composes these mechanisms into the fixed ten-stage runner. It checks paired 
 
 T16 implements eight mechanism-local sanity gates and a separate R0-R4 diagnostic table. Regime rankings never affect pass/fail. Saturated request pressure or latent demand is emitted as a calibration flag that must be resolved before formal preregistration.
 
+T17 implements the Chapter 6 measurement layer without changing the state machine. It separates three DetectionLag clocks, accepted versus latent redemption demand, pending versus censored outcomes, flow-adjusted economic loss, liquidity depletion, paired spillover scope, control cost, loss reduction, and the supplementary weighted stability index.
+
 ## Stage 1 to Stage 2 continuity gate
 
 Before model pilot execution, the simulation foundation must reproduce:

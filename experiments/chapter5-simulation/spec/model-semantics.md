@@ -60,6 +60,7 @@ Each draw is identified by `(masterSeed, replicateId, entityId, moduleId, tick, 
 ## Loss accounting
 
 - `LossMagnitude` is the NAV/AUM loss relative to initial AUM and is the primary loss measure.
+- Normal settlement principal is added back to ending AUM before loss measurement so redemptions are not misclassified as economic loss.
 - `FireSaleDiscountLoss` is the realized discount from forced asset sales and is a mechanism-decomposition measure.
 - The two measures are reported separately and are not added, because market-value loss may already contain the sale-price effect.
 

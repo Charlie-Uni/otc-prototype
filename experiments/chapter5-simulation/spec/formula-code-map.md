@@ -21,10 +21,15 @@ Formula IDs below are stable implementation IDs. Final thesis equation numbers w
 | F-LOSS-NET-1 | Shared-asset loss transmission | `network/propagation.ts::propagateNetworkEffects` | target asset value, source sale price impact, pass-through | integer value | `network/propagation.test.ts`: asset/AUM reconciliation and channel removal |
 | F-FMA-1 | First-mover advantage | `liquidity/fma.ts::firstMoverAdvantageBps` | runtime liquidity-buffer ratio | bps | `liquidity/fma.test.ts`; runtime tiers in `liquidity/buffer.test.ts` |
 | F-PRICE-1 | PriceImpact and sale proceeds | `liquidity/price-impact.ts::priceImpactBps`; `discountedSaleProceeds` | lambda, sale amount, depth, gamma | bps/value | `liquidity/price-impact.test.ts`; settlement integration in `redemption/lifecycle.test.ts` |
-| F-LOSS-1 | LossMagnitude | `metrics/loss.ts::lossMagnitude` | initial and current AUM | rate | Zero and sign boundaries |
-| F-LOSS-2 | LossReduction | `metrics/loss.ts::lossReduction` | control/no-control paired loss | absolute and relative | Zero denominator |
+| F-DETECT-2 | Three DetectionLag clocks | `metrics/detection.ts::detectionLagMetrics` | raw snapshots, disclosures, observations | seconds or censored | Timestamp order and non-identifiable threshold |
+| F-REDEEM-2 | RedemptionAcceleration and PeakRedemption | `metrics/counterfactual.ts::redemptionAccelerationBps`; `metrics/outcomes.ts::extractRunOutcomeMetrics` | paired accepted requests; tick request pressure | signed bps / bps | Pair rejection, fixed window, peak extraction |
+| F-SCOPE-1 | SpilloverScope and PublicControlSpillover | `metrics/counterfactual.ts::spilloverScope`; `publicControlSpillover` | paired unshocked-fund request rates | signed mean and affected share bps | 5% boundary and negative spillover |
+| F-LOSS-1 | Flow-adjusted LossMagnitude | `metrics/outcomes.ts::extractRunOutcomeMetrics` | initial AUM, ending AUM, normal settlement outflow | bps | No-shock settlement does not create loss |
+| F-LOSS-2 | LossReduction | `metrics/counterfactual.ts::lossReduction` | control/no-control paired loss | absolute and relative bps | Zero denominator and negative effect |
+| F-LIQ-1 | LiquidityBufferDepletion | `metrics/outcomes.ts::extractRunOutcomeMetrics` | initial and minimum runtime buffer | bps and first exhaustion time | Range and fixed-window extraction |
+| F-COST-1 | ControlCost | `metrics/counterfactual.ts::controlCost` | blocked, settled-delay, and pending request fields | bps / seconds | Weighted aggregation |
 | F-GATE-1 | Control attenuation and whole-request admission | `controls/gate.ts::controlledOutflow`; `redemptionBlockedByGate` | phi, requested outflow, paired request identity | amount/boolean | `controls/gate.test.ts`; actual settlement monotonicity in `controls/lifecycle.test.ts` |
-| F-BENEFIT-1 | DetectionBenefit | `metrics/detection.ts::detectionBenefit` | R0 lag, regime lag | seconds/days | Paired difference |
+| F-BENEFIT-1 | DetectionBenefit | `metrics/detection.ts::detectionBenefitSec` | R0 lag, regime lag | seconds | Paired difference and censoring |
 | F-STABILITY-1 | FundNetStabilityBenefit | `metrics/stability.ts::fundNetStabilityBenefit` | component metrics and weights | index | Alternative weight schemes |
 
 Every implementation entry must be updated from `planned` to an actual symbol and test path before formal preregistration.
