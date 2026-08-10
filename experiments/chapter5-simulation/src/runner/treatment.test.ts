@@ -73,6 +73,11 @@ test('requires the exact same scenario and horizon for paired runs', () => {
     { treatment, scenario: small!, horizonDays: 11 },
     [],
   ), /PAIRED_HORIZON_MISMATCH/);
+  assert.throws(() => assertPairedRunInputs(
+    { treatment, scenario: small!, shockEnabled: true },
+    { treatment, scenario: small!, shockEnabled: false },
+    [],
+  ), /PAIRED_SHOCK_ENABLEMENT_MISMATCH/);
   assert.equal(sameValuationShockScenario(small!, { ...small! }), true);
 });
 

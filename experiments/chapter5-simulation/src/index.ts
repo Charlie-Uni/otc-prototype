@@ -25,6 +25,8 @@ export * from './observation/schedule';
 export * from './observation/types';
 export * from './oracle/submission';
 export * from './oracle/types';
+export * from './pilot/sanity';
+export * from './pilot/types';
 export * from './redemption/lifecycle';
 export * from './redemption/types';
 export * from './risk/metrics';

@@ -30,6 +30,7 @@ The foundation phase provides:
 - shared-asset mark-down transmission plus next-period overlap, public-risk, and public-control spillover inputs.
 - a deterministic full-replicate runner that composes the frozen ten-stage tick pipeline;
 - machine-checked paired-treatment differences, complete tick evidence, and canonical semantic digests.
+- mechanism-local pilot sanity gates separated from non-gating R0-R4 calibration diagnostics.
 
 `calc.ts`, `regimes.ts`, and `sensitivity.ts` are byte-identical copies from `chapter3-artifact-v1.4.0`. The observation helper is the pure scheduling subset of `detection.ts`; the complete source file is hash-locked and its observable behavior is covered by golden tests, avoiding unrelated ABI and indexer code in the simulation package.
 
@@ -41,6 +42,7 @@ Commands:
 pnpm --filter @ots/chapter5-simulation test
 pnpm --filter @ots/chapter5-simulation typecheck
 pnpm --filter @ots/chapter5-simulation lock:check
+pnpm --filter @ots/chapter5-simulation pilot:sanity
 ```
 
 Pilot results are calibration evidence only. Formal results may be generated only after the analysis plan and parameters are committed and tagged separately.

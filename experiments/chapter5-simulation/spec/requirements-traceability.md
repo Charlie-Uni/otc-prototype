@@ -64,6 +64,8 @@ T14 implements all four proximity components, exact shared-asset loss propagatio
 
 T15 composes these mechanisms into the fixed ten-stage runner. It checks paired seeds, scenarios, horizons, and allowed treatment differences; applies network demand only in the next tick; and emits deterministic tick evidence. The additive probability mapping for incoming spillover is a pilot parameterization and is not a formal result until preregistered.
 
+T16 implements eight mechanism-local sanity gates and a separate R0-R4 diagnostic table. Regime rankings never affect pass/fail. Saturated request pressure or latent demand is emitted as a calibration flag that must be resolved before formal preregistration.
+
 ## Stage 1 to Stage 2 continuity gate
 
 Before model pilot execution, the simulation foundation must reproduce:

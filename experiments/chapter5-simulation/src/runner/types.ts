@@ -90,6 +90,7 @@ export type SimulationRunInput = {
   treatment: SimulationTreatment;
   scenario: ValuationShockScenario;
   horizonDays?: number;
+  shockEnabled?: boolean;
 };
 
 export type SimulationRunResult = {
@@ -98,6 +99,7 @@ export type SimulationRunResult = {
   regime: TransparencyRegime;
   scenario: ValuationShockScenario;
   horizonDays: number;
+  shockEnabled: boolean;
   traces: TickTrace[];
   publicRiskDisclosures: RiskDisclosure[];
   regulatorRiskDisclosures: RiskDisclosure[];

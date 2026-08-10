@@ -143,6 +143,9 @@ export function assertPairedRunInputs(
   if ((baseline.horizonDays ?? null) !== (comparison.horizonDays ?? null)) {
     throw new Error('PAIRED_HORIZON_MISMATCH');
   }
+  if ((baseline.shockEnabled ?? true) !== (comparison.shockEnabled ?? true)) {
+    throw new Error('PAIRED_SHOCK_ENABLEMENT_MISMATCH');
+  }
   assertPairedTreatments(
     baseline.treatment,
     comparison.treatment,

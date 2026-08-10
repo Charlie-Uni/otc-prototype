@@ -105,7 +105,7 @@ test('completes the 90-day baseline with a stable semantic digest', { timeout: 1
   assert.equal(result.riskObservations.length, 131_400);
   assert.equal(
     result.semanticDigestSha256,
-    'c8a8ebd2e636d66e4c61d3d83f6f794eec0f1d8651f4fb2b20a4c12030d6dafd',
+    '99d93349de220409622b05cbd1c569a00bed00b3e01adeff30312bf2fa6200a7',
   );
 });
 

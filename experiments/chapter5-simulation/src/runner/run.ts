@@ -170,6 +170,7 @@ function reservePropagationSources(
 export function runSimulation(input: SimulationRunInput): SimulationRunResult {
   const { treatment, scenario } = input;
   const { config, regime } = treatment;
+  const shockEnabled = input.shockEnabled ?? true;
   const network = generateNetworkModel(config);
   const horizonDays = validateRunInput(input, network);
   let state = createInitialSimulationState(network, scenario.shockAt);
@@ -204,7 +205,7 @@ export function runSimulation(input: SimulationRunInput): SimulationRunResult {
     const tickStartedAt = tickStartAt(scenario.shockAt, tick);
     const decisionAt = tickStartedAt + TICK_SEC - 1;
     state = advanceStateTime(state, network, tickStartedAt);
-    const shockApplied = tick === 0;
+    const shockApplied = shockEnabled && tick === 0;
     if (shockApplied) state = applyValuationShock(state, network, scenario);
 
     const oracleTraces: OracleTickTrace[] = [];
@@ -411,6 +412,7 @@ export function runSimulation(input: SimulationRunInput): SimulationRunResult {
     regime,
     scenario,
     horizonDays,
+    shockEnabled,
     traces,
     publicRiskDisclosures,
     regulatorRiskDisclosures,
