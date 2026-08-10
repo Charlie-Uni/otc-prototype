@@ -4,8 +4,9 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test src/artifact/*.test.ts src/behavior/*.test.ts src/controls/*.test.ts src/core/*.test.ts src/disclosure/*.test.ts src/liquidity/*.test.ts src/metrics/*.test.ts src/network/*.test.ts src/observation/*.test.ts src/oracle/*.test.ts src/pilot/*.test.ts src/redemption/*.test.ts src/risk/*.test.ts src/runner/*.test.ts src/shocks/*.test.ts src/state/*.test.ts",
+    "test": "node --import tsx --test src/artifact/*.test.ts src/behavior/*.test.ts src/calibration/*.test.ts src/controls/*.test.ts src/core/*.test.ts src/disclosure/*.test.ts src/liquidity/*.test.ts src/metrics/*.test.ts src/network/*.test.ts src/observation/*.test.ts src/oracle/*.test.ts src/pilot/*.test.ts src/redemption/*.test.ts src/risk/*.test.ts src/runner/*.test.ts src/shocks/*.test.ts src/state/*.test.ts",
     "pilot:sanity": "node --import tsx scripts/run-pilot-sanity.ts",
+    "pilot:calibrate": "node --import tsx scripts/run-pilot-calibration.ts",
     "lock:write": "node scripts/foundation-lock.mjs --write",
     "lock:check": "node scripts/foundation-lock.mjs --check",
     "check": "pnpm typecheck && pnpm test && pnpm lock:check"

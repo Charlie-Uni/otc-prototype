@@ -56,18 +56,21 @@ function resetReleaseProgress(fund: FundRuntimeState): void {
   fund.gateReleaseEligibleAtTick = null;
 }
 
-export function applyGateControlForSubmission(
+function applyGateControlForSubmissionUnchecked(
   state: SimulationState,
   network: NetworkModel,
   config: SimulationConfig,
   submissionId: string,
 ): GateControlResult {
-  validateSimulationState(state, network);
   const source = state.oracleRiskSnapshots.find((snapshot) => (
     snapshot.submissionId === submissionId
   ));
   if (!source) throw new Error('UNKNOWN_CONTROL_SUBMISSION');
-  const next = structuredClone(state);
+  const next: SimulationState = {
+    ...state,
+    funds: state.funds.map((fund) => ({ ...fund })),
+    controlTransitions: [...state.controlTransitions],
+  };
   const snapshot = next.oracleRiskSnapshots.find((candidate) => (
     candidate.submissionId === submissionId
   ))!;
@@ -115,7 +118,6 @@ export function applyGateControlForSubmission(
   fund.lastControlSubmissionId = snapshot.submissionId;
   fund.lastControlEvaluationTick = snapshot.tick;
   if (transition) next.controlTransitions.push(transition);
-  validateSimulationState(next, network);
   return {
     status: transition?.kind === 'GateTriggered'
       ? 'triggered'
@@ -123,4 +125,46 @@ export function applyGateControlForSubmission(
     state: next,
     transition,
   };
+}
+
+export function applyGateControlForSubmission(
+  state: SimulationState,
+  network: NetworkModel,
+  config: SimulationConfig,
+  submissionId: string,
+): GateControlResult {
+  validateSimulationState(state, network);
+  const result = applyGateControlForSubmissionUnchecked(
+    state,
+    network,
+    config,
+    submissionId,
+  );
+  validateSimulationState(result.state, network);
+  return result;
+}
+
+export function applyGateControlsForSubmissions(
+  state: SimulationState,
+  network: NetworkModel,
+  config: SimulationConfig,
+  submissionIds: readonly string[],
+): { state: SimulationState; results: GateControlResult[] } {
+  validateSimulationState(state, network);
+  const uniqueIds = new Set(submissionIds);
+  if (uniqueIds.size !== submissionIds.length) throw new Error('DUPLICATE_CONTROL_BATCH_SUBMISSION');
+  const results: GateControlResult[] = [];
+  let next = state;
+  for (const submissionId of submissionIds) {
+    const result = applyGateControlForSubmissionUnchecked(
+      next,
+      network,
+      config,
+      submissionId,
+    );
+    next = result.state;
+    results.push(result);
+  }
+  validateSimulationState(next, network);
+  return { state: next, results };
 }

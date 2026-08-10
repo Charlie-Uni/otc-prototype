@@ -5,12 +5,12 @@ import { parseSimulationConfig, type SimulationConfig } from '../core/config';
 import { TICK_SEC } from '../core/pipeline';
 import { liquidAssetValue } from '../liquidity/buffer';
 import { generateNetworkModel } from '../network/generator';
-import { submitOracleRisk } from '../oracle/submission';
+import { submitOracleRisk, submitOracleRisksForTick } from '../oracle/submission';
 import { queueRedemptionRequestsForFund, settlePendingRedemptions } from '../redemption/lifecycle';
 import type { InvestorRedemptionIntent } from '../redemption/types';
 import { createInitialSimulationState } from '../state/initialization';
 import type { SimulationState } from '../state/types';
-import { applyGateControlForSubmission } from './lifecycle';
+import { applyGateControlForSubmission, applyGateControlsForSubmissions } from './lifecycle';
 
 const baselineInput = JSON.parse(readFileSync(
   new URL('../../config/pilot-baseline.json', import.meta.url),
@@ -241,4 +241,42 @@ test('higher phi cannot increase controlled-fund settlement or liquid-asset cons
   assert.ok(rows[0]!.settledAmount > 0);
   assert.equal(rows.at(-1)!.settledAmount, 0);
   assert.ok(new Set(rows.map(({ settledAmount }) => settledAmount)).size >= 3);
+});
+
+test('batch control evaluation is state-equivalent to validated sequential evaluation', () => {
+  const initial = createInitialSimulationState(network, BASE_AT);
+  const requests = [network.funds[0]!, network.funds[1]!].map((fund) => ({
+    replicateId: 0,
+    tick: 0,
+    fundId: fund.id,
+    occurredAt: BASE_AT,
+    requestedSharesInWindow: 0,
+  }));
+  const submitted = submitOracleRisksForTick(initial, network, baseline, requests).state;
+  const submissionIds = submitted.oracleRiskSnapshots.map(({ submissionId }) => submissionId);
+  let sequentialState = submitted;
+  const sequentialStatuses = submissionIds.map((submissionId) => {
+    const result = applyGateControlForSubmission(
+      sequentialState,
+      network,
+      baseline,
+      submissionId,
+    );
+    sequentialState = result.state;
+    return result.status;
+  });
+  const batch = applyGateControlsForSubmissions(
+    submitted,
+    network,
+    baseline,
+    submissionIds,
+  );
+  assert.deepEqual(batch.state, sequentialState);
+  assert.deepEqual(batch.results.map(({ status }) => status), sequentialStatuses);
+  assert.throws(() => applyGateControlsForSubmissions(
+    submitted,
+    network,
+    baseline,
+    [submissionIds[0]!, submissionIds[0]!],
+  ), /DUPLICATE_CONTROL_BATCH_SUBMISSION/);
 });

@@ -41,15 +41,32 @@ function pendingSharesByHolder(state: SimulationState, fundId: string): Map<stri
   return pending;
 }
 
-export function queueRedemptionRequestsForFund(
+function pendingSharesByFund(
+  state: SimulationState,
+): Map<string, Map<string, number>> {
+  const byFund = new Map<string, Map<string, number>>();
+  for (const request of state.redemptionRequests) {
+    if (request.status !== 'pending') continue;
+    const holders = byFund.get(request.fundId) ?? new Map<string, number>();
+    holders.set(
+      request.investorId,
+      (holders.get(request.investorId) ?? 0) + request.requestedShares,
+    );
+    byFund.set(request.fundId, holders);
+  }
+  return byFund;
+}
+
+function queueRedemptionRequestsForFundUnchecked(
   state: SimulationState,
   network: NetworkModel,
   fundId: string,
   intents: readonly InvestorRedemptionIntent[],
   requestFractionBps: number,
   controlSeed: number,
+  existingRequestIds: Set<string>,
+  pendingByInvestor: ReadonlyMap<string, number>,
 ): QueueRedemptionResult {
-  validateSimulationState(state, network);
   if (!Number.isInteger(requestFractionBps) || requestFractionBps <= 0 || requestFractionBps > MAX_BPS) {
     throw new Error('INVALID_REDEMPTION_REQUEST_FRACTION_BPS');
   }
@@ -75,9 +92,6 @@ export function queueRedemptionRequestsForFund(
     if (!intentByInvestor.has(holding.investorId)) throw new Error('INCOMPLETE_REDEMPTION_INTENT_SET');
   }
 
-  const next = structuredClone(state);
-  const existingRequestIds = new Set(next.redemptionRequests.map(({ requestId }) => requestId));
-  const pendingByInvestor = pendingSharesByHolder(state, fundId);
   const newRequests: RedemptionRequestState[] = [];
   let redeemingInvestorCount = 0;
   let blockedByGateInvestorCount = 0;
@@ -128,12 +142,16 @@ export function queueRedemptionRequestsForFund(
     newRequests.push(candidate);
   }
 
-  next.redemptionRequests.push(...newRequests);
-  const fund = next.funds[fundIndex]!;
+  const funds = [...state.funds];
+  const fund = { ...state.funds[fundIndex]! };
+  funds[fundIndex] = fund;
   fund.queuedRedemptionShares += requestedShares;
   fund.cumulativeRequestedShares += requestedShares;
-  validateSimulationState(next, network);
-
+  const next = {
+    ...state,
+    funds,
+    redemptionRequests: [...state.redemptionRequests, ...newRequests],
+  };
   return {
     state: next,
     summary: {
@@ -157,6 +175,65 @@ export function queueRedemptionRequestsForFund(
   };
 }
 
+export function queueRedemptionRequestsForFund(
+  state: SimulationState,
+  network: NetworkModel,
+  fundId: string,
+  intents: readonly InvestorRedemptionIntent[],
+  requestFractionBps: number,
+  controlSeed: number,
+): QueueRedemptionResult {
+  validateSimulationState(state, network);
+  const result = queueRedemptionRequestsForFundUnchecked(
+    state,
+    network,
+    fundId,
+    intents,
+    requestFractionBps,
+    controlSeed,
+    new Set(state.redemptionRequests.map(({ requestId }) => requestId)),
+    pendingSharesByHolder(state, fundId),
+  );
+  validateSimulationState(result.state, network);
+  return result;
+}
+
+export function queueRedemptionRequestsForFunds(
+  state: SimulationState,
+  network: NetworkModel,
+  inputs: readonly {
+    fundId: string;
+    intents: readonly InvestorRedemptionIntent[];
+  }[],
+  requestFractionBps: number,
+  controlSeed: number,
+): { state: SimulationState; summaries: QueueRedemptionResult['summary'][] } {
+  validateSimulationState(state, network);
+  const seenFundIds = new Set<string>();
+  const existingRequestIds = new Set(state.redemptionRequests.map(({ requestId }) => requestId));
+  const pendingByFund = pendingSharesByFund(state);
+  const summaries: QueueRedemptionResult['summary'][] = [];
+  let next = state;
+  for (const input of inputs) {
+    if (seenFundIds.has(input.fundId)) throw new Error('DUPLICATE_REDEMPTION_QUEUE_FUND');
+    seenFundIds.add(input.fundId);
+    const result = queueRedemptionRequestsForFundUnchecked(
+      next,
+      network,
+      input.fundId,
+      input.intents,
+      requestFractionBps,
+      controlSeed,
+      existingRequestIds,
+      pendingByFund.get(input.fundId) ?? new Map(),
+    );
+    next = result.state;
+    summaries.push(result.summary);
+  }
+  validateSimulationState(next, network);
+  return { state: next, summaries };
+}
+
 function markPending(request: RedemptionRequestState, reason: PendingRedemptionReason): void {
   request.pendingReason = reason;
 }
@@ -167,7 +244,14 @@ export function settlePendingRedemptions(
   config: SimulationConfig,
 ): SettlementBatchResult {
   validateSimulationState(state, network);
-  const next = structuredClone(state);
+  const next: SimulationState = {
+    ...state,
+    funds: state.funds.map((fund) => ({ ...fund })),
+    holderBalances: state.holderBalances.map((holding) => ({ ...holding })),
+    assetPositions: state.assetPositions.map((position) => ({ ...position })),
+    redemptionRequests: state.redemptionRequests.map((request) => ({ ...request })),
+    assetSales: [...state.assetSales],
+  };
   const pendingIndexes = next.redemptionRequests
     .map((request, index) => ({ request, index }))
     .filter(({ request }) => request.status === 'pending')

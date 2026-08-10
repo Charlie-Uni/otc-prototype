@@ -59,6 +59,7 @@ function outcome(treatmentId: string, funds: FundRunOutcome[]): RunOutcomeMetric
   return {
     schemaVersion: 1,
     treatmentId,
+    configDigestSha256: 'a'.repeat(64),
     regimeId: 'R1',
     replicateId: 7,
     scenarioId: 'scenario-7',

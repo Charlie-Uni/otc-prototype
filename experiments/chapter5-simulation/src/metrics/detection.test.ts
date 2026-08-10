@@ -6,7 +6,11 @@ import { generateNetworkModel } from '../network/generator';
 import { runSimulation } from '../runner/run';
 import { createSimulationTreatment } from '../runner/treatment';
 import { createValuationShockScenarios } from '../shocks/scenario';
-import { detectionBenefitSec, detectionLagMetrics } from './detection';
+import {
+  detectionBenefitSec,
+  detectionLagMetrics,
+  regulatorDetectionLagForThreshold,
+} from './detection';
 
 const baselineInput = JSON.parse(readFileSync(
   new URL('../../config/pilot-baseline.json', import.meta.url),
@@ -124,4 +128,41 @@ test('distinguishes Oracle non-submission from a score below tau', () => {
     status: 'censored',
     reason: 'no_successful_submission',
   });
+});
+
+test('re-evaluates regulator detection at a pilot threshold without changing the run', () => {
+  const result = run('R1');
+  const detected = regulatorDetectionLagForThreshold(result, 400);
+  assert.equal(detected.status, 'detected');
+  assert.throws(
+    () => regulatorDetectionLagForThreshold(result, 10_001),
+    /INVALID_DETECTION_THRESHOLD/,
+  );
+});
+
+test('never anchors detection to a snapshot submitted before shockAt', () => {
+  const result = run('R1');
+  const target = result.finalState.oracleRiskSnapshots.find(({ fundId }) => (
+    fundId === result.scenario.targetFundId
+  ))!;
+  const preShock = {
+    ...target,
+    submissionId: 'pre-shock-high-score',
+    occurredAt: result.scenario.shockAt - 1,
+    submittedAt: result.scenario.shockAt - 1,
+    riskScoreBps: 10_000,
+    detected: true,
+  };
+  const metrics = detectionLagMetrics({
+    ...result,
+    finalState: {
+      ...result.finalState,
+      oracleRiskSnapshots: [preShock, ...result.finalState.oracleRiskSnapshots],
+    },
+  });
+  assert.equal(metrics.system.status, 'detected');
+  if (metrics.system.status === 'detected') {
+    assert.notEqual(metrics.system.sourceSubmissionId, preShock.submissionId);
+    assert.ok(metrics.system.detectedAt >= result.scenario.shockAt);
+  }
 });

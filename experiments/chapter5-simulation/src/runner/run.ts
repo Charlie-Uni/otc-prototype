@@ -11,14 +11,14 @@ import {
   generateInvestorObservationSchedules,
   observeRiskDisclosures,
 } from '../observation/schedule';
-import { baselineOracleTreatment, submitOracleRisk } from '../oracle/submission';
-import { queueRedemptionRequestsForFund, settlePendingRedemptions } from '../redemption/lifecycle';
+import { baselineOracleTreatment, submitOracleRisksForTick } from '../oracle/submission';
+import { queueRedemptionRequestsForFunds, settlePendingRedemptions } from '../redemption/lifecycle';
 import { createValuationShockScenarios } from '../shocks/scenario';
 import { applyValuationShock } from '../shocks/valuation';
 import { createInitialSimulationState } from '../state/initialization';
 import type { SimulationState } from '../state/types';
 import { validateSimulationState } from '../state/validation';
-import { applyGateControlForSubmission } from '../controls/lifecycle';
+import { applyGateControlsForSubmissions } from '../controls/lifecycle';
 import { runBehaviorStep } from './behavior-step';
 import {
   createControlDisclosureTimeline,
@@ -208,10 +208,9 @@ export function runSimulation(input: SimulationRunInput): SimulationRunResult {
     const shockApplied = shockEnabled && tick === 0;
     if (shockApplied) state = applyValuationShock(state, network, scenario);
 
-    const oracleTraces: OracleTickTrace[] = [];
-    const newSubmissionIds: string[] = [];
-    for (const fund of [...network.funds].sort((left, right) => left.id.localeCompare(right.id))) {
-      const result = submitOracleRisk(state, network, config, {
+    const oracleRequests = [...network.funds]
+      .sort((left, right) => left.id.localeCompare(right.id))
+      .map((fund) => ({
         replicateId: scenario.replicateId,
         tick,
         fundId: fund.id,
@@ -222,14 +221,19 @@ export function runSimulation(input: SimulationRunInput): SimulationRunResult {
           tickStartedAt,
           config.time.primaryWindowDays,
         ),
-      });
-      state = result.state;
+      }));
+    const oracleBatch = submitOracleRisksForTick(state, network, config, oracleRequests);
+    state = oracleBatch.state;
+    const oracleTraces: OracleTickTrace[] = [];
+    const newSubmissionIds: string[] = [];
+    for (let index = 0; index < oracleBatch.results.length; index += 1) {
+      const result = oracleBatch.results[index]!;
       const snapshot = result.status === 'submitted'
-        ? state.oracleRiskSnapshots.at(-1)!
+        ? result.state.oracleRiskSnapshots.at(-1)!
         : null;
       if (snapshot) newSubmissionIds.push(snapshot.submissionId);
       oracleTraces.push({
-        fundId: fund.id,
+        fundId: oracleRequests[index]!.fundId,
         status: result.status,
         attemptCount: result.attempts.length,
         failedAttemptCount: result.attempts.filter(({ failed }) => failed).length,
@@ -241,9 +245,16 @@ export function runSimulation(input: SimulationRunInput): SimulationRunResult {
       });
     }
 
-    for (const submissionId of newSubmissionIds) {
-      const controlled = applyGateControlForSubmission(state, network, config, submissionId);
-      state = controlled.state;
+    const controlBatch = applyGateControlsForSubmissions(
+      state,
+      network,
+      config,
+      newSubmissionIds,
+    );
+    state = controlBatch.state;
+    for (let index = 0; index < controlBatch.results.length; index += 1) {
+      const controlled = controlBatch.results[index]!;
+      const submissionId = newSubmissionIds[index]!;
       const trace = oracleTraces.find((candidate) => candidate.submissionId === submissionId)!;
       trace.controlTransition = controlled.transition?.kind ?? null;
     }
@@ -319,19 +330,20 @@ export function runSimulation(input: SimulationRunInput): SimulationRunResult {
     });
     beliefs = behavior.beliefs;
 
-    const queues = [] as TickTrace['queues'];
-    for (const fund of [...network.funds].sort((left, right) => left.id.localeCompare(right.id))) {
-      const queued = queueRedemptionRequestsForFund(
-        state,
-        network,
-        fund.id,
-        behavior.intentsByFund.get(fund.id) ?? [],
-        config.liquidity.redemptionRequestFractionBps,
-        config.control.seed,
-      );
-      state = queued.state;
-      queues.push(queued.summary);
-    }
+    const queued = queueRedemptionRequestsForFunds(
+      state,
+      network,
+      [...network.funds]
+        .sort((left, right) => left.id.localeCompare(right.id))
+        .map((fund) => ({
+          fundId: fund.id,
+          intents: behavior.intentsByFund.get(fund.id) ?? [],
+        })),
+      config.liquidity.redemptionRequestFractionBps,
+      config.control.seed,
+    );
+    state = queued.state;
+    const queues: TickTrace['queues'] = queued.summaries;
     laggedRequestPressureByFund = new Map(
       queues.map(({ fundId, requestPressureBps }) => [fundId, requestPressureBps]),
     );
@@ -409,6 +421,7 @@ export function runSimulation(input: SimulationRunInput): SimulationRunResult {
   const resultWithoutDigest = {
     schemaVersion: 1 as const,
     treatmentId: treatment.treatmentId,
+    configDigestSha256: semanticDigestSha256(config),
     regime,
     scenario,
     horizonDays,

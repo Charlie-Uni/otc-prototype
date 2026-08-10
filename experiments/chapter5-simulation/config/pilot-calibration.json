@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "screeningReplicates": 3,
+  "validationReplicates": 100,
+  "windowDays": 30,
+  "interceptLogOdds": [
+    -6.906754778648554,
+    -5.293304824724492,
+    -4.59511985013459
+  ],
+  "redemptionRequestFractionBps": [
+    1000,
+    2500,
+    5000
+  ],
+  "demandTransmissionBps": [
+    250,
+    500,
+    1000
+  ],
+  "baselineValuationShockBps": 2000,
+  "technicalBounds": {
+    "maximumNoShockAcceptedRequestRateBps": 1000,
+    "maximumPeakRequestPressureBps": 9999,
+    "minimumMeanRegimeLatentDemandRangeBps": 1
+  },
+  "detectionThresholdCalibration": {
+    "candidatesBps": [200, 300, 400, 500, 600, 700, 800, 1000, 1200],
+    "minimumShockDetectionRateBps": 9500
+  },
+  "precisionPlanning": {
+    "zScore": 1.96,
+    "targetHalfWidth": {
+      "acceptedRequestRateBps": 100,
+      "lossMagnitudeBps": 100,
+      "regulatorDetectionLagSec": 21600
+    }
+  }
+}

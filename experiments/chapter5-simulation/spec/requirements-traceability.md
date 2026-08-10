@@ -68,6 +68,8 @@ T16 implements eight mechanism-local sanity gates and a separate R0-R4 diagnosti
 
 T17 implements the Chapter 6 measurement layer without changing the state machine. It separates three DetectionLag clocks, accepted versus latent redemption demand, pending versus censored outcomes, flow-adjusted economic loss, liquidity depletion, paired spillover scope, control cost, loss reduction, and the supplementary weighted stability index.
 
+T17.5 screens declared behavior and demand-transmission parameters only for a stable, interior pilot. It preserves paired seeds, leaves shared-asset loss pass-through unchanged, forbids hypothesis-direction gates, validates the selected candidate over 100 pilot replicates, and derives formal replication recommendations from paired standard errors before T18 preregistration. It also demonstrates that none of the preregistered global `tau` candidates from 200 to 1200 bps reaches the 95% minimum shocked-run coverage across all R0-R4 arms. RegulatorDetectionLag precision therefore remains unavailable, not zero, until T18 freezes the detection-anchor method.
+
 ## Stage 1 to Stage 2 continuity gate
 
 Before model pilot execution, the simulation foundation must reproduce:

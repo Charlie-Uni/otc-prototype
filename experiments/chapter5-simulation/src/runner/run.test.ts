@@ -6,6 +6,7 @@ import { TICK_STAGES } from '../core/pipeline';
 import { generateNetworkModel } from '../network/generator';
 import { createValuationShockScenarios } from '../shocks/scenario';
 import { runSimulation } from './run';
+import { semanticDigestSha256 } from './digest';
 import { createSimulationTreatment } from './treatment';
 
 const baselineInput = JSON.parse(readFileSync(
@@ -103,9 +104,10 @@ test('completes the 90-day baseline with a stable semantic digest', { timeout: 1
   assert.equal(result.finalState.redemptionRequests.length, 200);
   assert.equal(result.finalState.networkPropagations.length, 9_666);
   assert.equal(result.riskObservations.length, 131_400);
+  assert.equal(result.configDigestSha256, semanticDigestSha256(baseline));
   assert.equal(
     result.semanticDigestSha256,
-    '99d93349de220409622b05cbd1c569a00bed00b3e01adeff30312bf2fa6200a7',
+    '39453c42401b08ca935ed3421073b4dabab2ea9d21e9135b9d7cdc8c27d51011',
   );
 });
 

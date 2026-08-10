@@ -76,4 +76,11 @@ test('rejects windows that exceed the completed run', () => {
   });
   assert.throws(() => extractRunOutcomeMetrics(run, config, 2),
     /INVALID_METRIC_WINDOW_DAYS/);
+  const mismatchedInput = structuredClone(baselineInput);
+  mismatchedInput.heterogeneity.initialAum = 999_999;
+  assert.throws(() => extractRunOutcomeMetrics(
+    run,
+    parseSimulationConfig(mismatchedInput),
+    1,
+  ), /METRIC_CONFIG_RUN_MISMATCH/);
 });

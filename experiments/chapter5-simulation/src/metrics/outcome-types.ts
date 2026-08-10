@@ -69,6 +69,7 @@ export type FundRunOutcome = {
 export type RunOutcomeMetrics = {
   schemaVersion: 1;
   treatmentId: string;
+  configDigestSha256: string;
   regimeId: TransparencyRegimeId;
   replicateId: number;
   scenarioId: string;

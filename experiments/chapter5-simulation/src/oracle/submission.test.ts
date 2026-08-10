@@ -7,7 +7,11 @@ import { generateNetworkModel } from '../network/generator';
 import { createInitialSimulationState } from '../state/initialization';
 import { validateSimulationState } from '../state/validation';
 import type { OracleSubmissionRequest } from './types';
-import { baselineOracleTreatment, submitOracleRisk } from './submission';
+import {
+  baselineOracleTreatment,
+  submitOracleRisk,
+  submitOracleRisksForTick,
+} from './submission';
 
 const config = parseSimulationConfig(JSON.parse(readFileSync(
   new URL('../../config/pilot-baseline.json', import.meta.url),
@@ -184,6 +188,27 @@ test('accepts concurrent fund submissions with one event time and independent co
   assert.equal(second.state.nowSec, BASE_AT + 60);
   assert.equal(second.state.oracleRiskSnapshots.length, 2);
   assert.ok(second.state.oracleRiskSnapshots.every(({ occurredAt }) => occurredAt === BASE_AT));
+
+  const requests = [network.funds[0]!, network.funds[1]!].map((fund) => ({
+    replicateId: 0,
+    tick: 0,
+    fundId: fund.id,
+    occurredAt: BASE_AT,
+    requestedSharesInWindow: 0,
+  }));
+  const batch = submitOracleRisksForTick(initial, network, config, requests, treatment);
+  assert.deepEqual(batch.state, second.state);
+  assert.deepEqual(
+    batch.results.map(({ status, candidate, attempts }) => ({ status, candidate, attempts })),
+    [first, second].map(({ status, candidate, attempts }) => ({ status, candidate, attempts })),
+  );
+  assert.throws(() => submitOracleRisksForTick(
+    initial,
+    network,
+    config,
+    [requests[0]!, requests[0]!],
+    treatment,
+  ), /DUPLICATE_ORACLE_BATCH_FUND/);
 });
 
 test('still rejects a backdated submission for the same fund', () => {

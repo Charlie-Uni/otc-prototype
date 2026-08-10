@@ -57,7 +57,7 @@ export function baselineOracleTreatment(config: SimulationConfig): OracleTreatme
   };
 }
 
-export function submitOracleRisk(
+function submitOracleRiskUnchecked(
   state: SimulationState,
   network: NetworkModel,
   config: SimulationConfig,
@@ -142,9 +142,43 @@ export function submitOracleRisk(
         },
       ],
     };
-    validateSimulationState(nextState, network);
     return { status: 'submitted', state: nextState, candidate, attempts };
   }
 
   return { status: 'failed', state, candidate, attempts };
+}
+
+export function submitOracleRisk(
+  state: SimulationState,
+  network: NetworkModel,
+  config: SimulationConfig,
+  request: OracleSubmissionRequest,
+  treatment: OracleTreatment = baselineOracleTreatment(config),
+): OracleSubmissionResult {
+  validateSimulationState(state, network);
+  const result = submitOracleRiskUnchecked(state, network, config, request, treatment);
+  validateSimulationState(result.state, network);
+  return result;
+}
+
+export function submitOracleRisksForTick(
+  state: SimulationState,
+  network: NetworkModel,
+  config: SimulationConfig,
+  requests: readonly OracleSubmissionRequest[],
+  treatment: OracleTreatment = baselineOracleTreatment(config),
+): { state: SimulationState; results: OracleSubmissionResult[] } {
+  validateSimulationState(state, network);
+  const seenFundIds = new Set<string>();
+  const results: OracleSubmissionResult[] = [];
+  let next = state;
+  for (const request of requests) {
+    if (seenFundIds.has(request.fundId)) throw new Error('DUPLICATE_ORACLE_BATCH_FUND');
+    seenFundIds.add(request.fundId);
+    const result = submitOracleRiskUnchecked(next, network, config, request, treatment);
+    next = result.state;
+    results.push(result);
+  }
+  validateSimulationState(next, network);
+  return { state: next, results };
 }

@@ -9,7 +9,11 @@ import { submitOracleRisk } from '../oracle/submission';
 import { createInitialSimulationState } from '../state/initialization';
 import type { SimulationState } from '../state/types';
 import { validateSimulationState } from '../state/validation';
-import { queueRedemptionRequestsForFund, settlePendingRedemptions } from './lifecycle';
+import {
+  queueRedemptionRequestsForFund,
+  queueRedemptionRequestsForFunds,
+  settlePendingRedemptions,
+} from './lifecycle';
 import type { InvestorRedemptionIntent } from './types';
 
 const baselineInput = JSON.parse(readFileSync(
@@ -355,4 +359,42 @@ test('rejects incomplete intent sets and detects queue-accounting tampering', ()
     () => validateSimulationState(invalidReason, network),
     /INVALID_PENDING_REDEMPTION_STATE/,
   );
+});
+
+test('batch queueing is state-equivalent to validated sequential fund queueing', () => {
+  const state = initialState();
+  const fundIds = ['fund-001', 'fund-002'];
+  const inputs = fundIds.map((fundId) => ({
+    fundId,
+    intents: intentsFor(state, fundId, new Set([largestHolder(state, fundId)])),
+  }));
+  let sequentialState = state;
+  const sequentialSummaries = inputs.map((input) => {
+    const result = queueRedemptionRequestsForFund(
+      sequentialState,
+      network,
+      input.fundId,
+      input.intents,
+      2_500,
+      config.control.seed,
+    );
+    sequentialState = result.state;
+    return result.summary;
+  });
+  const batch = queueRedemptionRequestsForFunds(
+    state,
+    network,
+    inputs,
+    2_500,
+    config.control.seed,
+  );
+  assert.deepEqual(batch.state, sequentialState);
+  assert.deepEqual(batch.summaries, sequentialSummaries);
+  assert.throws(() => queueRedemptionRequestsForFunds(
+    state,
+    network,
+    [inputs[0]!, inputs[0]!],
+    2_500,
+    config.control.seed,
+  ), /DUPLICATE_REDEMPTION_QUEUE_FUND/);
 });

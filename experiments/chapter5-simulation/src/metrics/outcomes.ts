@@ -2,6 +2,7 @@ import type { SimulationConfig } from '../core/config';
 import { generateNetworkModel } from '../network/generator';
 import type { FundNode, NetworkModel } from '../network/types';
 import type { SimulationRunResult, TickTrace } from '../runner/types';
+import { semanticDigestSha256 } from '../runner/digest';
 import type { RedemptionRequestState } from '../state/types';
 import { detectionLagMetrics } from './detection';
 import {
@@ -179,6 +180,9 @@ export function extractRunOutcomeMetrics(
   windowDays = config.time.primaryWindowDays,
 ): RunOutcomeMetrics {
   const network = generateNetworkModel(config);
+  if (result.configDigestSha256 !== semanticDigestSha256(config)) {
+    throw new Error('METRIC_CONFIG_RUN_MISMATCH');
+  }
   assertRunMatchesNetwork(result, network);
   const windowEndAt = outcomeWindowEndAt(
     result.scenario.shockAt,
@@ -190,6 +194,7 @@ export function extractRunOutcomeMetrics(
   return {
     schemaVersion: 1,
     treatmentId: result.treatmentId,
+    configDigestSha256: result.configDigestSha256,
     regimeId: result.regime.id,
     replicateId: result.scenario.replicateId,
     scenarioId: result.scenario.scenarioId,

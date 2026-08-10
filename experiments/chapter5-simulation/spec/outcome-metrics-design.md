@@ -4,6 +4,8 @@
 
 T17 defines deterministic measurement functions; it does not freeze parameters or report formal findings. Single-run metrics use `[shockAt, shockAt + windowDays * 86400)`. The primary window is 30 days, with 60- and 90-day calls using the same functions.
 
+Every run carries a canonical configuration digest. Metric extraction rejects a caller-supplied configuration whose digest differs, preventing silent denominator or network drift.
+
 `pending` describes an accepted redemption request that has no settlement by the measurement boundary. `censored` is reserved for an unavailable or unidentifiable detection time. Neither is replaced by zero or a large sentinel value.
 
 ## Detection

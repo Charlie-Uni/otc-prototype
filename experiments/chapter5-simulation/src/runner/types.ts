@@ -96,6 +96,7 @@ export type SimulationRunInput = {
 export type SimulationRunResult = {
   schemaVersion: 1;
   treatmentId: string;
+  configDigestSha256: string;
   regime: TransparencyRegime;
   scenario: ValuationShockScenario;
   horizonDays: number;

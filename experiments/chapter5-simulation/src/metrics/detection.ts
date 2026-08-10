@@ -6,6 +6,12 @@ import type {
   DetectionLagOutcome,
 } from './outcome-types';
 
+function requireDetectionThreshold(value: number): void {
+  if (!Number.isInteger(value) || value < 0 || value > 10_000) {
+    throw new Error('INVALID_DETECTION_THRESHOLD');
+  }
+}
+
 function detected(
   detectedAt: number,
   shockAt: number,
@@ -91,13 +97,46 @@ function observationLag(
   return { status: 'censored', reason: 'not_observed_within_horizon' };
 }
 
+export function regulatorDetectionLagForThreshold(
+  result: SimulationRunResult,
+  detectionThresholdBps: number,
+): DetectionLagOutcome {
+  requireDetectionThreshold(detectionThresholdBps);
+  const { targetFundId: fundId, shockAt } = result.scenario;
+  const eligibleSnapshots = result.finalState.oracleRiskSnapshots
+    .filter((snapshot) => (
+      snapshot.fundId === fundId
+      && snapshot.submittedAt >= shockAt
+    ));
+  const detectedSnapshots = eligibleSnapshots.filter((snapshot) => (
+    snapshot.riskScoreBps >= detectionThresholdBps
+  ));
+  if (detectedSnapshots.length === 0) {
+    return {
+      status: 'censored',
+      reason: eligibleSnapshots.length === 0
+        ? 'no_successful_submission'
+        : 'threshold_not_crossed',
+    };
+  }
+  return disclosureLag(
+    result.regulatorRiskDisclosures,
+    new Set(detectedSnapshots.map(({ submissionId }) => submissionId)),
+    fundId,
+    shockAt,
+  );
+}
+
 export function detectionLagMetrics(result: SimulationRunResult): DetectionLagMetrics {
   const { targetFundId: fundId, shockAt } = result.scenario;
   const horizonEndAt = shockAt + result.horizonDays * 86_400;
   const targetSnapshots = result.finalState.oracleRiskSnapshots
     .filter((snapshot) => snapshot.fundId === fundId);
   const detectedSnapshots = targetSnapshots
-    .filter((snapshot) => snapshot.detected)
+    .filter((snapshot) => (
+      snapshot.submittedAt >= shockAt
+      && snapshot.detected
+    ))
     .sort((left, right) => (
       left.submittedAt - right.submittedAt
       || left.submissionId.localeCompare(right.submissionId)
