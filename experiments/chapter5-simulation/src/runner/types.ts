@@ -6,16 +6,21 @@ import type { RiskDisclosure } from '../disclosure/types';
 import type { NetworkPropagationTargetSummary } from '../network/propagation';
 import type { InvestorRiskObservation } from '../observation/types';
 import type { QueueRedemptionSummary, SettlementBatchSummary } from '../redemption/types';
-import type { ValuationShockScenario } from '../shocks/scenario';
+import type { ShockScenario } from '../shocks/scenario';
 import type {
   GateTransitionKind,
   SimulationState,
 } from '../state/types';
 
+export type SimulationMechanisms = {
+  publicRiskDisclosureEnabled: boolean;
+};
+
 export type SimulationTreatment = {
   treatmentId: string;
   config: SimulationConfig;
   regime: TransparencyRegime;
+  mechanisms: SimulationMechanisms;
 };
 
 export type ControlDisclosure = {
@@ -88,7 +93,7 @@ export type TickTrace = {
 
 export type SimulationRunInput = {
   treatment: SimulationTreatment;
-  scenario: ValuationShockScenario;
+  scenario: ShockScenario;
   horizonDays?: number;
   shockEnabled?: boolean;
 };
@@ -97,8 +102,10 @@ export type SimulationRunResult = {
   schemaVersion: 1;
   treatmentId: string;
   configDigestSha256: string;
+  treatmentDigestSha256: string;
   regime: TransparencyRegime;
-  scenario: ValuationShockScenario;
+  mechanisms: SimulationMechanisms;
+  scenario: ShockScenario;
   horizonDays: number;
   shockEnabled: boolean;
   traces: TickTrace[];

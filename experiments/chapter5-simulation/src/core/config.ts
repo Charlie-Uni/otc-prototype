@@ -20,6 +20,13 @@ const riskTierBps = z.object({
 }).strict();
 const riskWeights = z.tuple([bps, bps, bps, bps, bps, bps]);
 
+export const RISK_WEIGHT_SCHEMES = {
+  equal_weight_baseline: [1_667, 1_667, 1_667, 1_667, 1_666, 1_666],
+  legacy_weight_scheme: [2_000, 2_000, 2_000, 2_000, 1_000, 1_000],
+} as const satisfies Record<string, readonly [number, number, number, number, number, number]>;
+
+export type RiskWeightSchemeId = keyof typeof RISK_WEIGHT_SCHEMES;
+
 export const simulationConfigSchema = z.object({
   schemaVersion: z.literal(1),
   time: z.object({
@@ -62,7 +69,7 @@ export const simulationConfigSchema = z.object({
     targetFundMode: z.literal('balanced_single_fund'),
   }).strict(),
   risk: z.object({
-    weightSchemeId: z.literal('equal_weight_baseline'),
+    weightSchemeId: z.enum(['equal_weight_baseline', 'legacy_weight_scheme']),
     weightBps: riskWeights,
     maxStaleAgeDays: positiveInteger,
   }).strict(),
@@ -143,6 +150,10 @@ export const simulationConfigSchema = z.object({
   }
   if (config.risk.weightBps.reduce((sum, weight) => sum + weight, 0) !== 10_000) {
     context.addIssue({ code: 'custom', message: 'RISK_WEIGHTS_MUST_SUM_10000' });
+  }
+  const expectedRiskWeights = RISK_WEIGHT_SCHEMES[config.risk.weightSchemeId];
+  if (expectedRiskWeights.some((weight, index) => config.risk.weightBps[index] !== weight)) {
+    context.addIssue({ code: 'custom', message: 'RISK_WEIGHT_SCHEME_MISMATCH' });
   }
   if (!config.thresholds.kappaScanBps.includes(config.thresholds.baselineKappaBps)) {
     context.addIssue({ code: 'custom', message: 'BASELINE_KAPPA_NOT_IN_SCAN' });

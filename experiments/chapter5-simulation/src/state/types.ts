@@ -125,6 +125,32 @@ export type AppliedValuationShock = {
   postShockEconomicAum: number;
 };
 
+export type AppliedLiquidityShock = {
+  scenarioId: string;
+  shockType: 'liquidity';
+  targetFundId: string;
+  shockAt: number;
+  liquidityImpairmentBps: number;
+  reclassifiedAmount: number;
+  preShockLiquidAssetValue: number;
+  postShockLiquidAssetValue: number;
+  preShockLiquidityShortfallBps: number;
+  postShockLiquidityShortfallBps: number;
+};
+
+export type AppliedRedemptionShock = {
+  scenarioId: string;
+  shockType: 'redemption';
+  targetFundId: string;
+  shockAt: number;
+  redemptionPressureBps: number;
+  preShockTotalShares: number;
+  requestedShares: number;
+  requestIds: string[];
+};
+
+export type AppliedRobustnessShock = AppliedLiquidityShock | AppliedRedemptionShock;
+
 export type SimulationState = {
   schemaVersion: 1;
   nowSec: number;
@@ -134,6 +160,7 @@ export type SimulationState = {
   redemptionRequests: RedemptionRequestState[];
   assetSales: AssetSaleState[];
   appliedValuationShocks: AppliedValuationShock[];
+  appliedRobustnessShocks?: AppliedRobustnessShock[];
   oracleRiskSnapshots: OracleRiskSnapshot[];
   controlTransitions: GateTransitionState[];
   networkPropagations: NetworkPropagationRecord[];

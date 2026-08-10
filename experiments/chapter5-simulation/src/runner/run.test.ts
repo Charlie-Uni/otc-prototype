@@ -107,7 +107,7 @@ test('completes the 90-day baseline with a stable semantic digest', { timeout: 1
   assert.equal(result.configDigestSha256, semanticDigestSha256(baseline));
   assert.equal(
     result.semanticDigestSha256,
-    '39453c42401b08ca935ed3421073b4dabab2ea9d21e9135b9d7cdc8c27d51011',
+    'a50bc9c964335398a52086cca23782e31051b7eb72b4b4de8724e589dba6d7c6',
   );
 });
 

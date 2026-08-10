@@ -4,8 +4,12 @@ import {
   type TransparencyRegimeId,
 } from '../artifact/risk/regimes';
 import { parseSimulationConfig, type SimulationConfig } from '../core/config';
-import type { ValuationShockScenario } from '../shocks/scenario';
-import type { SimulationRunInput, SimulationTreatment } from './types';
+import { shockMagnitudeBps, type ShockScenario } from '../shocks/scenario';
+import type {
+  SimulationMechanisms,
+  SimulationRunInput,
+  SimulationTreatment,
+} from './types';
 
 const PROTECTED_PAIR_PATHS = [
   'config.network.networkSeed',
@@ -24,16 +28,22 @@ function cloneRegime(regimeId: TransparencyRegimeId) {
   return structuredClone(getTransparencyRegime(regimeId));
 }
 
+export const DEFAULT_SIMULATION_MECHANISMS: SimulationMechanisms = {
+  publicRiskDisclosureEnabled: true,
+};
+
 export function createSimulationTreatment(
   treatmentId: string,
   config: SimulationConfig,
   regimeId: TransparencyRegimeId,
+  mechanisms: SimulationMechanisms = DEFAULT_SIMULATION_MECHANISMS,
 ): SimulationTreatment {
   requireIdentifier(treatmentId, 'TREATMENT_ID');
   const treatment = {
     treatmentId,
     config: parseSimulationConfig(structuredClone(config)),
     regime: cloneRegime(regimeId),
+    mechanisms: structuredClone(mechanisms),
   };
   validateSimulationTreatment(treatment);
   return treatment;
@@ -59,6 +69,9 @@ export function validateSimulationTreatment(treatment: SimulationTreatment): voi
   }
   if (!['public', 'private', 'delayed', 'tiered'].includes(regime.controlDisclosure)) {
     throw new Error('INVALID_REGIME_CONTROL_DISCLOSURE');
+  }
+  if (typeof treatment.mechanisms.publicRiskDisclosureEnabled !== 'boolean') {
+    throw new Error('INVALID_PUBLIC_RISK_DISCLOSURE_MECHANISM');
   }
 }
 
@@ -109,8 +122,8 @@ export function assertPairedTreatments(
     }
   }
   const differences = leafDifferences(
-    { config: baseline.config, regime: baseline.regime },
-    { config: comparison.config, regime: comparison.regime },
+    { config: baseline.config, regime: baseline.regime, mechanisms: baseline.mechanisms },
+    { config: comparison.config, regime: comparison.regime, mechanisms: comparison.mechanisms },
     '',
   );
   const unexpected = differences.filter((path) => !pathAllowed(path, allowedDifferencePaths));
@@ -120,16 +133,22 @@ export function assertPairedTreatments(
 }
 
 export function sameValuationShockScenario(
-  left: ValuationShockScenario,
-  right: ValuationShockScenario,
+  left: ShockScenario,
+  right: ShockScenario,
 ): boolean {
+  return left.shockType === 'valuation'
+    && right.shockType === 'valuation'
+    && sameShockScenario(left, right);
+}
+
+export function sameShockScenario(left: ShockScenario, right: ShockScenario): boolean {
   return left.scenarioId === right.scenarioId
     && left.shockType === right.shockType
     && left.replicateId === right.replicateId
     && left.targetFundId === right.targetFundId
     && left.shockAt === right.shockAt
     && left.cycleOffsetSec === right.cycleOffsetSec
-    && left.navDropBps === right.navDropBps;
+    && shockMagnitudeBps(left) === shockMagnitudeBps(right);
 }
 
 export function assertPairedRunInputs(
@@ -137,7 +156,7 @@ export function assertPairedRunInputs(
   comparison: SimulationRunInput,
   allowedDifferencePaths: readonly string[],
 ): void {
-  if (!sameValuationShockScenario(baseline.scenario, comparison.scenario)) {
+  if (!sameShockScenario(baseline.scenario, comparison.scenario)) {
     throw new Error('PAIRED_SCENARIO_MISMATCH');
   }
   if ((baseline.horizonDays ?? null) !== (comparison.horizonDays ?? null)) {

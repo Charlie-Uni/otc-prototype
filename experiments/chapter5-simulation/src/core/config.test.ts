@@ -96,6 +96,17 @@ test('rejects invalid risk weights and a baseline kappa outside the scan', () =>
   assert.throws(() => parseSimulationConfig(kappa), /BASELINE_KAPPA_NOT_IN_SCAN/);
 });
 
+test('binds each risk-weight scheme identifier to its exact six-weight vector', () => {
+  const legacy = structuredClone(baseline) as Record<string, Record<string, unknown>>;
+  legacy.risk.weightSchemeId = 'legacy_weight_scheme';
+  legacy.risk.weightBps = [2_000, 2_000, 2_000, 2_000, 1_000, 1_000];
+  assert.equal(parseSimulationConfig(legacy).risk.weightSchemeId, 'legacy_weight_scheme');
+
+  const mismatched = structuredClone(legacy);
+  mismatched.risk.weightBps = [1_667, 1_667, 1_667, 1_667, 1_666, 1_666];
+  assert.throws(() => parseSimulationConfig(mismatched), /RISK_WEIGHT_SCHEME_MISMATCH/);
+});
+
 test('bounds Oracle retries so one tick cannot create an unbounded attempt loop', () => {
   const value = structuredClone(baseline) as Record<string, Record<string, unknown>>;
   value.oracle.maxAttempts = 17;

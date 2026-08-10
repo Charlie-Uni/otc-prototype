@@ -13,8 +13,8 @@ import {
 } from '../observation/schedule';
 import { baselineOracleTreatment, submitOracleRisksForTick } from '../oracle/submission';
 import { queueRedemptionRequestsForFunds, settlePendingRedemptions } from '../redemption/lifecycle';
-import { createValuationShockScenarios } from '../shocks/scenario';
-import { applyValuationShock } from '../shocks/valuation';
+import { applyShock } from '../shocks/apply';
+import { createShockScenario, shockMagnitudeBps } from '../shocks/scenario';
 import { createInitialSimulationState } from '../state/initialization';
 import type { SimulationState } from '../state/types';
 import { validateSimulationState } from '../state/validation';
@@ -26,7 +26,7 @@ import {
 } from './control-disclosure';
 import { semanticDigestSha256 } from './digest';
 import { mergeRiskObservations, observationsFromIndex } from './observation-state';
-import { sameValuationShockScenario, validateSimulationTreatment } from './treatment';
+import { sameShockScenario, validateSimulationTreatment } from './treatment';
 import type {
   ControlDisclosure,
   OracleTickTrace,
@@ -58,8 +58,8 @@ function requestedSharesInWindow(
   const windowStartAt = windowEndAt - windowDays * TICK_SEC;
   return state.redemptionRequests
     .filter((request) => request.fundId === fundId
-      && request.requestedAt >= windowStartAt
-      && request.requestedAt < windowEndAt)
+      && request.requestedAt > windowStartAt
+      && request.requestedAt <= windowEndAt)
     .reduce((sum, request) => sum + request.requestedShares, 0);
 }
 
@@ -96,11 +96,14 @@ function latestByFund<T extends { fundId: string }>(values: readonly T[]): T[] {
 }
 
 function scenarioMatchesConfig(input: SimulationRunInput, network: NetworkModel): boolean {
-  return createValuationShockScenarios(
+  return sameShockScenario(createShockScenario(
     input.treatment.config,
     network,
     input.scenario.replicateId,
-  ).some((candidate) => sameValuationShockScenario(candidate, input.scenario));
+    input.scenario.shockType,
+    shockMagnitudeBps(input.scenario),
+    input.scenario.targetSelectionFundCount ?? network.funds.length,
+  ), input.scenario);
 }
 
 function validateRunInput(input: SimulationRunInput, network: NetworkModel): number {
@@ -206,7 +209,7 @@ export function runSimulation(input: SimulationRunInput): SimulationRunResult {
     const decisionAt = tickStartedAt + TICK_SEC - 1;
     state = advanceStateTime(state, network, tickStartedAt);
     const shockApplied = shockEnabled && tick === 0;
-    if (shockApplied) state = applyValuationShock(state, network, scenario);
+    if (shockApplied) state = applyShock(state, network, scenario);
 
     const oracleRequests = [...network.funds]
       .sort((left, right) => left.id.localeCompare(right.id))
@@ -259,12 +262,14 @@ export function runSimulation(input: SimulationRunInput): SimulationRunResult {
       trace.controlTransition = controlled.transition?.kind ?? null;
     }
 
-    const publicRiskTimeline = createRiskDisclosureTimelineForRegime(
-      state.oracleRiskSnapshots,
-      regime,
-      'public',
-      config.thresholds.detectionBps,
-    );
+    const publicRiskTimeline = treatment.mechanisms.publicRiskDisclosureEnabled
+      ? createRiskDisclosureTimelineForRegime(
+          state.oracleRiskSnapshots,
+          regime,
+          'public',
+          config.thresholds.detectionBps,
+        )
+      : [];
     const regulatorRiskTimeline = createRiskDisclosureTimelineForRegime(
       state.oracleRiskSnapshots,
       regime,
@@ -422,7 +427,13 @@ export function runSimulation(input: SimulationRunInput): SimulationRunResult {
     schemaVersion: 1 as const,
     treatmentId: treatment.treatmentId,
     configDigestSha256: semanticDigestSha256(config),
+    treatmentDigestSha256: semanticDigestSha256({
+      config,
+      regime,
+      mechanisms: treatment.mechanisms,
+    }),
     regime,
+    mechanisms: treatment.mechanisms,
     scenario,
     horizonDays,
     shockEnabled,

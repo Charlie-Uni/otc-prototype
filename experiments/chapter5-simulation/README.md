@@ -35,6 +35,9 @@ The foundation phase provides:
 - non-gating behavior/demand-transmission calibration and paired Monte Carlo precision planning before preregistration.
 - explicit pilot diagnosis of global detection-threshold coverage, with no automatic fallback when no candidate is identifiable.
 - a strict formal-analysis candidate with a paired shock-linked detection anchor, 144 deterministic cells, contamination checks, and a separate preregistration hash lock.
+- an explicit compiler for all 144 locked cells, including atomic dependent parameters and A1-A6 experiment-only mechanism switches;
+- valuation, liquidity, and redemption shock injectors with recomputable evidence and paired target/time coordinates;
+- a fail-closed formal executor that requires the preregistration tag, byte-identical lock, clean Chapter 5 worktree, and result provenance agreement.
 
 `calc.ts`, `regimes.ts`, and `sensitivity.ts` are byte-identical copies from `chapter3-artifact-v1.4.0`. The observation helper is the pure scheduling subset of `detection.ts`; the complete source file is hash-locked and its observable behavior is covered by golden tests, avoiding unrelated ABI and indexer code in the simulation package.
 
@@ -53,3 +56,5 @@ pnpm --filter @ots/chapter5-simulation prereg:check
 ```
 
 Pilot results are calibration evidence only. Formal results may be generated only after the analysis plan and parameters are committed, pass CI, and are tagged `chapter5-sim-prereg-v1`. The committed matrix is a design artifact, not an experimental result.
+
+`spec/formal-execution-semantics.md` records post-preregistration implementation semantics only. It does not alter any locked hypothesis, parameter, cell, expected direction, replication count, or exclusion rule.

@@ -15,7 +15,7 @@ export function applyValuationShock(
   if (scenario.navDropBps <= 0 || scenario.navDropBps >= MAX_BPS) {
     throw new Error('INVALID_VALUATION_SHOCK_MAGNITUDE');
   }
-  if (state.appliedValuationShocks.length > 0) {
+  if (state.appliedValuationShocks.length > 0 || (state.appliedRobustnessShocks?.length ?? 0) > 0) {
     throw new Error('SHOCK_ALREADY_APPLIED');
   }
   const targetFund = state.funds.find(({ fundId }) => fundId === scenario.targetFundId);

@@ -248,7 +248,10 @@ export function validateSimulationState(state: SimulationState, network: Network
   }
 
   const shockIds = new Set<string>();
-  if (state.appliedValuationShocks.length > 1) throw new Error('MULTIPLE_BASELINE_SHOCKS');
+  const robustnessShocks = state.appliedRobustnessShocks ?? [];
+  if (state.appliedValuationShocks.length + robustnessShocks.length > 1) {
+    throw new Error('MULTIPLE_BASELINE_SHOCKS');
+  }
   for (const shock of state.appliedValuationShocks) {
     if (shockIds.has(shock.scenarioId)) throw new Error('DUPLICATE_APPLIED_SHOCK');
     shockIds.add(shock.scenarioId);
@@ -268,6 +271,72 @@ export function validateSimulationState(state: SimulationState, network: Network
       (BigInt(shock.preShockEconomicAum) * BigInt(shock.navDropBps)) / BigInt(MAX_BPS),
     );
     if (shock.lossAmount !== expectedLoss) throw new Error('APPLIED_SHOCK_MAGNITUDE_MISMATCH');
+  }
+  for (const shock of robustnessShocks) {
+    if (shockIds.has(shock.scenarioId)) throw new Error('DUPLICATE_APPLIED_SHOCK');
+    shockIds.add(shock.scenarioId);
+    if (!networkFundIds.has(shock.targetFundId)) throw new Error('UNKNOWN_SHOCK_TARGET_FUND');
+    requireSafeNonNegative(shock.shockAt, 'APPLIED_SHOCK_TIME');
+    if (shock.shockAt > state.nowSec) throw new Error('APPLIED_SHOCK_AFTER_STATE_TIME');
+    if (shock.shockType === 'liquidity') {
+      requireSafeNonNegative(shock.reclassifiedAmount, 'LIQUIDITY_SHOCK_RECLASSIFIED_AMOUNT');
+      requireSafeNonNegative(shock.preShockLiquidAssetValue, 'PRE_SHOCK_LIQUID_ASSET_VALUE');
+      requireSafeNonNegative(shock.postShockLiquidAssetValue, 'POST_SHOCK_LIQUID_ASSET_VALUE');
+      if (shock.liquidityImpairmentBps <= 0 || shock.liquidityImpairmentBps >= MAX_BPS) {
+        throw new Error('INVALID_APPLIED_SHOCK_MAGNITUDE');
+      }
+      for (const shortfall of [
+        shock.preShockLiquidityShortfallBps,
+        shock.postShockLiquidityShortfallBps,
+      ]) {
+        if (!Number.isInteger(shortfall) || shortfall < 0 || shortfall > MAX_BPS) {
+          throw new Error('INVALID_APPLIED_LIQUIDITY_SHOCK_SHORTFALL');
+        }
+      }
+      if (
+        shock.preShockLiquidAssetValue - shock.reclassifiedAmount
+          !== shock.postShockLiquidAssetValue
+        || shock.postShockLiquidityShortfallBps
+          !== Math.min(
+            MAX_BPS,
+            shock.preShockLiquidityShortfallBps + shock.liquidityImpairmentBps,
+          )
+      ) {
+        throw new Error('APPLIED_LIQUIDITY_SHOCK_ACCOUNTING_MISMATCH');
+      }
+      continue;
+    }
+    requireSafeNonNegative(shock.preShockTotalShares, 'REDEMPTION_SHOCK_PRE_SHOCK_TOTAL_SHARES');
+    requireSafeNonNegative(shock.requestedShares, 'REDEMPTION_SHOCK_REQUESTED_SHARES');
+    if (shock.preShockTotalShares === 0) throw new Error('ZERO_REDEMPTION_SHOCK_PRE_SHOCK_TOTAL_SHARES');
+    if (shock.redemptionPressureBps <= 0 || shock.redemptionPressureBps >= MAX_BPS) {
+      throw new Error('INVALID_APPLIED_SHOCK_MAGNITUDE');
+    }
+    const targetFund = state.funds.find(({ fundId }) => fundId === shock.targetFundId)!;
+    const reconstructedPreShockShares = targetFund.totalShares + targetFund.cumulativeSettledShares;
+    if (shock.preShockTotalShares !== reconstructedPreShockShares) {
+      throw new Error('REDEMPTION_SHOCK_PRE_SHOCK_TOTAL_SHARES_MISMATCH');
+    }
+    const expectedRequestedShares = Number(
+      (BigInt(shock.preShockTotalShares) * BigInt(shock.redemptionPressureBps)) / BigInt(MAX_BPS),
+    );
+    if (shock.requestedShares !== expectedRequestedShares) {
+      throw new Error('APPLIED_REDEMPTION_SHOCK_MAGNITUDE_MISMATCH');
+    }
+    const recordedRequests = state.redemptionRequests.filter(({ requestId }) => (
+      shock.requestIds.includes(requestId)
+    ));
+    if (
+      new Set(shock.requestIds).size !== shock.requestIds.length
+      || recordedRequests.length !== shock.requestIds.length
+      || recordedRequests.some((request) => (
+        request.fundId !== shock.targetFundId || request.requestedAt !== shock.shockAt
+      ))
+      || recordedRequests.reduce((sum, request) => sum + request.requestedShares, 0)
+        !== shock.requestedShares
+    ) {
+      throw new Error('APPLIED_REDEMPTION_SHOCK_REQUEST_MISMATCH');
+    }
   }
 
   const submissionIds = new Set<string>();
