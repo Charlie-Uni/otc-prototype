@@ -67,7 +67,24 @@ export function submitOracleRisk(
   requireSafeNonNegative(request.replicateId, 'ORACLE_REPLICATE_ID');
   requireSafeNonNegative(request.tick, 'ORACLE_TICK');
   validateTreatment(treatment);
-  const candidate = deriveRiskSubmission(state, network, config, request);
+  let latestFundSnapshot: SimulationState['oracleRiskSnapshots'][number] | undefined;
+  for (let index = state.oracleRiskSnapshots.length - 1; index >= 0; index -= 1) {
+    const candidate = state.oracleRiskSnapshots[index]!;
+    if (candidate.fundId === request.fundId) {
+      latestFundSnapshot = candidate;
+      break;
+    }
+  }
+  if (latestFundSnapshot && request.occurredAt < latestFundSnapshot.occurredAt) {
+    throw new Error('ORACLE_OCCURRED_BEFORE_LATEST_FUND_SUBMISSION');
+  }
+  // Fund submissions in one Oracle stage share an event time but can complete in
+  // different orders. Per-fund valuation guards remain authoritative while the
+  // global processing clock may already have advanced for another fund.
+  const derivationState = request.occurredAt < state.nowSec
+    ? { ...state, nowSec: request.occurredAt }
+    : state;
+  const candidate = deriveRiskSubmission(derivationState, network, config, request);
   const attempts: OracleAttempt[] = [];
 
   for (let attemptIndex = 0; attemptIndex < treatment.maxAttempts; attemptIndex += 1) {

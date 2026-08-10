@@ -62,6 +62,8 @@ No silent omission is allowed. Any descope decision must be added to this table 
 
 T14 implements all four proximity components, exact shared-asset loss propagation, investor-overlap demand propagation, and public risk/control signal propagation. The equal chi weights and full pass-through pilot coefficients remain unfrozen until pilot diagnostics and preregistration.
 
+T15 composes these mechanisms into the fixed ten-stage runner. It checks paired seeds, scenarios, horizons, and allowed treatment differences; applies network demand only in the next tick; and emits deterministic tick evidence. The additive probability mapping for incoming spillover is a pilot parameterization and is not a formal result until preregistered.
+
 ## Stage 1 to Stage 2 continuity gate
 
 Before model pilot execution, the simulation foundation must reproduce:

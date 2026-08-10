@@ -155,3 +155,47 @@ test('rejects unbounded or malformed Oracle treatments', () => {
     /INVALID_ORACLE_EXECUTION_FAILURE_BPS/,
   );
 });
+
+test('accepts concurrent fund submissions with one event time and independent completion order', () => {
+  const treatment = {
+    latencySec: 60,
+    executionFailureBps: 0,
+    maxAttempts: 1,
+    retryDelaySec: 0,
+  };
+  const initial = createInitialSimulationState(network, BASE_AT);
+  const first = submitOracleRisk(initial, network, config, {
+    replicateId: 0,
+    tick: 0,
+    fundId: network.funds[0]!.id,
+    occurredAt: BASE_AT,
+    requestedSharesInWindow: 0,
+  }, treatment);
+  const second = submitOracleRisk(first.state, network, config, {
+    replicateId: 0,
+    tick: 0,
+    fundId: network.funds[1]!.id,
+    occurredAt: BASE_AT,
+    requestedSharesInWindow: 0,
+  }, treatment);
+
+  assert.equal(first.status, 'submitted');
+  assert.equal(second.status, 'submitted');
+  assert.equal(second.state.nowSec, BASE_AT + 60);
+  assert.equal(second.state.oracleRiskSnapshots.length, 2);
+  assert.ok(second.state.oracleRiskSnapshots.every(({ occurredAt }) => occurredAt === BASE_AT));
+});
+
+test('still rejects a backdated submission for the same fund', () => {
+  const first = submitOracleRisk(
+    createInitialSimulationState(network, BASE_AT),
+    network,
+    config,
+    request(),
+  );
+  assert.throws(() => submitOracleRisk(first.state, network, config, {
+    ...request(),
+    tick: 2,
+    occurredAt: BASE_AT,
+  }), /ORACLE_OCCURRED_BEFORE_LATEST_FUND_SUBMISSION/);
+});

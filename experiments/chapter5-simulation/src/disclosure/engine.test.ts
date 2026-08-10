@@ -2,7 +2,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { TICK_SEC } from '../core/pipeline';
 import { riskSnapshotFixture } from '../testing/oracle-snapshot';
-import { createRiskDisclosure, createRiskDisclosureTimeline } from './engine';
+import {
+  createRiskDisclosure,
+  createRiskDisclosureTimeline,
+  createRiskDisclosureTimelineForRegime,
+} from './engine';
 import { getTransparencyRegime, type TransparencyRegimeId } from '../artifact/risk/regimes';
 
 const CYCLE_START = 1_799_884_800;
@@ -79,4 +83,14 @@ test('rejects disclosure thresholds outside the bps domain', () => {
     ),
     /INVALID_DISCLOSURE_THRESHOLD/,
   );
+});
+
+test('supports experiment-only parameter packages without rewriting disclosure logic', () => {
+  const snapshot = riskSnapshotFixture('custom', 'fund-001', CYCLE_START + 1);
+  const custom = { ...getTransparencyRegime('R1'), delaySec: 123 };
+  const [disclosure] = createRiskDisclosureTimelineForRegime(
+    [snapshot], custom, 'public', 6_000,
+  );
+  assert.equal(disclosure?.disclosedAt, snapshot.submittedAt + 123);
+  assert.equal(disclosure?.signal.kind, 'exact');
 });

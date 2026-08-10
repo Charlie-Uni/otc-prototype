@@ -70,7 +70,20 @@ export function createRiskDisclosureTimeline(
   audience: DisclosureAudience,
   thresholdBps: number,
 ): RiskDisclosure[] {
-  const regime = getTransparencyRegime(regimeId);
+  return createRiskDisclosureTimelineForRegime(
+    snapshots,
+    getTransparencyRegime(regimeId),
+    audience,
+    thresholdBps,
+  );
+}
+
+export function createRiskDisclosureTimelineForRegime(
+  snapshots: readonly OracleRiskSnapshot[],
+  regime: TransparencyRegime,
+  audience: DisclosureAudience,
+  thresholdBps: number,
+): RiskDisclosure[] {
   const latestByFundAndBoundary = new Map<string, RiskDisclosure>();
 
   for (const snapshot of snapshots) {
