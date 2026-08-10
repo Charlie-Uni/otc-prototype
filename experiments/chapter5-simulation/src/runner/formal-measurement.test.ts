@@ -17,6 +17,7 @@ import {
   createFormalPairObservation,
   measurementSpecFromAnalysisPlan,
 } from '../formal/measurement';
+import { createFormalPairContrast } from '../formal/contrasts';
 
 const baseline = parseSimulationConfig(JSON.parse(readFileSync(
   new URL('../../config/formal-baseline.json', import.meta.url),
@@ -113,4 +114,44 @@ test('rejects observation tampering even when the outer digest is recomputed', (
     () => assertFormalPairObservationDigest(tampered),
     /FORMAL_ARM_MEASUREMENT_DIGEST_MISMATCH/,
   );
+});
+
+test('derives paired metric contrasts without imposing a hypothesis direction', () => {
+  const shocked = cell('POLICY-R1-2000-SHOCK');
+  const noShock = cell('POLICY-R1-2000-NO-SHOCK');
+  const observation = createFormalPairObservation(
+    executeForTest(shocked),
+    executeForTest(noShock),
+    shocked,
+    noShock,
+    { windowDays: [1], sensitivityThresholdBps: 6_000 },
+  );
+  const contrast = createFormalPairContrast(observation, 1);
+  assert.equal(contrast.firstArm, 'shock');
+  assert.equal(contrast.secondArm, 'no_shock');
+  assert.equal(
+    contrast.difference.acceptedRequestRateBps.firstMinusSecond,
+    contrast.first.acceptedRequestRateBps - contrast.second.acceptedRequestRateBps,
+  );
+  assert.equal(contrast.spillover.status, 'available');
+  assert.deepEqual(
+    contrast.primaryRegulatorDetection,
+    observation.primaryShockLinkedDetection?.regulatorDisclosure,
+  );
+});
+
+test('marks network-scale spillover as structurally non-comparable', () => {
+  const baselineScale = cell('ROBUST-NETWORK_SCALE-large-BASELINE');
+  const largeScale = cell('ROBUST-NETWORK_SCALE-large-COMPARISON');
+  const observation = createFormalPairObservation(
+    executeForTest(baselineScale),
+    executeForTest(largeScale),
+    baselineScale,
+    largeScale,
+    { windowDays: [1], sensitivityThresholdBps: 6_000 },
+  );
+  assert.deepEqual(createFormalPairContrast(observation, 1).spillover, {
+    status: 'not_comparable',
+    reason: 'fund_set_differs_by_design',
+  });
 });

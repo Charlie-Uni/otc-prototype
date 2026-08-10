@@ -15,6 +15,7 @@ import { semanticDigestSha256 } from './digest';
 import { shockMagnitudeBps } from '../shocks/scenario';
 import { createFormalShardPlan } from '../formal/shard-plan';
 import { assertFormalShardResult, executeFormalShard } from '../formal/shard-runner';
+import { scanFormalShardSet } from '../formal/shard-set';
 import {
   persistFormalShardFailure,
   persistFormalShardResult,
@@ -29,6 +30,19 @@ const matrix = JSON.parse(readFileSync(
   'utf8',
 )) as FormalExperimentMatrix;
 const compiled = compileFormalMatrix(matrix, baseline);
+function miniMatrix(replicates: number): typeof compiled {
+  return {
+    ...compiled,
+    cellCount: 2,
+    cells: compiled.cells
+      .filter(({ cell }) => cell.pairId === 'A1')
+      .map((entry) => ({
+        ...entry,
+        cell: { ...entry.cell, replicates },
+      })),
+  };
+}
+const miniCompiled = miniMatrix(1);
 const authorization = {
   preregistrationTag: 'chapter5-sim-prereg-v1' as const,
   preregistrationCommit: 'a'.repeat(40),
@@ -60,9 +74,9 @@ function executeOneDay(
 }
 
 test('executes one complete pair shard with one shared authorization', () => {
-  const plan = createFormalShardPlan(compiled, 1);
+  const plan = createFormalShardPlan(miniCompiled, 1);
   const result = executeFormalShard(
-    compiled,
+    miniCompiled,
     baseline,
     plan,
     'A1:r0000-0000',
@@ -110,15 +124,20 @@ test('executes one complete pair shard with one shared authorization', () => {
       JSON.parse(readFileSync(first.path, 'utf8')).semanticDigestSha256,
       result.semanticDigestSha256,
     );
+    const shardSet = scanFormalShardSet(directory, plan);
+    assert.equal(shardSet.loadedShardCount, 1);
+    assert.equal(shardSet.loadedPairObservations, 1);
+    assert.equal(shardSet.failureEvidence.length, 1);
+    assert.equal(shardSet.shardDigests[0]?.semanticDigestSha256, result.semanticDigestSha256);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
 });
 
 test('fails fast when a replicate executor returns the wrong cell', () => {
-  const plan = createFormalShardPlan(compiled, 1);
+  const plan = createFormalShardPlan(miniCompiled, 1);
   assert.throws(() => executeFormalShard(
-    compiled,
+    miniCompiled,
     baseline,
     plan,
     'A1:r0000-0000',
@@ -131,4 +150,46 @@ test('fails fast when a replicate executor returns the wrong cell', () => {
       }),
     },
   ), /FORMAL_MEASUREMENT_EXECUTION_SCOPE_MISMATCH/);
+});
+
+test('rejects a complete shard set assembled from different execution commits', () => {
+  const twoReplicates = miniMatrix(2);
+  const plan = createFormalShardPlan(twoReplicates, 1);
+  const otherAuthorization = { ...authorization, executionCommit: 'd'.repeat(40) };
+  const directory = mkdtempSync(join(tmpdir(), 'chapter5-formal-shard-auth-'));
+  try {
+    let observationsReceived = 0;
+    assert.throws(
+      () => scanFormalShardSet(directory, plan, () => { observationsReceived += 1; }),
+      /MISSING_FORMAL_SHARD_FILES/,
+    );
+    assert.equal(observationsReceived, 0);
+    for (const [replicateId, selectedAuthorization] of [
+      [0, authorization],
+      [1, otherAuthorization],
+    ] as const) {
+      const result = executeFormalShard(
+        twoReplicates,
+        baseline,
+        plan,
+        `A1:r000${replicateId}-000${replicateId}`,
+        { windowDays: [1], sensitivityThresholdBps: 6_000 },
+        {
+          authorize: () => selectedAuthorization,
+          executeReplicate: (matrixInput, config, cellId, currentReplicate) => ({
+            ...executeOneDay(matrixInput, config, cellId, currentReplicate),
+            authorization: selectedAuthorization,
+          }),
+        },
+      );
+      persistFormalShardResult(directory, result, plan);
+    }
+    assert.throws(
+      () => scanFormalShardSet(directory, plan, () => { observationsReceived += 1; }),
+      /FORMAL_SHARD_AUTHORIZATION_MISMATCH/,
+    );
+    assert.equal(observationsReceived, 0);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });

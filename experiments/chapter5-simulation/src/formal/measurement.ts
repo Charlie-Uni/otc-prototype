@@ -144,6 +144,8 @@ export function createFormalPairObservation(
     || leftCell.family !== rightCell.family
     || leftExecution.designDigestSha256 !== rightExecution.designDigestSha256
     || leftExecution.replicateId !== rightExecution.replicateId
+    || leftExecution.result.scenario.shockAt !== rightExecution.result.scenario.shockAt
+    || leftExecution.result.scenario.targetFundId !== rightExecution.result.scenario.targetFundId
     || semanticDigestSha256(leftExecution.authorization)
       !== semanticDigestSha256(rightExecution.authorization)
   ) throw new Error('FORMAL_MEASUREMENT_PAIR_MISMATCH');

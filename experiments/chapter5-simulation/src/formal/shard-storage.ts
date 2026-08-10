@@ -19,6 +19,10 @@ function shardStem(shardId: string): string {
   return `${readable}-${suffix}`;
 }
 
+export function formalShardResultFileName(shardId: string): string {
+  return `${shardStem(shardId)}.json`;
+}
+
 function parseExisting(path: string, plan: FormalShardPlan): FormalShardResult {
   let parsed: unknown;
   try {
@@ -43,7 +47,7 @@ export function persistFormalShardResult(
 ): FormalShardPersistence {
   assertFormalShardResult(result, plan);
   mkdirSync(outputDirectory, { recursive: true });
-  const finalPath = resolve(outputDirectory, `${shardStem(result.shardId)}.json`);
+  const finalPath = resolve(outputDirectory, formalShardResultFileName(result.shardId));
   if (existsSync(finalPath)) {
     const existing = parseExisting(finalPath, plan);
     if (existing.semanticDigestSha256 !== result.semanticDigestSha256) {

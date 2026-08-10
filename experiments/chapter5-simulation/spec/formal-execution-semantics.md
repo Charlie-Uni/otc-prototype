@@ -75,3 +75,24 @@ digest is rejected. Every shard and nested arm/observation has a canonical seman
 records are written separately and never replace successful evidence. Raw daily trajectories are not
 persisted by this layer; they are reduced immediately to the preregistered analysis windows so the
 formal run remains bounded in memory and storage.
+
+## Merge and paired inference boundaries
+
+Final analysis accepts only the exact successful file set named by one shard plan. Every file is
+revalidated against the plan, all nested digests are recomputed, and every shard must carry the same
+preregistration and execution authorization. Missing, unknown, malformed, mixed-commit, or conflicting
+shards fail closed. Technical-failure records remain part of the run-instance manifest but do not alter
+the semantic digest of the complete successful result set. Observation callbacks begin only after a
+complete validation pass; the second streaming pass rechecks every shard digest before use.
+
+Pair contrasts use the canonical arm order stored in each observation: `shock - no_shock` for primary
+policy pairs and `baseline - comparison` for ablation, robustness, and behavior-LHS pairs. The code
+reports the signed value and never treats an expected hypothesis direction as a validity condition.
+Network-scale arms have different fund sets, while shock-type arms have different scenario identities;
+their fund-by-fund SpilloverScope is therefore marked structurally non-comparable instead of forcing an
+invalid join. Their normalized arm-level outcomes remain available for robustness reporting.
+
+Streaming estimates use Welford moments, paired Monte Carlo standard errors, and the locked 95% normal
+interval. Two-sided normal p-values are adjusted by the Holm step-down method independently within each
+hypothesis family. These functions are fixed before formal outputs are read; the later report builder may
+only map locked contrasts to H1-H6 and may not introduce a result-dependent metric or exclusion rule.

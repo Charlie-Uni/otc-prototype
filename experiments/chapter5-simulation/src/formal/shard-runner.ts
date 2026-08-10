@@ -129,3 +129,11 @@ export function assertFormalShardResult(
   ) throw new Error('FORMAL_SHARD_RESULT_OBSERVATION_MISMATCH');
   result.observations.forEach(assertFormalPairObservationDigest);
 }
+
+export function parseFormalShardResult(
+  value: unknown,
+  plan: FormalShardPlan,
+): FormalShardResult {
+  assertFormalShardResult(value as FormalShardResult, plan);
+  return value as FormalShardResult;
+}
