@@ -26,6 +26,8 @@ The foundation phase provides:
 - continuous first-mover advantage and deterministic price-impact asset sales with reconciled discount loss.
 - Oracle-driven Gate transitions with strict kappa boundaries and auditable source provenance;
 - paired whole-request control strength plus rule-based simulation release after consecutive low-risk periods.
+- four-component fund-network proximity with independent real-channel and analogy-channel ablations;
+- shared-asset mark-down transmission plus next-period overlap, public-risk, and public-control spillover inputs.
 
 `calc.ts`, `regimes.ts`, and `sensitivity.ts` are byte-identical copies from `chapter3-artifact-v1.4.0`. The observation helper is the pure scheduling subset of `detection.ts`; the complete source file is hash-locked and its observable behavior is covered by golden tests, avoiding unrelated ABI and indexer code in the simulation package.
 

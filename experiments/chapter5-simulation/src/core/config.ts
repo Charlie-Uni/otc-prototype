@@ -108,6 +108,18 @@ export const simulationConfigSchema = z.object({
     releaseDelayTicks: nonNegativeInteger,
     releaseDelayTicksScan: z.array(nonNegativeInteger).min(1),
   }).strict(),
+  propagation: z.object({
+    proximityWeightsBps: z.tuple([bps, bps, bps, bps]),
+    sharedAssetPassThroughBps: bps,
+    investorOverlapTransmissionBps: bps,
+    publicRiskTransmissionBps: bps,
+    publicControlTransmissionBps: bps,
+    channels: z.object({
+      sharedIlliquidAssets: z.boolean(),
+      investorOverlap: z.boolean(),
+      signalAnalogy: z.boolean(),
+    }).strict(),
+  }).strict(),
   thresholds: z.object({
     detectionBps: bps,
     baselineKappaBps: bps,
@@ -198,6 +210,12 @@ export const simulationConfigSchema = z.object({
     if (!scan.values.includes(scan.baseline)) {
       context.addIssue({ code: 'custom', message: scan.baselineError });
     }
+  }
+  if (config.propagation.proximityWeightsBps.reduce(
+    (sum, weight) => sum + weight,
+    0,
+  ) !== 10_000) {
+    context.addIssue({ code: 'custom', message: 'PROXIMITY_WEIGHTS_MUST_SUM_10000' });
   }
   if (new Set(config.shock.navDropBps).size !== config.shock.navDropBps.length) {
     context.addIssue({ code: 'custom', message: 'DUPLICATE_SHOCK_MAGNITUDES' });

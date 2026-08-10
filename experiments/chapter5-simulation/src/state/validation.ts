@@ -6,6 +6,7 @@ import {
 import { computeWeightedRiskScoreBps } from '../artifact/simulation/sensitivity';
 import { validateControlTransitions, validateFundGateFields } from '../controls/validation';
 import { TICK_SEC } from '../core/pipeline';
+import { validateNetworkPropagations } from '../network/propagation-validation';
 import type { NetworkModel } from '../network/types';
 import { PENDING_REDEMPTION_REASONS, type SimulationState } from './types';
 
@@ -337,4 +338,5 @@ export function validateSimulationState(state: SimulationState, network: Network
   }
 
   validateControlTransitions(state);
+  validateNetworkPropagations(state, network);
 }

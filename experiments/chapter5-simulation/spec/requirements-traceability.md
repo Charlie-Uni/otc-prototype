@@ -60,6 +60,8 @@ R0-R4 are policy packages. A1-A6 use custom experiment configurations in the ind
 
 No silent omission is allowed. Any descope decision must be added to this table with a reason before formal preregistration.
 
+T14 implements all four proximity components, exact shared-asset loss propagation, investor-overlap demand propagation, and public risk/control signal propagation. The equal chi weights and full pass-through pilot coefficients remain unfrozen until pilot diagnostics and preregistration.
+
 ## Stage 1 to Stage 2 continuity gate
 
 Before model pilot execution, the simulation foundation must reproduce:

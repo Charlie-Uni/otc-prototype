@@ -69,3 +69,58 @@ export type NetworkSummary = {
   activeInvestorCount: number;
   overlappingInvestorCount: number;
 };
+
+export type NetworkProximityComponents = {
+  sharedIlliquidAssetBps: number;
+  investorOverlapBps: number;
+  commonServiceOrManagerBps: number;
+  valuationMethodSimilarityBps: number;
+};
+
+export type NetworkTransmissionChannels = {
+  sharedIlliquidAssets: boolean;
+  investorOverlap: boolean;
+  signalAnalogy: boolean;
+};
+
+export const NETWORK_PROPAGATION_SOURCE_KINDS = [
+  'asset_sale',
+  'redemption_pressure',
+  'public_risk',
+  'public_control',
+] as const;
+
+export type NetworkPropagationSourceKind = typeof NETWORK_PROPAGATION_SOURCE_KINDS[number];
+
+export type NetworkSignalSource = {
+  sourceId: string;
+  kind: Exclude<NetworkPropagationSourceKind, 'asset_sale'>;
+  sourceFundId: string;
+  tick: number;
+  availableAt: number;
+  magnitudeBps: number;
+};
+
+export type NetworkPropagationRecord = {
+  propagationId: string;
+  replicateId: number;
+  sourceKind: NetworkPropagationSourceKind;
+  sourceId: string;
+  sourceFundId: string;
+  targetFundId: string;
+  tick: number;
+  sourceAt: number;
+  propagatedAt: number;
+  rawComponents: NetworkProximityComponents;
+  effectiveComponents: NetworkProximityComponents;
+  proximityWeightsBps: readonly [number, number, number, number];
+  networkProximityBps: number;
+  transmissionProximityBps: number;
+  sourceMagnitudeBps: number;
+  transmissionBps: number;
+  spilloverRedemptionBps: number;
+  transmittedLoss: number;
+  assetClassId: string | null;
+  targetAssetValueBefore: number | null;
+  targetAssetValueAfter: number | null;
+};

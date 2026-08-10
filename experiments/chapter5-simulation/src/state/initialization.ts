@@ -88,6 +88,7 @@ export function createInitialSimulationState(network: NetworkModel, atSec: numbe
     appliedValuationShocks: [],
     oracleRiskSnapshots: [],
     controlTransitions: [],
+    networkPropagations: [],
   };
   validateSimulationState(state, network);
   return state;

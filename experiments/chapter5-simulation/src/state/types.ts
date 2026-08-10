@@ -1,4 +1,5 @@
 import type { RiskMetrics } from '../artifact/risk/calc';
+import type { NetworkPropagationRecord } from '../network/types';
 
 export type FundRuntimeState = {
   fundId: string;
@@ -135,4 +136,5 @@ export type SimulationState = {
   appliedValuationShocks: AppliedValuationShock[];
   oracleRiskSnapshots: OracleRiskSnapshot[];
   controlTransitions: GateTransitionState[];
+  networkPropagations: NetworkPropagationRecord[];
 };

@@ -22,6 +22,7 @@ test('creates a complete pre-shock state from the generated network', () => {
   assert.deepEqual(state.appliedValuationShocks, []);
   assert.deepEqual(state.oracleRiskSnapshots, []);
   assert.deepEqual(state.controlTransitions, []);
+  assert.deepEqual(state.networkPropagations, []);
 
   for (const fund of state.funds) {
     assert.equal(fund.economicAum, 100_000_000);

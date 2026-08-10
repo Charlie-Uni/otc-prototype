@@ -37,6 +37,13 @@ test('accepts the mentor-approved pilot baseline', () => {
   assert.deepEqual(config.control.phiScanBps, [0, 2_500, 5_000, 7_500, 10_000]);
   assert.equal(config.control.releaseConsecutiveTicks, 3);
   assert.equal(config.control.releaseDelayTicks, 1);
+  assert.deepEqual(config.propagation.proximityWeightsBps, [2_500, 2_500, 2_500, 2_500]);
+  assert.equal(config.propagation.sharedAssetPassThroughBps, 10_000);
+  assert.deepEqual(config.propagation.channels, {
+    sharedIlliquidAssets: true,
+    investorOverlap: true,
+    signalAnalogy: true,
+  });
   assert.equal(config.thresholds.baselineKappaBps, 7_000);
 });
 
@@ -137,4 +144,10 @@ test('rejects unordered control scans and baselines outside their scan', () => {
     () => parseSimulationConfig(missing),
     /BASELINE_CONTROL_RELEASE_STREAK_NOT_IN_SCAN/,
   );
+});
+
+test('requires network-proximity weights to form one convex bps scheme', () => {
+  const value = structuredClone(baseline) as Record<string, Record<string, unknown>>;
+  value.propagation.proximityWeightsBps = [2_500, 2_500, 2_500, 2_499];
+  assert.throws(() => parseSimulationConfig(value), /PROXIMITY_WEIGHTS_MUST_SUM_10000/);
 });

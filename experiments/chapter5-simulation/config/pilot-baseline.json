@@ -98,6 +98,18 @@
     "releaseDelayTicks": 1,
     "releaseDelayTicksScan": [0, 1, 3]
   },
+  "propagation": {
+    "proximityWeightsBps": [2500, 2500, 2500, 2500],
+    "sharedAssetPassThroughBps": 10000,
+    "investorOverlapTransmissionBps": 10000,
+    "publicRiskTransmissionBps": 10000,
+    "publicControlTransmissionBps": 10000,
+    "channels": {
+      "sharedIlliquidAssets": true,
+      "investorOverlap": true,
+      "signalAnalogy": true
+    }
+  },
   "thresholds": {
     "detectionBps": 6000,
     "baselineKappaBps": 7000,

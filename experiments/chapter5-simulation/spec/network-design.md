@@ -29,6 +29,8 @@ The first nine funds cover every liquidity-mismatch x stale-pricing tier combina
 
 The `sharedInvestorCoreBps` parameter is a structural design input, not the realized fraction of investors with multiple holdings. The generator reports the realized overlap separately.
 
+The generated relations define the structural network used by T14. They are held fixed within a paired run; lifecycle balances and economic states evolve over that structure. This separation prevents a channel treatment from endogenously changing the treatment graph before its paired counterfactual is evaluated.
+
 ## Determinism and validity
 
 Investor identity assignment is derived from the Chapter 5 counter-based random function using `networkSeed`; no mutable random stream is used. Validation rejects duplicate identifiers, dangling relations, duplicate edges, non-positive weights, holdings or exposures that do not sum to 10000 bps, incorrect HHI values, and missing institutional links.

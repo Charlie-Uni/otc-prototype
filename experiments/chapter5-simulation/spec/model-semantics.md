@@ -84,6 +84,16 @@ The Chapter 3 artifact triggers Gate automatically and releases it through a reg
 
 Control strength uses `phiBps in [0,10000]`. The continuous formula defines the aggregate attenuation envelope; actual simulation settlement preserves whole requests through one paired deterministic admission draw per request. Higher phi cannot expand the admitted request set. Equality at kappa qualifies for neither trigger nor release.
 
+## Network propagation
+
+- `FundNetworkProximity` is the chi-weighted sum of shared illiquid assets, investor overlap, common service provider/manager, and valuation-method similarity.
+- Asset and investor components use weighted Jaccard overlap. Common manager and common service provider contribute one half each to their combined component.
+- Seeded structural relation weights remain fixed within a run so one-dimension channel ablations stay paired. Economic AUM, asset positions, share balances, risk states, and redemption states remain dynamic.
+- An illiquid asset sale marks down the same asset in other exposed funds using the realized source price impact. It changes economic AUM and asset positions, but not reported AUM before a later Oracle update.
+- Investor-overlap pressure, disclosed public risk, and disclosed public control events create next-period spillover-redemption inputs. Private or not-yet-disclosed events supply no public signal input.
+- The common-asset, investor-overlap, and signal-analogy channel families can be disabled independently without renormalizing chi weights.
+- Pilot chi and transmission coefficients are operational inputs, not empirical estimates or preregistered formal values.
+
 ## Pilot interpretation
 
 Mechanism-local checks are mandatory: no-shock stability, shock-to-score monotonicity, lower-buffer vulnerability, coefficient signs, and controlled-fund settlement/buffer monotonicity under increasing phi. R0-R4 outcome rankings, including R1 versus R0 redemption acceleration, are diagnostic results and never pass/fail gates.
