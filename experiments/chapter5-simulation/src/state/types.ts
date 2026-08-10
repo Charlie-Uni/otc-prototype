@@ -14,7 +14,31 @@ export type FundRuntimeState = {
   lastValuationAsOf: number;
   lastValuationUpdateAt: number;
   gated: boolean;
+  gatePhiBps: number;
+  gatedAt: number | null;
+  gateTriggerSubmissionId: string | null;
+  gateReleaseStreakTicks: number;
+  gateReleaseEligibleAtTick: number | null;
+  lastControlSubmissionId: string | null;
+  lastControlEvaluationTick: number | null;
   reportedRiskMetrics: RiskMetrics;
+};
+
+export const GATE_TRANSITION_KINDS = ['GateTriggered', 'GateReleased'] as const;
+
+export type GateTransitionKind = typeof GATE_TRANSITION_KINDS[number];
+
+export type GateTransitionState = {
+  transitionId: string;
+  kind: GateTransitionKind;
+  fundId: string;
+  tick: number;
+  sourceOccurredAt: number;
+  transitionedAt: number;
+  sourceSubmissionId: string;
+  riskScoreBps: number;
+  kappaBps: number;
+  gatePhiBps: number;
 };
 
 export const PENDING_REDEMPTION_REASONS = [
@@ -30,6 +54,7 @@ export type PendingRedemptionReason = typeof PENDING_REDEMPTION_REASONS[number];
 
 export type RedemptionRequestState = {
   requestId: string;
+  replicateId: number;
   fundId: string;
   investorId: string;
   tick: number;
@@ -109,4 +134,5 @@ export type SimulationState = {
   assetSales: AssetSaleState[];
   appliedValuationShocks: AppliedValuationShock[];
   oracleRiskSnapshots: OracleRiskSnapshot[];
+  controlTransitions: GateTransitionState[];
 };

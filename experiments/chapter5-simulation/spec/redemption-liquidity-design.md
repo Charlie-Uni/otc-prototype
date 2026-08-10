@@ -17,7 +17,7 @@ The first measure cannot exceed 10000 bps and rejects an impossible numerator. T
 
 ## Queue and share locking
 
-Each fund receives exactly one binary intent for every active holder in a decision tick. A positive intent creates one deterministic request ID, and requested shares are locked by the invariant that a holder's pending shares cannot exceed the holder's current balance. Repeated queueing can only use the still-available balance.
+Each fund receives exactly one binary intent for every active holder in a decision tick. An admitted positive intent creates one deterministic request ID, and requested shares are locked by the invariant that a holder's pending shares cannot exceed the holder's current balance. Repeated queueing can only use the still-available balance. An active Gate applies the T13 whole-request control rule before admission; blocked decisions remain visible as latent demand in the queue summary but do not inflate the on-state redemption queue.
 
 Requests are processed FIFO by `(requestedAt, requestId)`. Settlement is whole-request only. No partial settlement rule is introduced because neither the thesis nor the Chapter 3 artifact defines one.
 

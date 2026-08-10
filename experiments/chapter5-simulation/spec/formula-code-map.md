@@ -20,7 +20,7 @@ Formula IDs below are stable implementation IDs. Final thesis equation numbers w
 | F-PRICE-1 | PriceImpact and sale proceeds | `liquidity/price-impact.ts::priceImpactBps`; `discountedSaleProceeds` | lambda, sale amount, depth, gamma | bps/value | `liquidity/price-impact.test.ts`; settlement integration in `redemption/lifecycle.test.ts` |
 | F-LOSS-1 | LossMagnitude | `metrics/loss.ts::lossMagnitude` | initial and current AUM | rate | Zero and sign boundaries |
 | F-LOSS-2 | LossReduction | `metrics/loss.ts::lossReduction` | control/no-control paired loss | absolute and relative | Zero denominator |
-| F-GATE-1 | Control attenuation | `controls/gate.ts::controlledOutflow` | phi, requested outflow | amount | Higher phi weakly lowers outflow |
+| F-GATE-1 | Control attenuation and whole-request admission | `controls/gate.ts::controlledOutflow`; `redemptionBlockedByGate` | phi, requested outflow, paired request identity | amount/boolean | `controls/gate.test.ts`; actual settlement monotonicity in `controls/lifecycle.test.ts` |
 | F-BENEFIT-1 | DetectionBenefit | `metrics/detection.ts::detectionBenefit` | R0 lag, regime lag | seconds/days | Paired difference |
 | F-STABILITY-1 | FundNetStabilityBenefit | `metrics/stability.ts::fundNetStabilityBenefit` | component metrics and weights | index | Alternative weight schemes |
 

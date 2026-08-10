@@ -1,6 +1,7 @@
 import { MAX_BPS } from '../artifact/risk/calc';
 import type { SimulationConfig } from '../core/config';
 import { TICK_SEC } from '../core/pipeline';
+import { redemptionBlockedByGate } from '../controls/gate';
 import { planSettlementLiquidity } from '../liquidity/settlement-plan';
 import {
   redemptionDecisionPressureBps,
@@ -24,7 +25,7 @@ function requireSafeNonNegative(value: number, field: string): void {
 }
 
 function requestIdFor(intent: InvestorRedemptionIntent): string {
-  return `redemption:${intent.fundId}:${intent.investorId}:${intent.tick}`;
+  return `redemption:r${intent.replicateId}:${intent.fundId}:${intent.investorId}:${intent.tick}`;
 }
 
 function pendingSharesByHolder(state: SimulationState, fundId: string): Map<string, number> {
@@ -46,6 +47,7 @@ export function queueRedemptionRequestsForFund(
   fundId: string,
   intents: readonly InvestorRedemptionIntent[],
   requestFractionBps: number,
+  controlSeed: number,
 ): QueueRedemptionResult {
   validateSimulationState(state, network);
   if (!Number.isInteger(requestFractionBps) || requestFractionBps <= 0 || requestFractionBps > MAX_BPS) {
@@ -62,6 +64,7 @@ export function queueRedemptionRequestsForFund(
   const intentTicks = new Set<number>();
   for (const intent of intents) {
     if (intent.fundId !== fundId) throw new Error('REDEMPTION_INTENT_FUND_MISMATCH');
+    requireSafeNonNegative(intent.replicateId, 'REDEMPTION_INTENT_REPLICATE_ID');
     requireSafeNonNegative(intent.tick, 'REDEMPTION_INTENT_TICK');
     intentTicks.add(intent.tick);
     if (intentByInvestor.has(intent.investorId)) throw new Error('DUPLICATE_REDEMPTION_INTENT');
@@ -77,7 +80,9 @@ export function queueRedemptionRequestsForFund(
   const pendingByInvestor = pendingSharesByHolder(state, fundId);
   const newRequests: RedemptionRequestState[] = [];
   let redeemingInvestorCount = 0;
+  let blockedByGateInvestorCount = 0;
   let requestedShares = 0;
+  let blockedSharesByGate = 0;
 
   for (const holding of activeHoldings) {
     const intent = intentByInvestor.get(holding.investorId)!;
@@ -90,11 +95,9 @@ export function queueRedemptionRequestsForFund(
       Number((BigInt(availableShares) * BigInt(requestFractionBps)) / BigInt(MAX_BPS)),
     );
     const requestId = requestIdFor(intent);
-    if (existingRequestIds.has(requestId)) throw new Error('DUPLICATE_REDEMPTION_REQUEST_ID');
-    existingRequestIds.add(requestId);
-    requestedShares += shares;
-    newRequests.push({
+    const candidate: RedemptionRequestState = {
       requestId,
+      replicateId: intent.replicateId,
       fundId,
       investorId: holding.investorId,
       tick: intent.tick,
@@ -106,7 +109,23 @@ export function queueRedemptionRequestsForFund(
       settlementAmount: null,
       settlementNavPerShareBps: null,
       fireSaleDiscountLoss: null,
-    });
+    };
+    if (
+      state.funds[fundIndex]!.gated
+      && redemptionBlockedByGate(
+        candidate,
+        state.funds[fundIndex]!.gatePhiBps,
+        controlSeed,
+      )
+    ) {
+      blockedByGateInvestorCount += 1;
+      blockedSharesByGate += shares;
+      continue;
+    }
+    if (existingRequestIds.has(requestId)) throw new Error('DUPLICATE_REDEMPTION_REQUEST_ID');
+    existingRequestIds.add(requestId);
+    requestedShares += shares;
+    newRequests.push(candidate);
   }
 
   next.redemptionRequests.push(...newRequests);
@@ -121,11 +140,14 @@ export function queueRedemptionRequestsForFund(
       fundId,
       eligibleInvestorCount: activeHoldings.length,
       redeemingInvestorCount,
+      blockedByGateInvestorCount,
       decisionPressureBps: redemptionDecisionPressureBps(
         redeemingInvestorCount,
         activeHoldings.length,
       ),
       requestedShares,
+      blockedSharesByGate,
+      latentRequestedShares: requestedShares + blockedSharesByGate,
       requestPressureBps: redemptionRequestPressureBps(
         requestedShares,
         state.funds[fundIndex]!.totalShares,
@@ -162,7 +184,10 @@ export function settlePendingRedemptions(
   for (const requestIndex of pendingIndexes) {
     const request = next.redemptionRequests[requestIndex]!;
     const fund = next.funds.find(({ fundId }) => fundId === request.fundId)!;
-    if (fund.gated) {
+    if (
+      fund.gated
+      && redemptionBlockedByGate(request, fund.gatePhiBps, config.control.seed)
+    ) {
       markPending(request, 'gated');
       continue;
     }

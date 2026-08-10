@@ -8,6 +8,7 @@ test('freezes the chapter 5 within-tick causal order', () => {
   assert.deepEqual(observed, [
     'apply_shock',
     'submit_oracle_state',
+    'apply_programmable_control',
     'apply_disclosure_policy',
     'observe_disclosures',
     'update_beliefs',

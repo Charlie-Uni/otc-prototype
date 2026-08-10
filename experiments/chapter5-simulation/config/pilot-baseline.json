@@ -89,6 +89,15 @@
     "priceImpactGamma": 1,
     "marketDepthMultipleBps": 20000
   },
+  "control": {
+    "seed": 20260814,
+    "baselinePhiBps": 10000,
+    "phiScanBps": [0, 2500, 5000, 7500, 10000],
+    "releaseConsecutiveTicks": 3,
+    "releaseConsecutiveTicksScan": [1, 3, 5],
+    "releaseDelayTicks": 1,
+    "releaseDelayTicksScan": [0, 1, 3]
+  },
   "thresholds": {
     "detectionBps": 6000,
     "baselineKappaBps": 7000,

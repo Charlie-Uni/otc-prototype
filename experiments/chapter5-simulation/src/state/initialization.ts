@@ -69,6 +69,13 @@ export function createInitialSimulationState(network: NetworkModel, atSec: numbe
       lastValuationAsOf: atSec,
       lastValuationUpdateAt: atSec,
       gated: false,
+      gatePhiBps: 0,
+      gatedAt: null,
+      gateTriggerSubmissionId: null,
+      gateReleaseStreakTicks: 0,
+      gateReleaseEligibleAtTick: null,
+      lastControlSubmissionId: null,
+      lastControlEvaluationTick: null,
       reportedRiskMetrics: initialRiskMetrics(
         fund.liquidityBufferRatioBps,
         fund.investorConcentrationBps,
@@ -80,6 +87,7 @@ export function createInitialSimulationState(network: NetworkModel, atSec: numbe
     assetSales: [],
     appliedValuationShocks: [],
     oracleRiskSnapshots: [],
+    controlTransitions: [],
   };
   validateSimulationState(state, network);
   return state;

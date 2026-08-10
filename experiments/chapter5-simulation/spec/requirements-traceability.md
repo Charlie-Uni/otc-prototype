@@ -46,8 +46,8 @@ R0-R4 are policy packages. A1-A6 use custom experiment configurations in the ind
 | Information granularity | A3 plus aggregate/tiered sensitivity | Required |
 | Visibility and publicness | A1 and A6 | Required |
 | Control threshold | kappa in 5000/6000/7000/8000 bps | Required |
-| Control strength | phi in 0/0.25/0.5/0.75/1 | Required |
-| Control release | k in 1/3/5 periods and delay in 0/1/3 days | Required |
+| Control strength | phi in 0/0.25/0.5/0.75/1 | Implemented, not frozen |
+| Control release | k in 1/3/5 periods and delay in 0/1/3 days | Implemented simulation extension, not frozen |
 | Shock magnitude and type | Valuation -10/-20/-30%; liquidity and redemption robustness | Required |
 | Behavior coefficients | Parameter grid or Latin Hypercube sampling | Required |
 | Risk-score weights and stale normalization | Equal/legacy weights and 7/14/30/45-day MaxStaleAge scan | Required |

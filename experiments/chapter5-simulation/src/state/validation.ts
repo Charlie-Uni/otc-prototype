@@ -4,6 +4,7 @@ import {
   normalizeStalePricingRiskBps,
 } from '../artifact/risk/calc';
 import { computeWeightedRiskScoreBps } from '../artifact/simulation/sensitivity';
+import { validateControlTransitions, validateFundGateFields } from '../controls/validation';
 import { TICK_SEC } from '../core/pipeline';
 import type { NetworkModel } from '../network/types';
 import { PENDING_REDEMPTION_REASONS, type SimulationState } from './types';
@@ -39,6 +40,7 @@ export function validateSimulationState(state: SimulationState, network: Network
     );
     requireSafeNonNegative(fund.lastValuationAsOf, 'LAST_VALUATION_AS_OF');
     requireSafeNonNegative(fund.lastValuationUpdateAt, 'LAST_VALUATION_UPDATE_AT');
+    validateFundGateFields(fund, state.nowSec);
     if (fund.lastValuationAsOf > fund.lastValuationUpdateAt) {
       throw new Error('VALUATION_AS_OF_AFTER_UPDATE');
     }
@@ -94,6 +96,7 @@ export function validateSimulationState(state: SimulationState, network: Network
     requestIds.add(request.requestId);
     const pair = `${request.fundId}\u0000${request.investorId}`;
     if (!expectedHoldingPairs.has(pair)) throw new Error('UNKNOWN_REDEMPTION_REQUEST_HOLDER');
+    requireSafeNonNegative(request.replicateId, 'REDEMPTION_REQUEST_REPLICATE_ID');
     requireSafeNonNegative(request.tick, 'REDEMPTION_REQUEST_TICK');
     requireSafeNonNegative(request.requestedAt, 'REDEMPTION_REQUESTED_AT');
     if (request.requestedAt > state.nowSec) throw new Error('REDEMPTION_REQUEST_AFTER_STATE_TIME');
@@ -267,12 +270,16 @@ export function validateSimulationState(state: SimulationState, network: Network
   }
 
   const submissionIds = new Set<string>();
+  const submissionFundTicks = new Set<string>();
   for (const snapshot of state.oracleRiskSnapshots) {
     if (submissionIds.has(snapshot.submissionId)) throw new Error('DUPLICATE_ORACLE_SUBMISSION');
     submissionIds.add(snapshot.submissionId);
     if (!networkFundIds.has(snapshot.fundId)) throw new Error('UNKNOWN_ORACLE_SUBMISSION_FUND');
     requireSafeNonNegative(snapshot.replicateId, 'ORACLE_REPLICATE_ID');
     requireSafeNonNegative(snapshot.tick, 'ORACLE_TICK');
+    const fundTick = `${snapshot.replicateId}\u0000${snapshot.fundId}\u0000${snapshot.tick}`;
+    if (submissionFundTicks.has(fundTick)) throw new Error('DUPLICATE_ORACLE_FUND_TICK');
+    submissionFundTicks.add(fundTick);
     requireSafeNonNegative(snapshot.occurredAt, 'ORACLE_OCCURRED_AT');
     requireSafeNonNegative(snapshot.submittedAt, 'ORACLE_SUBMITTED_AT');
     requireSafeNonNegative(snapshot.staleAgeSecRaw, 'ORACLE_STALE_AGE');
@@ -328,4 +335,6 @@ export function validateSimulationState(state: SimulationState, network: Network
       throw new Error('ORACLE_INTERVENTION_MISMATCH');
     }
   }
+
+  validateControlTransitions(state);
 }

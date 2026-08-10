@@ -99,6 +99,15 @@ export const simulationConfigSchema = z.object({
     priceImpactGamma,
     marketDepthMultipleBps: z.number().int().min(10_000).safe(),
   }).strict(),
+  control: z.object({
+    seed: positiveInteger,
+    baselinePhiBps: bps,
+    phiScanBps: z.array(bps).min(1),
+    releaseConsecutiveTicks: positiveInteger,
+    releaseConsecutiveTicksScan: z.array(positiveInteger).min(1),
+    releaseDelayTicks: nonNegativeInteger,
+    releaseDelayTicksScan: z.array(nonNegativeInteger).min(1),
+  }).strict(),
   thresholds: z.object({
     detectionBps: bps,
     baselineKappaBps: bps,
@@ -149,6 +158,46 @@ export const simulationConfigSchema = z.object({
     * (maximumSaleToDepthRatio ** config.liquidity.priceImpactGamma);
   if (maximumImpactSlope >= 1) {
     context.addIssue({ code: 'custom', message: 'NON_MONOTONE_PRICE_IMPACT_REGION' });
+  }
+  const controlScans: ReadonlyArray<{
+    values: readonly number[];
+    baseline: number;
+    duplicateError: string;
+    orderError: string;
+    baselineError: string;
+  }> = [
+    {
+      values: config.control.phiScanBps,
+      baseline: config.control.baselinePhiBps,
+      duplicateError: 'DUPLICATE_CONTROL_PHI_VALUES',
+      orderError: 'CONTROL_PHI_VALUES_NOT_ASCENDING',
+      baselineError: 'BASELINE_CONTROL_PHI_NOT_IN_SCAN',
+    },
+    {
+      values: config.control.releaseConsecutiveTicksScan,
+      baseline: config.control.releaseConsecutiveTicks,
+      duplicateError: 'DUPLICATE_CONTROL_RELEASE_STREAK_VALUES',
+      orderError: 'CONTROL_RELEASE_STREAK_VALUES_NOT_ASCENDING',
+      baselineError: 'BASELINE_CONTROL_RELEASE_STREAK_NOT_IN_SCAN',
+    },
+    {
+      values: config.control.releaseDelayTicksScan,
+      baseline: config.control.releaseDelayTicks,
+      duplicateError: 'DUPLICATE_CONTROL_RELEASE_DELAY_VALUES',
+      orderError: 'CONTROL_RELEASE_DELAY_VALUES_NOT_ASCENDING',
+      baselineError: 'BASELINE_CONTROL_RELEASE_DELAY_NOT_IN_SCAN',
+    },
+  ];
+  for (const scan of controlScans) {
+    if (new Set(scan.values).size !== scan.values.length) {
+      context.addIssue({ code: 'custom', message: scan.duplicateError });
+    }
+    if (scan.values.some((value, index, values) => index > 0 && value <= values[index - 1]!)) {
+      context.addIssue({ code: 'custom', message: scan.orderError });
+    }
+    if (!scan.values.includes(scan.baseline)) {
+      context.addIssue({ code: 'custom', message: scan.baselineError });
+    }
   }
   if (new Set(config.shock.navDropBps).size !== config.shock.navDropBps.length) {
     context.addIssue({ code: 'custom', message: 'DUPLICATE_SHOCK_MAGNITUDES' });

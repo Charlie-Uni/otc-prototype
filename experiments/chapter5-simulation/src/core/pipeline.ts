@@ -3,6 +3,7 @@ export const TICK_SEC = 86_400;
 export const TICK_STAGES = [
   'apply_shock',
   'submit_oracle_state',
+  'apply_programmable_control',
   'apply_disclosure_policy',
   'observe_disclosures',
   'update_beliefs',

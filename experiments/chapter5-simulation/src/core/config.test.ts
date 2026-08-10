@@ -33,6 +33,10 @@ test('accepts the mentor-approved pilot baseline', () => {
   assert.equal(config.liquidity.redemptionRequestFractionBps, 10_000);
   assert.equal(config.liquidity.priceImpactGamma, 1);
   assert.equal(config.liquidity.marketDepthMultipleBps, 20_000);
+  assert.equal(config.control.baselinePhiBps, 10_000);
+  assert.deepEqual(config.control.phiScanBps, [0, 2_500, 5_000, 7_500, 10_000]);
+  assert.equal(config.control.releaseConsecutiveTicks, 3);
+  assert.equal(config.control.releaseDelayTicks, 1);
   assert.equal(config.thresholds.baselineKappaBps, 7_000);
 });
 
@@ -120,4 +124,17 @@ test('rejects price-impact parameters outside a monotone settlement region', () 
   value.liquidity.priceImpactGamma = 1;
   value.liquidity.marketDepthMultipleBps = 10_000;
   assert.throws(() => parseSimulationConfig(value), /NON_MONOTONE_PRICE_IMPACT_REGION/);
+});
+
+test('rejects unordered control scans and baselines outside their scan', () => {
+  const unordered = structuredClone(baseline) as Record<string, Record<string, unknown>>;
+  unordered.control.phiScanBps = [0, 5_000, 2_500, 10_000];
+  assert.throws(() => parseSimulationConfig(unordered), /CONTROL_PHI_VALUES_NOT_ASCENDING/);
+
+  const missing = structuredClone(baseline) as Record<string, Record<string, unknown>>;
+  missing.control.releaseConsecutiveTicks = 2;
+  assert.throws(
+    () => parseSimulationConfig(missing),
+    /BASELINE_CONTROL_RELEASE_STREAK_NOT_IN_SCAN/,
+  );
 });

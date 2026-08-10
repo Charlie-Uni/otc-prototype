@@ -24,6 +24,8 @@ The foundation phase provides:
 - dual investor-count and share-flow redemption-pressure measures;
 - FIFO whole-request settlement with share locking, cash-first liquidity use, and explicit pending states;
 - continuous first-mover advantage and deterministic price-impact asset sales with reconciled discount loss.
+- Oracle-driven Gate transitions with strict kappa boundaries and auditable source provenance;
+- paired whole-request control strength plus rule-based simulation release after consecutive low-risk periods.
 
 `calc.ts`, `regimes.ts`, and `sensitivity.ts` are byte-identical copies from `chapter3-artifact-v1.4.0`. The observation helper is the pure scheduling subset of `detection.ts`; the complete source file is hash-locked and its observable behavior is covered by golden tests, avoiding unrelated ABI and indexer code in the simulation package.
 

@@ -3,7 +3,9 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { parseSimulationConfig, type SimulationConfig } from '../core/config';
 import { TICK_SEC } from '../core/pipeline';
+import { applyGateControlForSubmission } from '../controls/lifecycle';
 import { generateNetworkModel } from '../network/generator';
+import { submitOracleRisk } from '../oracle/submission';
 import { createInitialSimulationState } from '../state/initialization';
 import type { SimulationState } from '../state/types';
 import { validateSimulationState } from '../state/validation';
@@ -30,6 +32,7 @@ function intentsFor(
   return state.holderBalances
     .filter((holding) => holding.fundId === fundId && holding.shares > 0)
     .map((holding) => ({
+      replicateId: 0,
       investorId: holding.investorId,
       fundId,
       tick,
@@ -54,12 +57,16 @@ test('queues full available holdings while reporting both pressure definitions',
     fundId,
     intentsFor(state, fundId, redeeming),
     config.liquidity.redemptionRequestFractionBps,
+    config.control.seed,
   );
 
   assert.equal(result.summary.eligibleInvestorCount, 20);
   assert.equal(result.summary.redeemingInvestorCount, 2);
+  assert.equal(result.summary.blockedByGateInvestorCount, 0);
   assert.equal(result.summary.decisionPressureBps, 1_000);
   assert.equal(result.summary.requestedShares, 10_000_000);
+  assert.equal(result.summary.blockedSharesByGate, 0);
+  assert.equal(result.summary.latentRequestedShares, 10_000_000);
   assert.equal(result.summary.requestPressureBps, 1_000);
   assert.equal(result.state.redemptionRequests.length, 2);
   assert.equal(result.state.funds[0]!.queuedRedemptionShares, 10_000_000);
@@ -80,6 +87,7 @@ test('locks pending shares so later ticks can request only the remaining balance
     fundId,
     intentsFor(state, fundId, new Set([investorId]), 0),
     5_000,
+    config.control.seed,
   ).state;
   first.nowSec += TICK_SEC;
   const second = queueRedemptionRequestsForFund(
@@ -88,6 +96,7 @@ test('locks pending shares so later ticks can request only the remaining balance
     fundId,
     intentsFor(first, fundId, new Set([investorId]), 1),
     5_000,
+    config.control.seed,
   ).state;
   const requests = second.redemptionRequests.filter((request) => request.investorId === investorId);
 
@@ -112,6 +121,7 @@ test('settles FIFO requests from liquid assets and preserves share/AUM accountin
     fundId,
     intentsFor(state, fundId, new Set(holders.slice(0, 2).map(({ investorId }) => investorId))),
     10_000,
+    config.control.seed,
   ).state;
   const result = settlePendingRedemptions(queued, network, config);
   const fund = result.state.funds.find(({ fundId: id }) => id === fundId)!;
@@ -145,6 +155,7 @@ test('sells illiquid assets only after cash and records discount loss', () => {
     fundId,
     intentsFor(state, fundId, new Set([investorId])),
     10_000,
+    config.control.seed,
   ).state;
   const result = settlePendingRedemptions(queued, network, config);
   const request = result.state.redemptionRequests[0]!;
@@ -184,6 +195,7 @@ test('keeps a whole request pending without partial asset mutation when liquidit
     fundId,
     intentsFor(state, fundId, new Set([largestHolder(state, fundId)])),
     10_000,
+    config.control.seed,
   ).state;
   const positionsBefore = structuredClone(queued.assetPositions);
   const result = settlePendingRedemptions(queued, network, config);
@@ -208,13 +220,31 @@ test('applies settlement delay and gate checks before touching liquidity', () =>
     fundId,
     intentsFor(state, fundId, new Set([investorId])),
     10_000,
+    config.control.seed,
   ).state;
   const delayed = settlePendingRedemptions(queued, network, delayedConfig);
   assert.equal(delayed.summary.pendingByReason.settlement_delay, 1);
 
-  const gatedState = structuredClone(queued);
-  gatedState.funds.find(({ fundId: id }) => id === fundId)!.gated = true;
-  const gated = settlePendingRedemptions(gatedState, network, config);
+  const gatedInput = structuredClone(baselineInput) as Record<string, Record<string, unknown>>;
+  gatedInput.thresholds.baselineKappaBps = 0;
+  gatedInput.thresholds.kappaScanBps = [0];
+  const gatedConfig = parseSimulationConfig(gatedInput);
+  const submitted = submitOracleRisk(queued, network, gatedConfig, {
+    replicateId: 0,
+    tick: 0,
+    fundId,
+    occurredAt: queued.nowSec,
+    requestedSharesInWindow: queued.funds.find(({ fundId: id }) => id === fundId)!
+      .queuedRedemptionShares,
+  });
+  assert.equal(submitted.status, 'submitted');
+  const gatedState = applyGateControlForSubmission(
+    submitted.state,
+    network,
+    gatedConfig,
+    submitted.state.oracleRiskSnapshots.at(-1)!.submissionId,
+  ).state;
+  const gated = settlePendingRedemptions(gatedState, network, gatedConfig);
   assert.equal(gated.summary.pendingByReason.gated, 1);
   assert.deepEqual(gated.state.assetPositions, queued.assetPositions);
 });
@@ -233,6 +263,7 @@ test('keeps requests pending when integer settlement rounds to zero', () => {
     fundId,
     intentsFor(state, fundId, new Set([largestHolder(state, fundId)])),
     10_000,
+    config.control.seed,
   ).state;
   const result = settlePendingRedemptions(queued, network, config);
 
@@ -256,6 +287,7 @@ test('keeps final fund-closure redemption pending instead of inventing liquidati
     fundId,
     intentsFor(state, fundId, new Set([finalInvestorId])),
     10_000,
+    config.control.seed,
   ).state;
   const result = settlePendingRedemptions(queued, network, config);
 
@@ -268,7 +300,14 @@ test('rejects incomplete intent sets and detects queue-accounting tampering', ()
   const state = initialState();
   const fundId = 'fund-001';
   assert.throws(
-    () => queueRedemptionRequestsForFund(state, network, fundId, [], 10_000),
+    () => queueRedemptionRequestsForFund(
+      state,
+      network,
+      fundId,
+      [],
+      10_000,
+      config.control.seed,
+    ),
     /INCOMPLETE_REDEMPTION_INTENT_SET/,
   );
   const mismatchedTicks = intentsFor(
@@ -278,7 +317,14 @@ test('rejects incomplete intent sets and detects queue-accounting tampering', ()
   );
   mismatchedTicks[0]!.tick = 1;
   assert.throws(
-    () => queueRedemptionRequestsForFund(state, network, fundId, mismatchedTicks, 10_000),
+    () => queueRedemptionRequestsForFund(
+      state,
+      network,
+      fundId,
+      mismatchedTicks,
+      10_000,
+      config.control.seed,
+    ),
     /REDEMPTION_INTENT_TICK_MISMATCH/,
   );
 
@@ -288,6 +334,7 @@ test('rejects incomplete intent sets and detects queue-accounting tampering', ()
     fundId,
     intentsFor(state, fundId, new Set([largestHolder(state, fundId)])),
     10_000,
+    config.control.seed,
   ).state;
   queued.funds.find(({ fundId: id }) => id === fundId)!.queuedRedemptionShares += 1;
   assert.throws(
@@ -301,6 +348,7 @@ test('rejects incomplete intent sets and detects queue-accounting tampering', ()
     fundId,
     intentsFor(state, fundId, new Set([largestHolder(state, fundId)])),
     10_000,
+    config.control.seed,
   ).state;
   invalidReason.redemptionRequests[0]!.pendingReason = 'invalid_reason' as never;
   assert.throws(

@@ -21,6 +21,7 @@ test('creates a complete pre-shock state from the generated network', () => {
   assert.equal(state.assetPositions.length, 30);
   assert.deepEqual(state.appliedValuationShocks, []);
   assert.deepEqual(state.oracleRiskSnapshots, []);
+  assert.deepEqual(state.controlTransitions, []);
 
   for (const fund of state.funds) {
     assert.equal(fund.economicAum, 100_000_000);
@@ -35,6 +36,13 @@ test('creates a complete pre-shock state from the generated network', () => {
     assert.equal(fund.lastValuationAsOf, INITIAL_AT);
     assert.equal(fund.lastValuationUpdateAt, INITIAL_AT);
     assert.equal(fund.gated, false);
+    assert.equal(fund.gatePhiBps, 0);
+    assert.equal(fund.gatedAt, null);
+    assert.equal(fund.gateTriggerSubmissionId, null);
+    assert.equal(fund.gateReleaseStreakTicks, 0);
+    assert.equal(fund.gateReleaseEligibleAtTick, null);
+    assert.equal(fund.lastControlSubmissionId, null);
+    assert.equal(fund.lastControlEvaluationTick, null);
   }
   assert.deepEqual(state.redemptionRequests, []);
   assert.deepEqual(state.assetSales, []);

@@ -12,16 +12,17 @@
 
 1. Apply the exogenous shock.
 2. Submit Oracle state.
-3. Apply the disclosure regime.
-4. Execute investor observation schedules.
-5. Update investor beliefs.
-6. Draw redemption decisions.
-7. Queue and settle accepted redemptions.
-8. Update NAV and liquidity state.
-9. Propagate real and signal-analogy effects across funds.
+3. Apply programmable control.
+4. Apply the disclosure regime.
+5. Execute investor observation schedules.
+6. Update investor beliefs.
+7. Draw redemption decisions.
+8. Queue and settle accepted redemptions.
+9. Update NAV and liquidity state.
+10. Propagate real and signal-analogy effects across funds.
 
 The order is a versioned model contract and has a regression test.
-Step 2 publishes any due opening-of-tick valuation and risk snapshot. Step 8 updates post-settlement economic NAV and liquidity for the next tick; it does not publish a second Oracle snapshot.
+Step 2 publishes any due opening-of-tick valuation and risk snapshot. Step 3 consumes that successful snapshot exactly once. Step 9 updates post-settlement economic NAV and liquidity for the next tick; it does not publish a second Oracle snapshot.
 
 ## Randomness and paired counterfactuals
 
@@ -80,6 +81,8 @@ Each draw is identified by `(masterSeed, replicateId, entityId, moduleId, tick, 
 ## Control boundary
 
 The Chapter 3 artifact triggers Gate automatically and releases it through a regulator transaction carrying `reasonHash`. The simulation adds a rule-based release after the score remains below kappa for `k` consecutive periods plus a regulatory delay. This is a Stage 2 model extension, not a claim about the deployed artifact.
+
+Control strength uses `phiBps in [0,10000]`. The continuous formula defines the aggregate attenuation envelope; actual simulation settlement preserves whole requests through one paired deterministic admission draw per request. Higher phi cannot expand the admitted request set. Equality at kappa qualifies for neither trigger nor release.
 
 ## Pilot interpretation
 
