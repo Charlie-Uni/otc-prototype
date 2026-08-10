@@ -2,6 +2,7 @@ import type { TransparencyRegimeId } from '../artifact/risk/regimes';
 
 export const DETECTION_CENSOR_REASONS = [
   'threshold_not_crossed',
+  'shock_metric_not_observed',
   'no_successful_submission',
   'threshold_not_identifiable',
   'not_disclosed_within_horizon',
@@ -29,6 +30,14 @@ export type DetectionLagMetrics = {
   regulatorDisclosure: DetectionLagOutcome;
   publicDisclosure: DetectionLagOutcome;
   publicObservation: DetectionLagOutcome;
+};
+
+export type ShockLinkedDetectionLagMetrics = {
+  fundId: string;
+  shockAt: number;
+  anchor: 'paired_valuation_haircut_increase';
+  system: DetectionLagOutcome;
+  regulatorDisclosure: DetectionLagOutcome;
 };
 
 export type SettlementDelaySummary = {

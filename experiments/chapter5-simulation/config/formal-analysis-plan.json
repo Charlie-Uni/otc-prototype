@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "status": "preregistration_specification",
+  "formalExecutionRequiresTag": "chapter5-sim-prereg-v1",
+  "pilotDataExcluded": true,
+  "primaryWindowDays": 30,
+  "robustnessWindowDays": [60, 90],
+  "replications": {
+    "formalPerCell": 500,
+    "keyRobustnessPerCell": 1000,
+    "basis": "max(mentor minimum, pilot paired-CI recommendation)"
+  },
+  "controlExperiment": {
+    "artifactPolicyBaselineKappaBps": 7000,
+    "mechanismExperimentKappaBps": 1500,
+    "selectionRule": "candidate with shocked target-fund activation rate closest to 5000 bps in the 100-replicate paired reachability pilot; no-shock activation is diagnostic only",
+    "scope": "H5 control-strength/release scans and H6 control-disclosure ablation only"
+  },
+  "detection": {
+    "primaryMetricId": "RegulatorDetectionLag",
+    "anchor": "paired_valuation_haircut_increase",
+    "anchorComparator": "gt",
+    "anchorValueBps": 0,
+    "clock": "first successful Oracle snapshot whose valuation haircut exceeds the same-tick matched no-shock snapshot, then its first regulator disclosure",
+    "sensitivityMetricId": "RegulatorWarningThresholdLag",
+    "sensitivityThresholdBps": 6000,
+    "reportSensitivityCensoring": true
+  },
+  "shockTypeRobustnessAnchors": [
+    { "shockType": "valuation", "metric": "valuationHaircutBps", "pairedComparator": "gt" },
+    { "shockType": "liquidity", "metric": "liquidityShortfallBps", "pairedComparator": "gt" },
+    { "shockType": "redemption", "metric": "redemptionPressureBps", "pairedComparator": "gt" }
+  ],
+  "missingness": {
+    "detection": "report censored status and reason; never impute a numeric lag",
+    "settlement": "report pending status and pending rate; never call it censored",
+    "failedRun": "retain failure evidence and exclude from estimates only under the declared technical-failure rule"
+  },
+  "inference": {
+    "confidenceLevelBps": 9500,
+    "pairedContrasts": true,
+    "intervalMethod": "paired Monte Carlo normal interval with reported standard error",
+    "multipleComparisonMethod": "Holm adjustment within each hypothesis family",
+    "effectReporting": "point estimate, confidence interval, paired sample count, censoring rate"
+  },
+  "hypotheses": [
+    {
+      "id": "H1",
+      "expectedDirection": "R1/R2/R4 regulator detection lag below R3 and R0",
+      "primaryMetricIds": ["RegulatorDetectionLag", "DetectionBenefit"],
+      "contrastIds": ["POLICY_R0_R4"],
+      "usedAsModelGate": false
+    },
+    {
+      "id": "H2",
+      "expectedDirection": "public immediate detailed disclosure increases redemption acceleration",
+      "primaryMetricIds": ["RedemptionAcceleration", "PeakRedemption"],
+      "contrastIds": ["A1", "A2", "A3"],
+      "usedAsModelGate": false
+    },
+    {
+      "id": "H3",
+      "expectedDirection": "regulator-only or tiered disclosure preserves detection with lower coordination cost",
+      "primaryMetricIds": ["DetectionBenefit", "RedemptionAcceleration", "ControlCost"],
+      "contrastIds": ["POLICY_R0_R4", "A1", "A3"],
+      "usedAsModelGate": false
+    },
+    {
+      "id": "H4",
+      "expectedDirection": "asset and investor overlap increase loss and redemption spillovers",
+      "primaryMetricIds": ["SpilloverRedemption", "SpilloverScope", "LossMagnitude"],
+      "contrastIds": ["A4", "A5"],
+      "usedAsModelGate": false
+    },
+    {
+      "id": "H5",
+      "expectedDirection": "stronger controls reduce loss and liquidity depletion while imposing control cost",
+      "primaryMetricIds": ["LossReduction", "LiquidityBufferDepletion", "ControlCost"],
+      "contrastIds": ["CONTROL_PHI"],
+      "usedAsModelGate": false
+    },
+    {
+      "id": "H6",
+      "expectedDirection": "public control disclosure increases spillover demand in proximate unshocked funds",
+      "primaryMetricIds": ["PublicControlSpillover", "SpilloverScope"],
+      "contrastIds": ["A6"],
+      "usedAsModelGate": false
+    }
+  ],
+  "exclusionRules": [
+    "pilot and calibration runs are excluded from formal results",
+    "a failed formal cell is preserved as failure evidence and rerun only with the same locked inputs",
+    "a run with a config digest mismatch is rejected before metric extraction",
+    "no regime ordering or hypothesis direction is a run-validity condition"
+  ],
+  "supplementaryStabilityWeightSchemes": [
+    { "id": "equal", "weightBps": [2500, 2500, 2500, 2500] },
+    { "id": "detection_heavy", "weightBps": [4000, 2000, 2000, 2000] },
+    { "id": "loss_heavy", "weightBps": [2000, 2000, 4000, 2000] }
+  ],
+  "plannedOutputs": [
+    "H1-H6 paired-estimate table",
+    "R0-R4 detection and censoring table",
+    "redemption and liquidity outcome table",
+    "network spillover table",
+    "control benefit-cost table",
+    "single-dimension robustness appendix"
+  ]
+}

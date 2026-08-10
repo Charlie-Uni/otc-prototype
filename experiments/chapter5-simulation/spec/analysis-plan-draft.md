@@ -1,6 +1,7 @@
 # Analysis Plan Draft
 
-Status: foundation draft, not preregistered.
+Status: historical foundation draft. The executable candidate is now
+`formal-preregistration.md` plus the strict JSON plan and experiment matrix.
 
 This document records the analysis structure before model implementation. Pilot runs may calibrate numerical behavior ranges and estimate Monte Carlo standard errors. Pilot observations are excluded from formal thesis results.
 

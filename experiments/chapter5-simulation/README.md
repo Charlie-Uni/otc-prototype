@@ -34,6 +34,7 @@ The foundation phase provides:
 - deterministic single-run and paired-counterfactual outcome metrics for Chapter 6 analysis.
 - non-gating behavior/demand-transmission calibration and paired Monte Carlo precision planning before preregistration.
 - explicit pilot diagnosis of global detection-threshold coverage, with no automatic fallback when no candidate is identifiable.
+- a strict formal-analysis candidate with a paired shock-linked detection anchor, 144 deterministic cells, contamination checks, and a separate preregistration hash lock.
 
 `calc.ts`, `regimes.ts`, and `sensitivity.ts` are byte-identical copies from `chapter3-artifact-v1.4.0`. The observation helper is the pure scheduling subset of `detection.ts`; the complete source file is hash-locked and its observable behavior is covered by golden tests, avoiding unrelated ABI and indexer code in the simulation package.
 
@@ -47,6 +48,8 @@ pnpm --filter @ots/chapter5-simulation typecheck
 pnpm --filter @ots/chapter5-simulation lock:check
 pnpm --filter @ots/chapter5-simulation pilot:sanity
 pnpm --filter @ots/chapter5-simulation pilot:calibrate
+pnpm --filter @ots/chapter5-simulation pilot:control-threshold
+pnpm --filter @ots/chapter5-simulation prereg:check
 ```
 
-Pilot results are calibration evidence only. Formal results may be generated only after the analysis plan and parameters are committed and tagged separately.
+Pilot results are calibration evidence only. Formal results may be generated only after the analysis plan and parameters are committed, pass CI, and are tagged `chapter5-sim-prereg-v1`. The committed matrix is a design artifact, not an experimental result.

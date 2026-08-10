@@ -21,7 +21,8 @@ Formula IDs below are stable implementation IDs. Final thesis equation numbers w
 | F-LOSS-NET-1 | Shared-asset loss transmission | `network/propagation.ts::propagateNetworkEffects` | target asset value, source sale price impact, pass-through | integer value | `network/propagation.test.ts`: asset/AUM reconciliation and channel removal |
 | F-FMA-1 | First-mover advantage | `liquidity/fma.ts::firstMoverAdvantageBps` | runtime liquidity-buffer ratio | bps | `liquidity/fma.test.ts`; runtime tiers in `liquidity/buffer.test.ts` |
 | F-PRICE-1 | PriceImpact and sale proceeds | `liquidity/price-impact.ts::priceImpactBps`; `discountedSaleProceeds` | lambda, sale amount, depth, gamma | bps/value | `liquidity/price-impact.test.ts`; settlement integration in `redemption/lifecycle.test.ts` |
-| F-DETECT-2 | Three DetectionLag clocks | `metrics/detection.ts::detectionLagMetrics` | raw snapshots, disclosures, observations | seconds or censored | Timestamp order and non-identifiable threshold |
+| F-DETECT-2 | Three warning-threshold DetectionLag clocks | `metrics/detection.ts::detectionLagMetrics` | raw snapshots, disclosures, observations, configurable tau | seconds or censored | Timestamp order and non-identifiable threshold |
+| F-DETECT-3 | Primary shock-linked RegulatorDetectionLag | `metrics/detection.ts::pairedValuationShockDetectionLagMetrics` | paired shock/no-shock snapshots and regulator disclosures | seconds or censored | Pair validity, threshold independence, positive paired haircut difference |
 | F-REDEEM-2 | RedemptionAcceleration and PeakRedemption | `metrics/counterfactual.ts::redemptionAccelerationBps`; `metrics/outcomes.ts::extractRunOutcomeMetrics` | paired accepted requests; tick request pressure | signed bps / bps | Pair rejection, fixed window, peak extraction |
 | F-SCOPE-1 | SpilloverScope and PublicControlSpillover | `metrics/counterfactual.ts::spilloverScope`; `publicControlSpillover` | paired unshocked-fund request rates | signed mean and affected share bps | 5% boundary and negative spillover |
 | F-LOSS-1 | Flow-adjusted LossMagnitude | `metrics/outcomes.ts::extractRunOutcomeMetrics` | initial AUM, ending AUM, normal settlement outflow | bps | No-shock settlement does not create loss |
@@ -32,4 +33,4 @@ Formula IDs below are stable implementation IDs. Final thesis equation numbers w
 | F-BENEFIT-1 | DetectionBenefit | `metrics/detection.ts::detectionBenefitSec` | R0 lag, regime lag | seconds | Paired difference and censoring |
 | F-STABILITY-1 | FundNetStabilityBenefit | `metrics/stability.ts::fundNetStabilityBenefit` | component metrics and weights | index | Alternative weight schemes |
 
-Every implementation entry must be updated from `planned` to an actual symbol and test path before formal preregistration.
+All baseline formula entries above map to implemented symbols and tests. Shock-type robustness extends F-DETECT-3 to liquidity shortfall and redemption pressure in the formal executor without changing the paired-increase definition.

@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "time": {
+    "tickSec": 86400,
+    "horizonDays": 90,
+    "primaryWindowDays": 30,
+    "robustnessWindowDays": [60, 90]
+  },
+  "network": {
+    "fundCount": 10,
+    "investorCount": 200,
+    "assetClassCount": 5,
+    "managerCount": 2,
+    "serviceProviderCount": 3,
+    "valuationMethodCount": 2,
+    "networkSeed": 20260809,
+    "sharedInvestorCoreBps": 3000
+  },
+  "heterogeneity": {
+    "holderCountPerFund": 20,
+    "initialAum": 100000000,
+    "initialTotalShares": 100000000,
+    "expectedRedemptionClaimsBps": 3000,
+    "liquidAssetShareBpsByLiquidityMismatchTier": {
+      "low": 4500,
+      "medium": 3000,
+      "high": 1500
+    },
+    "navUpdateIntervalDaysByStalePricingTier": {
+      "low": 1,
+      "medium": 7,
+      "high": 14
+    },
+    "topHolderShareBpsByConcentrationTier": {
+      "low": 500,
+      "medium": 3000,
+      "high": 5000
+    }
+  },
+  "monteCarlo": {
+    "pilotReplicatesPerCell": 100,
+    "formalMinimumReplicatesPerCell": 500,
+    "keyRobustnessReplicatesPerCell": 1000
+  },
+  "shock": {
+    "baselineType": "valuation",
+    "seed": 20260810,
+    "cycleStartAt": 1799884800,
+    "navDropBps": [1000, 2000, 3000],
+    "r0CycleSec": 604800,
+    "shockAtMode": "uniform_within_r0_cycle",
+    "targetFundMode": "balanced_single_fund"
+  },
+  "risk": {
+    "weightSchemeId": "equal_weight_baseline",
+    "weightBps": [1667, 1667, 1667, 1667, 1666, 1666],
+    "maxStaleAgeDays": 30
+  },
+  "oracle": {
+    "seed": 20260811,
+    "baselineLatencySec": 0,
+    "baselineExecutionFailureBps": 0,
+    "maxAttempts": 2,
+    "retryDelaySec": 300
+  },
+  "observation": {
+    "seed": 20260812,
+    "startOffsetUpperExclusiveSec": 86400,
+    "pollingIntervalsSec": [3600, 21600, 86400],
+    "synchronicityBucketSec": 86400
+  },
+  "behavior": {
+    "seed": 20260813,
+    "initialRiskPriorBps": 2000,
+    "expectedOthersWeightsBps": [4000, 3000, 3000],
+    "coefficients": {
+      "interceptLogOdds": -5.293304824724492,
+      "perceivedRisk": 1,
+      "publicness": 0.25,
+      "signalSynchronicity": 0.5,
+      "expectedOthersRedeem": 1,
+      "firstMoverAdvantage": 1
+    }
+  },
+  "liquidity": {
+    "redemptionRequestFractionBps": 1000,
+    "baselineSettlementDelayDays": 0,
+    "priceImpactLambdaBps": 500,
+    "priceImpactGamma": 1,
+    "marketDepthMultipleBps": 20000
+  },
+  "control": {
+    "seed": 20260814,
+    "baselinePhiBps": 10000,
+    "phiScanBps": [0, 2500, 5000, 7500, 10000],
+    "releaseConsecutiveTicks": 3,
+    "releaseConsecutiveTicksScan": [1, 3, 5],
+    "releaseDelayTicks": 1,
+    "releaseDelayTicksScan": [0, 1, 3]
+  },
+  "propagation": {
+    "proximityWeightsBps": [2500, 2500, 2500, 2500],
+    "sharedAssetPassThroughBps": 10000,
+    "investorOverlapTransmissionBps": 500,
+    "publicRiskTransmissionBps": 500,
+    "publicControlTransmissionBps": 500,
+    "channels": {
+      "sharedIlliquidAssets": true,
+      "investorOverlap": true,
+      "signalAnalogy": true
+    }
+  },
+  "thresholds": {
+    "detectionBps": 6000,
+    "baselineKappaBps": 7000,
+    "kappaScanBps": [5000, 6000, 7000, 8000]
+  }
+}

@@ -1,0 +1,274 @@
+{
+  "schemaVersion": 1,
+  "baselineConfigPath": "config/formal-baseline.json",
+  "formalReplicates": 500,
+  "keyRobustnessReplicates": 1000,
+  "controlExperimentKappaBps": 1500,
+  "primaryPolicy": {
+    "regimeIds": ["R0", "R1", "R2", "R3", "R4"],
+    "valuationShockBps": [1000, 2000, 3000],
+    "includeMatchedNoShock": true
+  },
+  "ablations": [
+    {
+      "id": "A1",
+      "label": "public versus regulator-only risk disclosure",
+      "regimeId": "R1",
+      "changedPath": "mechanisms.publicRiskDisclosureEnabled",
+      "baselineValue": true,
+      "comparisonValue": false,
+      "hypothesisIds": ["H2", "H3"]
+    },
+    {
+      "id": "A2",
+      "label": "immediate versus delayed disclosure",
+      "regimeId": "R1",
+      "changedPath": "regime.delaySec",
+      "baselineValue": 0,
+      "comparisonValue": 86400,
+      "hypothesisIds": ["H2"]
+    },
+    {
+      "id": "A3",
+      "label": "detailed versus aggregate disclosure",
+      "regimeId": "R1",
+      "changedPath": "regime.granularity",
+      "baselineValue": "detailed",
+      "comparisonValue": "aggregate",
+      "hypothesisIds": ["H2", "H3"]
+    },
+    {
+      "id": "A4",
+      "label": "investor-overlap channel on versus off",
+      "regimeId": "R1",
+      "changedPath": "config.propagation.channels.investorOverlap",
+      "baselineValue": true,
+      "comparisonValue": false,
+      "hypothesisIds": ["H4"]
+    },
+    {
+      "id": "A5",
+      "label": "shared-illiquid-asset channel on versus off",
+      "regimeId": "R1",
+      "changedPath": "config.propagation.channels.sharedIlliquidAssets",
+      "baselineValue": true,
+      "comparisonValue": false,
+      "hypothesisIds": ["H4"]
+    },
+    {
+      "id": "A6",
+      "label": "public versus private control disclosure",
+      "regimeId": "R1",
+      "changedPath": "regime.controlDisclosure",
+      "baselineValue": "public",
+      "comparisonValue": "private",
+      "fixedChanges": [
+        { "path": "config.thresholds.baselineKappaBps", "value": 1500 }
+      ],
+      "hypothesisIds": ["H6"]
+    }
+  ],
+  "robustnessScans": [
+    {
+      "id": "NETWORK_SCALE",
+      "changedPath": "design.networkScale",
+      "baselineValueId": "baseline",
+      "replicates": 1000,
+      "values": [
+        { "id": "baseline", "value": { "fundCount": 10, "investorCount": 200, "assetClassCount": 5 } },
+        { "id": "large", "value": { "fundCount": 20, "investorCount": 400, "assetClassCount": 8 } }
+      ]
+    },
+    {
+      "id": "INVESTOR_OVERLAP",
+      "changedPath": "config.network.sharedInvestorCoreBps",
+      "baselineValueId": "3000",
+      "replicates": 500,
+      "values": [
+        { "id": "1000", "value": 1000 },
+        { "id": "3000", "value": 3000 },
+        { "id": "5000", "value": 5000 }
+      ]
+    },
+    {
+      "id": "ILLIQUID_ASSET_SHARE",
+      "changedPath": "config.heterogeneity.liquidAssetShareBpsByLiquidityMismatchTier",
+      "baselineValueId": "baseline",
+      "replicates": 500,
+      "values": [
+        { "id": "liquid", "value": { "low": 6000, "medium": 4500, "high": 3000 } },
+        { "id": "baseline", "value": { "low": 4500, "medium": 3000, "high": 1500 } },
+        { "id": "illiquid", "value": { "low": 3000, "medium": 2000, "high": 1000 } }
+      ]
+    },
+    {
+      "id": "NAV_UPDATE_FREQUENCY",
+      "changedPath": "config.heterogeneity.navUpdateIntervalDaysByStalePricingTier",
+      "baselineValueId": "baseline",
+      "replicates": 500,
+      "values": [
+        { "id": "frequent", "value": { "low": 1, "medium": 3, "high": 7 } },
+        { "id": "baseline", "value": { "low": 1, "medium": 7, "high": 14 } },
+        { "id": "infrequent", "value": { "low": 7, "medium": 14, "high": 30 } }
+      ]
+    },
+    {
+      "id": "SETTLEMENT_DELAY",
+      "changedPath": "config.liquidity.baselineSettlementDelayDays",
+      "baselineValueId": "0",
+      "replicates": 500,
+      "values": [
+        { "id": "0", "value": 0 },
+        { "id": "3", "value": 3 },
+        { "id": "7", "value": 7 }
+      ]
+    },
+    {
+      "id": "CONTROL_KAPPA",
+      "changedPath": "config.thresholds.baselineKappaBps",
+      "baselineValueId": "7000",
+      "replicates": 500,
+      "values": [
+        { "id": "5000", "value": 5000 },
+        { "id": "6000", "value": 6000 },
+        { "id": "7000", "value": 7000 },
+        { "id": "8000", "value": 8000 }
+      ]
+    },
+    {
+      "id": "CONTROL_PHI",
+      "changedPath": "config.control.baselinePhiBps",
+      "baselineValueId": "10000",
+      "replicates": 1000,
+      "fixedChanges": [
+        { "path": "config.thresholds.baselineKappaBps", "value": 1500 }
+      ],
+      "values": [
+        { "id": "0", "value": 0 },
+        { "id": "2500", "value": 2500 },
+        { "id": "5000", "value": 5000 },
+        { "id": "7500", "value": 7500 },
+        { "id": "10000", "value": 10000 }
+      ]
+    },
+    {
+      "id": "CONTROL_RELEASE_STREAK",
+      "changedPath": "config.control.releaseConsecutiveTicks",
+      "baselineValueId": "3",
+      "replicates": 500,
+      "fixedChanges": [
+        { "path": "config.thresholds.baselineKappaBps", "value": 1500 }
+      ],
+      "values": [
+        { "id": "1", "value": 1 },
+        { "id": "3", "value": 3 },
+        { "id": "5", "value": 5 }
+      ]
+    },
+    {
+      "id": "CONTROL_RELEASE_DELAY",
+      "changedPath": "config.control.releaseDelayTicks",
+      "baselineValueId": "1",
+      "replicates": 500,
+      "fixedChanges": [
+        { "path": "config.thresholds.baselineKappaBps", "value": 1500 }
+      ],
+      "values": [
+        { "id": "0", "value": 0 },
+        { "id": "1", "value": 1 },
+        { "id": "3", "value": 3 }
+      ]
+    },
+    {
+      "id": "RISK_WEIGHTS",
+      "changedPath": "design.riskWeightScheme",
+      "baselineValueId": "equal",
+      "replicates": 500,
+      "values": [
+        { "id": "equal", "value": "equal_weight_baseline" },
+        { "id": "legacy", "value": "legacy_weight_scheme" }
+      ]
+    },
+    {
+      "id": "MAX_STALE_AGE",
+      "changedPath": "config.risk.maxStaleAgeDays",
+      "baselineValueId": "30",
+      "replicates": 500,
+      "values": [
+        { "id": "7", "value": 7 },
+        { "id": "14", "value": 14 },
+        { "id": "30", "value": 30 },
+        { "id": "45", "value": 45 }
+      ]
+    },
+    {
+      "id": "PRICE_IMPACT_GAMMA",
+      "changedPath": "config.liquidity.priceImpactGamma",
+      "baselineValueId": "1",
+      "replicates": 500,
+      "values": [
+        { "id": "1", "value": 1 },
+        { "id": "1_5", "value": 1.5 },
+        { "id": "2", "value": 2 }
+      ]
+    },
+    {
+      "id": "ORACLE_LATENCY",
+      "changedPath": "config.oracle.baselineLatencySec",
+      "baselineValueId": "0",
+      "replicates": 1000,
+      "values": [
+        { "id": "0", "value": 0 },
+        { "id": "3600", "value": 3600 },
+        { "id": "21600", "value": 21600 }
+      ]
+    },
+    {
+      "id": "EXECUTION_FAILURE",
+      "changedPath": "config.oracle.baselineExecutionFailureBps",
+      "baselineValueId": "0",
+      "replicates": 1000,
+      "values": [
+        { "id": "0", "value": 0 },
+        { "id": "100", "value": 100 },
+        { "id": "500", "value": 500 }
+      ]
+    },
+    {
+      "id": "PROXIMITY_WEIGHTS",
+      "changedPath": "config.propagation.proximityWeightsBps",
+      "baselineValueId": "equal",
+      "replicates": 1000,
+      "values": [
+        { "id": "equal", "value": [2500, 2500, 2500, 2500] },
+        { "id": "asset_heavy", "value": [5000, 2000, 1500, 1500] },
+        { "id": "investor_heavy", "value": [2000, 5000, 1500, 1500] },
+        { "id": "signal_heavy", "value": [1500, 1500, 3500, 3500] }
+      ]
+    },
+    {
+      "id": "SHOCK_TYPE",
+      "changedPath": "design.shockType",
+      "baselineValueId": "valuation",
+      "replicates": 1000,
+      "values": [
+        { "id": "valuation", "value": "valuation" },
+        { "id": "liquidity", "value": "liquidity" },
+        { "id": "redemption", "value": "redemption" }
+      ]
+    }
+  ],
+  "behaviorLhs": {
+    "sampleCount": 16,
+    "seed": 20260815,
+    "replicates": 500,
+    "ranges": {
+      "interceptLogOdds": [-5.8, -4.8],
+      "perceivedRisk": [0.5, 1.5],
+      "publicness": [0.125, 0.5],
+      "signalSynchronicity": [0.25, 0.75],
+      "expectedOthersRedeem": [0.5, 1.5],
+      "firstMoverAdvantage": [0.5, 1.5]
+    }
+  }
+}

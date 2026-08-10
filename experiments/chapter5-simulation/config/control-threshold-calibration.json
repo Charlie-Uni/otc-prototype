@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "replicates": 100,
+  "horizonDays": 30,
+  "regimeId": "R1",
+  "valuationShockBps": 2000,
+  "candidateKappaBps": [1000, 1250, 1500, 1750, 2000, 2500, 3000, 5000, 6000, 7000, 8000],
+  "targetShockedActivationRateBps": 5000,
+  "selectionRule": "minimum absolute distance from target shocked activation rate; ties select the higher kappa",
+  "noShockActivationUsedForSelection": false
+}

@@ -2,6 +2,11 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { parseSimulationConfig } from '../core/config';
+import {
+  disclosureTimeFor,
+  getTransparencyRegime,
+  type TransparencyRegimeId,
+} from '../artifact/risk/regimes';
 import { generateNetworkModel } from '../network/generator';
 import { runSimulation } from '../runner/run';
 import { createSimulationTreatment } from '../runner/treatment';
@@ -10,6 +15,7 @@ import {
   detectionBenefitSec,
   detectionLagMetrics,
   regulatorDetectionLagForThreshold,
+  pairedValuationShockDetectionLagMetrics,
 } from './detection';
 
 const baselineInput = JSON.parse(readFileSync(
@@ -17,7 +23,7 @@ const baselineInput = JSON.parse(readFileSync(
   'utf8',
 )) as Record<string, Record<string, unknown>>;
 
-function run(regimeId: 'R1' | 'R2', thresholdBps = 6_000, shockEnabled = true) {
+function run(regimeId: TransparencyRegimeId, thresholdBps = 6_000, shockEnabled = true) {
   const input = structuredClone(baselineInput);
   input.thresholds.detectionBps = thresholdBps;
   const config = parseSimulationConfig(input);
@@ -164,5 +170,71 @@ test('never anchors detection to a snapshot submitted before shockAt', () => {
   if (metrics.system.status === 'detected') {
     assert.notEqual(metrics.system.sourceSubmissionId, preShock.submissionId);
     assert.ok(metrics.system.detectedAt >= result.scenario.shockAt);
+  }
+});
+
+test('anchors primary valuation-shock detection to the first paired haircut increase', () => {
+  const result = run('R1', 10_000);
+  const noShock = run('R1', 10_000, false);
+  const metrics = pairedValuationShockDetectionLagMetrics(result, noShock);
+  assert.equal(metrics.anchor, 'paired_valuation_haircut_increase');
+  assert.equal(metrics.system.status, 'detected');
+  assert.equal(metrics.regulatorDisclosure.status, 'detected');
+  if (metrics.system.status === 'detected') {
+    const sourceSubmissionId = metrics.system.sourceSubmissionId;
+    const source = result.finalState.oracleRiskSnapshots.find(({ submissionId }) => (
+      submissionId === sourceSubmissionId
+    ));
+    assert.ok(source);
+    const counterfactual = noShock.finalState.oracleRiskSnapshots.find((snapshot) => (
+      snapshot.fundId === result.scenario.targetFundId && snapshot.tick === source.tick
+    ));
+    assert.ok(counterfactual);
+    assert.ok(source.metrics.valuationHaircutBps > counterfactual.metrics.valuationHaircutBps);
+  }
+});
+
+test('keeps the shock-linked anchor independent from the configurable score threshold', () => {
+  const lowThreshold = pairedValuationShockDetectionLagMetrics(
+    run('R1', 0),
+    run('R1', 0, false),
+  );
+  const highThreshold = pairedValuationShockDetectionLagMetrics(
+    run('R1', 10_000),
+    run('R1', 10_000, false),
+  );
+  assert.deepEqual(lowThreshold, highThreshold);
+});
+
+test('rejects reversed or mismatched shock-linked pairs', () => {
+  const shocked = run('R1');
+  const noShock = run('R1', 6_000, false);
+  assert.throws(
+    () => pairedValuationShockDetectionLagMetrics(noShock, shocked),
+    /INVALID_SHOCK_LINKED_PAIR_ARMS/,
+  );
+  assert.throws(
+    () => pairedValuationShockDetectionLagMetrics(shocked, run('R2', 6_000, false)),
+    /SHOCK_LINKED_PAIR_MISMATCH/,
+  );
+});
+
+test('applies the frozen regulator disclosure boundary after paired shock detection', () => {
+  for (const regimeId of ['R0', 'R1', 'R2', 'R3', 'R4'] as const) {
+    const shocked = run(regimeId, 10_000);
+    const metrics = pairedValuationShockDetectionLagMetrics(
+      shocked,
+      run(regimeId, 10_000, false),
+    );
+    assert.equal(metrics.system.status, 'detected');
+    assert.equal(metrics.regulatorDisclosure.status, 'detected');
+    if (metrics.system.status === 'detected'
+      && metrics.regulatorDisclosure.status === 'detected') {
+      const regime = getTransparencyRegime(regimeId);
+      const expected = regime.visibility === 'public'
+        ? disclosureTimeFor(metrics.system.detectedAt, regime)
+        : metrics.system.detectedAt;
+      assert.equal(metrics.regulatorDisclosure.detectedAt, expected, regimeId);
+    }
   }
 });

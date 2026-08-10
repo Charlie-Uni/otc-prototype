@@ -1,9 +1,11 @@
 import type { RiskDisclosure } from '../disclosure/types';
 import type { SimulationRunResult } from '../runner/types';
 import type { InvestorRiskObservation } from '../observation/types';
+import { sameValuationShockScenario } from '../runner/treatment';
 import type {
   DetectionLagMetrics,
   DetectionLagOutcome,
+  ShockLinkedDetectionLagMetrics,
 } from './outcome-types';
 
 function requireDetectionThreshold(value: number): void {
@@ -125,6 +127,65 @@ export function regulatorDetectionLagForThreshold(
     fundId,
     shockAt,
   );
+}
+
+export function pairedValuationShockDetectionLagMetrics(
+  shocked: SimulationRunResult,
+  noShock: SimulationRunResult,
+): ShockLinkedDetectionLagMetrics {
+  if (!shocked.shockEnabled || noShock.shockEnabled) {
+    throw new Error('INVALID_SHOCK_LINKED_PAIR_ARMS');
+  }
+  if (!sameValuationShockScenario(shocked.scenario, noShock.scenario)
+    || shocked.configDigestSha256 !== noShock.configDigestSha256
+    || shocked.regime.id !== noShock.regime.id) {
+    throw new Error('SHOCK_LINKED_PAIR_MISMATCH');
+  }
+  const { targetFundId: fundId, shockAt } = shocked.scenario;
+  const eligibleSnapshots = shocked.finalState.oracleRiskSnapshots
+    .filter((snapshot) => snapshot.fundId === fundId && snapshot.submittedAt >= shockAt)
+    .sort((left, right) => (
+      left.submittedAt - right.submittedAt
+      || left.submissionId.localeCompare(right.submissionId)
+    ));
+  const noShockByTick = new Map(noShock.finalState.oracleRiskSnapshots
+    .filter((snapshot) => snapshot.fundId === fundId && snapshot.submittedAt >= shockAt)
+    .map((snapshot) => [snapshot.tick, snapshot]));
+  const detectedSnapshots = eligibleSnapshots.filter((snapshot) => {
+    const counterfactual = noShockByTick.get(snapshot.tick);
+    return counterfactual !== undefined
+      && snapshot.metrics.valuationHaircutBps
+        > counterfactual.metrics.valuationHaircutBps;
+  });
+  const first = detectedSnapshots[0];
+  if (!first) {
+    const censored = {
+      status: 'censored',
+      reason: eligibleSnapshots.length === 0
+        ? 'no_successful_submission'
+        : 'shock_metric_not_observed',
+    } as const;
+    return {
+      fundId,
+      shockAt,
+      anchor: 'paired_valuation_haircut_increase',
+      system: censored,
+      regulatorDisclosure: censored,
+    };
+  }
+  const ids = new Set(detectedSnapshots.map(({ submissionId }) => submissionId));
+  return {
+    fundId,
+    shockAt,
+    anchor: 'paired_valuation_haircut_increase',
+    system: detected(first.submittedAt, shockAt, first.submissionId),
+    regulatorDisclosure: disclosureLag(
+      shocked.regulatorRiskDisclosures,
+      ids,
+      fundId,
+      shockAt,
+    ),
+  };
 }
 
 export function detectionLagMetrics(result: SimulationRunResult): DetectionLagMetrics {

@@ -1,0 +1,3463 @@
+{
+  "schemaVersion": 1,
+  "designDigestSha256": "2ae6acadc56e50a88697a380de1658951c2315d6aa321e25704e58ae1bf09165",
+  "cellCount": 144,
+  "cells": [
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R0-1000",
+      "regimeId": "R0",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 1000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R0-1000-SHOCK",
+      "arm": "shock",
+      "shockEnabled": true
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R0-1000",
+      "regimeId": "R0",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 1000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R0-1000-NO-SHOCK",
+      "arm": "no_shock",
+      "shockEnabled": false
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R0-2000",
+      "regimeId": "R0",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R0-2000-SHOCK",
+      "arm": "shock",
+      "shockEnabled": true
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R0-2000",
+      "regimeId": "R0",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R0-2000-NO-SHOCK",
+      "arm": "no_shock",
+      "shockEnabled": false
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R0-3000",
+      "regimeId": "R0",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 3000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R0-3000-SHOCK",
+      "arm": "shock",
+      "shockEnabled": true
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R0-3000",
+      "regimeId": "R0",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 3000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R0-3000-NO-SHOCK",
+      "arm": "no_shock",
+      "shockEnabled": false
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R1-1000",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 1000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R1-1000-SHOCK",
+      "arm": "shock",
+      "shockEnabled": true
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R1-1000",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 1000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R1-1000-NO-SHOCK",
+      "arm": "no_shock",
+      "shockEnabled": false
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R1-2000",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R1-2000-SHOCK",
+      "arm": "shock",
+      "shockEnabled": true
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R1-2000",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R1-2000-NO-SHOCK",
+      "arm": "no_shock",
+      "shockEnabled": false
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R1-3000",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 3000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R1-3000-SHOCK",
+      "arm": "shock",
+      "shockEnabled": true
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R1-3000",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 3000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R1-3000-NO-SHOCK",
+      "arm": "no_shock",
+      "shockEnabled": false
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R2-1000",
+      "regimeId": "R2",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 1000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R2-1000-SHOCK",
+      "arm": "shock",
+      "shockEnabled": true
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R2-1000",
+      "regimeId": "R2",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 1000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R2-1000-NO-SHOCK",
+      "arm": "no_shock",
+      "shockEnabled": false
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R2-2000",
+      "regimeId": "R2",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R2-2000-SHOCK",
+      "arm": "shock",
+      "shockEnabled": true
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R2-2000",
+      "regimeId": "R2",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R2-2000-NO-SHOCK",
+      "arm": "no_shock",
+      "shockEnabled": false
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R2-3000",
+      "regimeId": "R2",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 3000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R2-3000-SHOCK",
+      "arm": "shock",
+      "shockEnabled": true
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R2-3000",
+      "regimeId": "R2",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 3000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R2-3000-NO-SHOCK",
+      "arm": "no_shock",
+      "shockEnabled": false
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R3-1000",
+      "regimeId": "R3",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 1000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R3-1000-SHOCK",
+      "arm": "shock",
+      "shockEnabled": true
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R3-1000",
+      "regimeId": "R3",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 1000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R3-1000-NO-SHOCK",
+      "arm": "no_shock",
+      "shockEnabled": false
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R3-2000",
+      "regimeId": "R3",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R3-2000-SHOCK",
+      "arm": "shock",
+      "shockEnabled": true
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R3-2000",
+      "regimeId": "R3",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R3-2000-NO-SHOCK",
+      "arm": "no_shock",
+      "shockEnabled": false
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R3-3000",
+      "regimeId": "R3",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 3000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R3-3000-SHOCK",
+      "arm": "shock",
+      "shockEnabled": true
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R3-3000",
+      "regimeId": "R3",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 3000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R3-3000-NO-SHOCK",
+      "arm": "no_shock",
+      "shockEnabled": false
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R4-1000",
+      "regimeId": "R4",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 1000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R4-1000-SHOCK",
+      "arm": "shock",
+      "shockEnabled": true
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R4-1000",
+      "regimeId": "R4",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 1000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R4-1000-NO-SHOCK",
+      "arm": "no_shock",
+      "shockEnabled": false
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R4-2000",
+      "regimeId": "R4",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R4-2000-SHOCK",
+      "arm": "shock",
+      "shockEnabled": true
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R4-2000",
+      "regimeId": "R4",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R4-2000-NO-SHOCK",
+      "arm": "no_shock",
+      "shockEnabled": false
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R4-3000",
+      "regimeId": "R4",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 3000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R4-3000-SHOCK",
+      "arm": "shock",
+      "shockEnabled": true
+    },
+    {
+      "family": "primary_policy",
+      "pairId": "POLICY-R4-3000",
+      "regimeId": "R4",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 3000,
+      "replicates": 500,
+      "treatmentChanges": [],
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "cellId": "POLICY-R4-3000-NO-SHOCK",
+      "arm": "no_shock",
+      "shockEnabled": false
+    },
+    {
+      "family": "ablation",
+      "pairId": "A1",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2",
+        "H3"
+      ],
+      "cellId": "A1-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": [
+        {
+          "path": "mechanisms.publicRiskDisclosureEnabled",
+          "value": true
+        }
+      ]
+    },
+    {
+      "family": "ablation",
+      "pairId": "A1",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2",
+        "H3"
+      ],
+      "cellId": "A1-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "mechanisms.publicRiskDisclosureEnabled",
+          "value": false
+        }
+      ]
+    },
+    {
+      "family": "ablation",
+      "pairId": "A2",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "A2-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": [
+        {
+          "path": "regime.delaySec",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "family": "ablation",
+      "pairId": "A2",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "A2-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "regime.delaySec",
+          "value": 86400
+        }
+      ]
+    },
+    {
+      "family": "ablation",
+      "pairId": "A3",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2",
+        "H3"
+      ],
+      "cellId": "A3-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": [
+        {
+          "path": "regime.granularity",
+          "value": "detailed"
+        }
+      ]
+    },
+    {
+      "family": "ablation",
+      "pairId": "A3",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2",
+        "H3"
+      ],
+      "cellId": "A3-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "regime.granularity",
+          "value": "aggregate"
+        }
+      ]
+    },
+    {
+      "family": "ablation",
+      "pairId": "A4",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H4"
+      ],
+      "cellId": "A4-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": [
+        {
+          "path": "config.propagation.channels.investorOverlap",
+          "value": true
+        }
+      ]
+    },
+    {
+      "family": "ablation",
+      "pairId": "A4",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H4"
+      ],
+      "cellId": "A4-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.propagation.channels.investorOverlap",
+          "value": false
+        }
+      ]
+    },
+    {
+      "family": "ablation",
+      "pairId": "A5",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H4"
+      ],
+      "cellId": "A5-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": [
+        {
+          "path": "config.propagation.channels.sharedIlliquidAssets",
+          "value": true
+        }
+      ]
+    },
+    {
+      "family": "ablation",
+      "pairId": "A5",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H4"
+      ],
+      "cellId": "A5-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.propagation.channels.sharedIlliquidAssets",
+          "value": false
+        }
+      ]
+    },
+    {
+      "family": "ablation",
+      "pairId": "A6",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H6"
+      ],
+      "cellId": "A6-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "regime.controlDisclosure",
+          "value": "public"
+        }
+      ]
+    },
+    {
+      "family": "ablation",
+      "pairId": "A6",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H6"
+      ],
+      "cellId": "A6-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "regime.controlDisclosure",
+          "value": "private"
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-NETWORK_SCALE-large",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-NETWORK_SCALE-large-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "design.networkScale",
+          "value": {
+            "fundCount": 10,
+            "investorCount": 200,
+            "assetClassCount": 5
+          }
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-NETWORK_SCALE-large",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-NETWORK_SCALE-large-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "design.networkScale",
+          "value": {
+            "fundCount": 20,
+            "investorCount": 400,
+            "assetClassCount": 8
+          }
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-INVESTOR_OVERLAP-1000",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-INVESTOR_OVERLAP-1000-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.network.sharedInvestorCoreBps",
+          "value": 3000
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-INVESTOR_OVERLAP-1000",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-INVESTOR_OVERLAP-1000-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.network.sharedInvestorCoreBps",
+          "value": 1000
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-INVESTOR_OVERLAP-5000",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-INVESTOR_OVERLAP-5000-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.network.sharedInvestorCoreBps",
+          "value": 3000
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-INVESTOR_OVERLAP-5000",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-INVESTOR_OVERLAP-5000-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.network.sharedInvestorCoreBps",
+          "value": 5000
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-ILLIQUID_ASSET_SHARE-liquid",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-ILLIQUID_ASSET_SHARE-liquid-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.heterogeneity.liquidAssetShareBpsByLiquidityMismatchTier",
+          "value": {
+            "low": 4500,
+            "medium": 3000,
+            "high": 1500
+          }
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-ILLIQUID_ASSET_SHARE-liquid",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-ILLIQUID_ASSET_SHARE-liquid-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.heterogeneity.liquidAssetShareBpsByLiquidityMismatchTier",
+          "value": {
+            "low": 6000,
+            "medium": 4500,
+            "high": 3000
+          }
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-ILLIQUID_ASSET_SHARE-illiquid",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-ILLIQUID_ASSET_SHARE-illiquid-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.heterogeneity.liquidAssetShareBpsByLiquidityMismatchTier",
+          "value": {
+            "low": 4500,
+            "medium": 3000,
+            "high": 1500
+          }
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-ILLIQUID_ASSET_SHARE-illiquid",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-ILLIQUID_ASSET_SHARE-illiquid-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.heterogeneity.liquidAssetShareBpsByLiquidityMismatchTier",
+          "value": {
+            "low": 3000,
+            "medium": 2000,
+            "high": 1000
+          }
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-NAV_UPDATE_FREQUENCY-frequent",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-NAV_UPDATE_FREQUENCY-frequent-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.heterogeneity.navUpdateIntervalDaysByStalePricingTier",
+          "value": {
+            "low": 1,
+            "medium": 7,
+            "high": 14
+          }
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-NAV_UPDATE_FREQUENCY-frequent",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-NAV_UPDATE_FREQUENCY-frequent-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.heterogeneity.navUpdateIntervalDaysByStalePricingTier",
+          "value": {
+            "low": 1,
+            "medium": 3,
+            "high": 7
+          }
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-NAV_UPDATE_FREQUENCY-infrequent",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-NAV_UPDATE_FREQUENCY-infrequent-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.heterogeneity.navUpdateIntervalDaysByStalePricingTier",
+          "value": {
+            "low": 1,
+            "medium": 7,
+            "high": 14
+          }
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-NAV_UPDATE_FREQUENCY-infrequent",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-NAV_UPDATE_FREQUENCY-infrequent-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.heterogeneity.navUpdateIntervalDaysByStalePricingTier",
+          "value": {
+            "low": 7,
+            "medium": 14,
+            "high": 30
+          }
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-SETTLEMENT_DELAY-3",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-SETTLEMENT_DELAY-3-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.liquidity.baselineSettlementDelayDays",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-SETTLEMENT_DELAY-3",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-SETTLEMENT_DELAY-3-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.liquidity.baselineSettlementDelayDays",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-SETTLEMENT_DELAY-7",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-SETTLEMENT_DELAY-7-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.liquidity.baselineSettlementDelayDays",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-SETTLEMENT_DELAY-7",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-SETTLEMENT_DELAY-7-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.liquidity.baselineSettlementDelayDays",
+          "value": 7
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_KAPPA-5000",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_KAPPA-5000-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 7000
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_KAPPA-5000",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_KAPPA-5000-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 5000
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_KAPPA-6000",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_KAPPA-6000-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 7000
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_KAPPA-6000",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_KAPPA-6000-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 6000
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_KAPPA-8000",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_KAPPA-8000-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 7000
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_KAPPA-8000",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_KAPPA-8000-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 8000
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_PHI-0",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_PHI-0-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.baselinePhiBps",
+          "value": 10000
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_PHI-0",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_PHI-0-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.baselinePhiBps",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_PHI-2500",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_PHI-2500-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.baselinePhiBps",
+          "value": 10000
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_PHI-2500",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_PHI-2500-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.baselinePhiBps",
+          "value": 2500
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_PHI-5000",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_PHI-5000-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.baselinePhiBps",
+          "value": 10000
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_PHI-5000",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_PHI-5000-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.baselinePhiBps",
+          "value": 5000
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_PHI-7500",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_PHI-7500-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.baselinePhiBps",
+          "value": 10000
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_PHI-7500",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_PHI-7500-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.baselinePhiBps",
+          "value": 7500
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_RELEASE_STREAK-1",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_RELEASE_STREAK-1-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.releaseConsecutiveTicks",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_RELEASE_STREAK-1",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_RELEASE_STREAK-1-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.releaseConsecutiveTicks",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_RELEASE_STREAK-5",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_RELEASE_STREAK-5-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.releaseConsecutiveTicks",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_RELEASE_STREAK-5",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_RELEASE_STREAK-5-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.releaseConsecutiveTicks",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_RELEASE_DELAY-0",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_RELEASE_DELAY-0-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.releaseDelayTicks",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_RELEASE_DELAY-0",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_RELEASE_DELAY-0-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.releaseDelayTicks",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_RELEASE_DELAY-3",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_RELEASE_DELAY-3-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.releaseDelayTicks",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-CONTROL_RELEASE_DELAY-3",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-CONTROL_RELEASE_DELAY-3-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.thresholds.baselineKappaBps",
+          "value": 1500
+        },
+        {
+          "path": "config.control.releaseDelayTicks",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-RISK_WEIGHTS-legacy",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-RISK_WEIGHTS-legacy-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "design.riskWeightScheme",
+          "value": "equal_weight_baseline"
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-RISK_WEIGHTS-legacy",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-RISK_WEIGHTS-legacy-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "design.riskWeightScheme",
+          "value": "legacy_weight_scheme"
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-MAX_STALE_AGE-7",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-MAX_STALE_AGE-7-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.risk.maxStaleAgeDays",
+          "value": 30
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-MAX_STALE_AGE-7",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-MAX_STALE_AGE-7-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.risk.maxStaleAgeDays",
+          "value": 7
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-MAX_STALE_AGE-14",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-MAX_STALE_AGE-14-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.risk.maxStaleAgeDays",
+          "value": 30
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-MAX_STALE_AGE-14",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-MAX_STALE_AGE-14-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.risk.maxStaleAgeDays",
+          "value": 14
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-MAX_STALE_AGE-45",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-MAX_STALE_AGE-45-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.risk.maxStaleAgeDays",
+          "value": 30
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-MAX_STALE_AGE-45",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-MAX_STALE_AGE-45-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.risk.maxStaleAgeDays",
+          "value": 45
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-PRICE_IMPACT_GAMMA-1_5",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-PRICE_IMPACT_GAMMA-1_5-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.liquidity.priceImpactGamma",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-PRICE_IMPACT_GAMMA-1_5",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-PRICE_IMPACT_GAMMA-1_5-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.liquidity.priceImpactGamma",
+          "value": 1.5
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-PRICE_IMPACT_GAMMA-2",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-PRICE_IMPACT_GAMMA-2-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.liquidity.priceImpactGamma",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-PRICE_IMPACT_GAMMA-2",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-PRICE_IMPACT_GAMMA-2-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.liquidity.priceImpactGamma",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-ORACLE_LATENCY-3600",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-ORACLE_LATENCY-3600-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.oracle.baselineLatencySec",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-ORACLE_LATENCY-3600",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-ORACLE_LATENCY-3600-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.oracle.baselineLatencySec",
+          "value": 3600
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-ORACLE_LATENCY-21600",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-ORACLE_LATENCY-21600-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.oracle.baselineLatencySec",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-ORACLE_LATENCY-21600",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-ORACLE_LATENCY-21600-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.oracle.baselineLatencySec",
+          "value": 21600
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-EXECUTION_FAILURE-100",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-EXECUTION_FAILURE-100-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.oracle.baselineExecutionFailureBps",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-EXECUTION_FAILURE-100",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-EXECUTION_FAILURE-100-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.oracle.baselineExecutionFailureBps",
+          "value": 100
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-EXECUTION_FAILURE-500",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-EXECUTION_FAILURE-500-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.oracle.baselineExecutionFailureBps",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-EXECUTION_FAILURE-500",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-EXECUTION_FAILURE-500-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.oracle.baselineExecutionFailureBps",
+          "value": 500
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-PROXIMITY_WEIGHTS-asset_heavy",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-PROXIMITY_WEIGHTS-asset_heavy-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.propagation.proximityWeightsBps",
+          "value": [
+            2500,
+            2500,
+            2500,
+            2500
+          ]
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-PROXIMITY_WEIGHTS-asset_heavy",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-PROXIMITY_WEIGHTS-asset_heavy-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.propagation.proximityWeightsBps",
+          "value": [
+            5000,
+            2000,
+            1500,
+            1500
+          ]
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-PROXIMITY_WEIGHTS-investor_heavy",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-PROXIMITY_WEIGHTS-investor_heavy-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.propagation.proximityWeightsBps",
+          "value": [
+            2500,
+            2500,
+            2500,
+            2500
+          ]
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-PROXIMITY_WEIGHTS-investor_heavy",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-PROXIMITY_WEIGHTS-investor_heavy-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.propagation.proximityWeightsBps",
+          "value": [
+            2000,
+            5000,
+            1500,
+            1500
+          ]
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-PROXIMITY_WEIGHTS-signal_heavy",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-PROXIMITY_WEIGHTS-signal_heavy-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.propagation.proximityWeightsBps",
+          "value": [
+            2500,
+            2500,
+            2500,
+            2500
+          ]
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-PROXIMITY_WEIGHTS-signal_heavy",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-PROXIMITY_WEIGHTS-signal_heavy-COMPARISON",
+      "arm": "comparison",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "config.propagation.proximityWeightsBps",
+          "value": [
+            1500,
+            1500,
+            3500,
+            3500
+          ]
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-SHOCK_TYPE-liquidity",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-SHOCK_TYPE-liquidity-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "design.shockType",
+          "value": "valuation"
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-SHOCK_TYPE-liquidity",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-SHOCK_TYPE-liquidity-COMPARISON",
+      "arm": "comparison",
+      "shockType": "liquidity",
+      "treatmentChanges": [
+        {
+          "path": "design.shockType",
+          "value": "liquidity"
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-SHOCK_TYPE-redemption",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-SHOCK_TYPE-redemption-BASELINE",
+      "arm": "baseline",
+      "shockType": "valuation",
+      "treatmentChanges": [
+        {
+          "path": "design.shockType",
+          "value": "valuation"
+        }
+      ]
+    },
+    {
+      "family": "robustness",
+      "pairId": "ROBUST-SHOCK_TYPE-redemption",
+      "regimeId": "R1",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 1000,
+      "hypothesisIds": [
+        "H1",
+        "H2",
+        "H4",
+        "H5",
+        "H6"
+      ],
+      "cellId": "ROBUST-SHOCK_TYPE-redemption-COMPARISON",
+      "arm": "comparison",
+      "shockType": "redemption",
+      "treatmentChanges": [
+        {
+          "path": "design.shockType",
+          "value": "redemption"
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-01",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-01-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-01",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-01-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 1.09375
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 1.40625
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -5.58125
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 0.71875
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.37109375
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.328125
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-02",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-02-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-02",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-02-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 0.96875
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 0.96875
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -5.01875
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 1.09375
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.23046875
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.703125
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-03",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-03-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-03",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-03-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 0.65625
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 1.15625
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -5.64375
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 0.96875
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.32421875
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.578125
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-04",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-04-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-04",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-04-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 1.15625
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 1.21875
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -5.14375
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 0.90625
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.16015625
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.265625
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-05",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-05-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-05",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-05-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 1.28125
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 1.46875
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -5.51875
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 0.59375
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.18359375
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.671875
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-06",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-06-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-06",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-06-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 1.21875
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 0.53125
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -5.76875
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 1.21875
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.27734375
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.484375
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-07",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-07-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-07",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-07-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 1.40625
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 1.09375
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -4.89375
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 1.40625
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.46484375
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.546875
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-08",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-08-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-08",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-08-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 1.46875
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 1.34375
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -5.70625
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 1.15625
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.25390625
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.421875
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-09",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-09-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-09",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-09-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 0.59375
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 1.28125
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -5.33125
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 1.46875
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.44140625
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.453125
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-10",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-10-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-10",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-10-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 0.53125
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 0.59375
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -4.83125
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 1.34375
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.30078125
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.640625
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-11",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-11-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-11",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-11-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 1.03125
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 0.71875
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -5.39375
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 1.03125
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.48828125
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.390625
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-12",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-12-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-12",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-12-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 0.84375
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 0.78125
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -5.20625
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 1.28125
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.13671875
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.609375
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-13",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-13-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-13",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-13-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 1.34375
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 0.65625
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -5.45625
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 0.78125
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.20703125
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.359375
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-14",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-14-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-14",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-14-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 0.71875
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 0.84375
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -5.08125
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 0.65625
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.41796875
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.296875
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-15",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-15-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-15",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-15-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 0.78125
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 1.03125
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -4.95625
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 0.84375
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.39453125
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.734375
+        }
+      ]
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-16",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-16-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": []
+    },
+    {
+      "family": "behavior_lhs",
+      "pairId": "BEHAVIOR-LHS-16",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H2"
+      ],
+      "cellId": "BEHAVIOR-LHS-16-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.behavior.coefficients.expectedOthersRedeem",
+          "value": 0.90625
+        },
+        {
+          "path": "config.behavior.coefficients.firstMoverAdvantage",
+          "value": 0.90625
+        },
+        {
+          "path": "config.behavior.coefficients.interceptLogOdds",
+          "value": -5.26875
+        },
+        {
+          "path": "config.behavior.coefficients.perceivedRisk",
+          "value": 0.53125
+        },
+        {
+          "path": "config.behavior.coefficients.publicness",
+          "value": 0.34765625
+        },
+        {
+          "path": "config.behavior.coefficients.signalSynchronicity",
+          "value": 0.515625
+        }
+      ]
+    }
+  ]
+}

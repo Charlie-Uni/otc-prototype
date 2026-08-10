@@ -70,6 +70,8 @@ T17 implements the Chapter 6 measurement layer without changing the state machin
 
 T17.5 screens declared behavior and demand-transmission parameters only for a stable, interior pilot. It preserves paired seeds, leaves shared-asset loss pass-through unchanged, forbids hypothesis-direction gates, validates the selected candidate over 100 pilot replicates, and derives formal replication recommendations from paired standard errors before T18 preregistration. It also demonstrates that none of the preregistered global `tau` candidates from 200 to 1200 bps reaches the 95% minimum shocked-run coverage across all R0-R4 arms. RegulatorDetectionLag precision therefore remains unavailable, not zero, until T18 freezes the detection-anchor method.
 
+T18 freezes the primary valuation-shock detection anchor as the first positive paired haircut difference against the same-tick no-shock counterfactual. The Chapter 3 `score >= tau` clock remains a separately censored sensitivity analysis at 6000 bps. The formal policy baseline retains `kappa=7000`; a separate 100-pair reachability pilot selects `kappa=1500` only as the common H5/H6 control-experiment condition because the 5000-8000 artifact range never activates under the calibrated model. The formal baseline contains only the pilot-selected behavior/demand values. A deterministic 144-cell manifest covers matched R0-R4 shock/no-shock runs, A1-A6, one-dimension robustness, and paired Latin-hypercube behavior sensitivity. Expected H1-H6 directions are explicitly forbidden as model gates. No formal result is produced until the dedicated preregistration commit, green CI run, and annotated tag exist.
+
 ## Stage 1 to Stage 2 continuity gate
 
 Before model pilot execution, the simulation foundation must reproduce:

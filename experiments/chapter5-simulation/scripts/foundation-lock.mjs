@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,150 +24,20 @@ const repositoryFiles = [
   'pnpm-workspace.yaml',
 ];
 
-const localFiles = [
-  'README.md',
-  'config/pilot-baseline.json',
-  'config/pilot-calibration.json',
-  'package.json',
-  'scripts/calibration-provenance.ts',
-  'scripts/foundation-lock.mjs',
-  'scripts/run-pilot-calibration-shard.ts',
-  'scripts/run-pilot-calibration.ts',
-  'scripts/run-pilot-sanity.ts',
-  'spec/analysis-plan-draft.md',
-  'spec/behavior-model-design.md',
-  'spec/control-model-design.md',
-  'spec/disclosure-observation-design.md',
-  'spec/formula-code-map.md',
-  'spec/model-semantics.md',
-  'spec/network-design.md',
-  'spec/network-propagation-design.md',
-  'spec/oracle-risk-design.md',
-  'spec/outcome-metrics-design.md',
-  'spec/pilot-sanity-design.md',
-  'spec/pilot-calibration-design.md',
-  'spec/pilot-calibration-memo.md',
-  'spec/redemption-liquidity-design.md',
-  'spec/requirements-traceability.md',
-  'spec/runner-design.md',
-  'spec/shock-design.md',
-  'src/artifact/golden.test.ts',
-  'src/artifact/risk/calc.ts',
-  'src/artifact/risk/regimes.ts',
-  'src/artifact/simulation/observation.ts',
-  'src/artifact/simulation/sensitivity.ts',
-  'src/behavior/beliefs.test.ts',
-  'src/behavior/beliefs.ts',
-  'src/behavior/expectations.test.ts',
-  'src/behavior/expectations.ts',
-  'src/behavior/redemption.test.ts',
-  'src/behavior/redemption.ts',
-  'src/behavior/types.ts',
-  'src/calibration/config.test.ts',
-  'src/calibration/config.ts',
-  'src/calibration/detection-threshold.test.ts',
-  'src/calibration/detection-threshold.ts',
-  'src/calibration/grid.test.ts',
-  'src/calibration/grid.ts',
-  'src/calibration/observations.ts',
-  'src/calibration/precision.test.ts',
-  'src/calibration/precision.ts',
-  'src/calibration/run.test.ts',
-  'src/calibration/run.ts',
-  'src/calibration/screening.ts',
-  'src/calibration/shard.test.ts',
-  'src/calibration/shard.ts',
-  'src/calibration/statistics.test.ts',
-  'src/calibration/statistics.ts',
-  'src/calibration/types.ts',
-  'src/controls/gate.test.ts',
-  'src/controls/gate.ts',
-  'src/controls/lifecycle.test.ts',
-  'src/controls/lifecycle.ts',
-  'src/controls/types.ts',
-  'src/controls/validation.ts',
-  'src/core/allocation.test.ts',
-  'src/core/allocation.ts',
-  'src/core/config.test.ts',
-  'src/core/config.ts',
-  'src/core/pipeline.test.ts',
-  'src/core/pipeline.ts',
-  'src/core/rng.test.ts',
-  'src/core/rng.ts',
-  'src/disclosure/engine.test.ts',
-  'src/disclosure/engine.ts',
-  'src/disclosure/types.ts',
-  'src/index.ts',
-  'src/liquidity/buffer.test.ts',
-  'src/liquidity/buffer.ts',
-  'src/liquidity/fma.test.ts',
-  'src/liquidity/fma.ts',
-  'src/liquidity/price-impact.test.ts',
-  'src/liquidity/price-impact.ts',
-  'src/liquidity/settlement-plan.ts',
-  'src/metrics/redemption.test.ts',
-  'src/metrics/redemption.ts',
-  'src/metrics/counterfactual.test.ts',
-  'src/metrics/counterfactual.ts',
-  'src/metrics/detection.test.ts',
-  'src/metrics/detection.ts',
-  'src/metrics/math.ts',
-  'src/metrics/math.test.ts',
-  'src/metrics/outcome-types.ts',
-  'src/metrics/outcomes.test.ts',
-  'src/metrics/outcomes.ts',
-  'src/metrics/spillover.test.ts',
-  'src/metrics/spillover.ts',
-  'src/metrics/stability.test.ts',
-  'src/metrics/stability.ts',
-  'src/network/generator.test.ts',
-  'src/network/generator.ts',
-  'src/network/proximity.test.ts',
-  'src/network/proximity.ts',
-  'src/network/propagation-validation.ts',
-  'src/network/propagation.test.ts',
-  'src/network/propagation.ts',
-  'src/network/types.ts',
-  'src/network/validation.ts',
-  'src/observation/schedule.test.ts',
-  'src/observation/schedule.ts',
-  'src/observation/types.ts',
-  'src/oracle/submission.test.ts',
-  'src/oracle/submission.ts',
-  'src/oracle/types.ts',
-  'src/pilot/sanity.test.ts',
-  'src/pilot/sanity.ts',
-  'src/pilot/types.ts',
-  'src/redemption/lifecycle.test.ts',
-  'src/redemption/lifecycle.ts',
-  'src/redemption/types.ts',
-  'src/risk/metrics.test.ts',
-  'src/risk/metrics.ts',
-  'src/runner/behavior-step.ts',
-  'src/runner/control-disclosure.test.ts',
-  'src/runner/control-disclosure.ts',
-  'src/runner/digest.test.ts',
-  'src/runner/digest.ts',
-  'src/runner/network-demand.test.ts',
-  'src/runner/network-demand.ts',
-  'src/runner/observation-state.test.ts',
-  'src/runner/observation-state.ts',
-  'src/runner/run.test.ts',
-  'src/runner/run.ts',
-  'src/runner/treatment.test.ts',
-  'src/runner/treatment.ts',
-  'src/runner/types.ts',
-  'src/shocks/scenario.test.ts',
-  'src/shocks/scenario.ts',
-  'src/shocks/valuation.test.ts',
-  'src/shocks/valuation.ts',
-  'src/state/initialization.test.ts',
-  'src/state/initialization.ts',
-  'src/state/types.ts',
-  'src/state/validation.ts',
-  'src/testing/oracle-snapshot.ts',
-  'tsconfig.json',
-];
+const excludedDirectories = new Set(['node_modules', 'results']);
+const excludedFiles = new Set(['spec/foundation-lock.json', '.DS_Store']);
+
+function collectLocalFiles(directory = packageRoot, prefix = '') {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const relativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) {
+      if (excludedDirectories.has(entry.name)) return [];
+      return collectLocalFiles(resolve(directory, entry.name), relativePath);
+    }
+    if (excludedFiles.has(relativePath) || excludedFiles.has(entry.name)) return [];
+    return [relativePath];
+  }).sort();
+}
 
 const exactVendorPairs = [
   ['apps/api/src/risk/calc.ts', 'src/artifact/risk/calc.ts'],
@@ -190,7 +60,10 @@ function git(args) {
 function buildLock() {
   const artifactCommit = git(['rev-parse', `${artifactTag}^{commit}`]).toString('utf8').trim();
   const lockedSourceFiles = sortedHashes(sourceFiles, (path) => git(['show', `${artifactTag}:${path}`]));
-  const lockedLocalFiles = sortedHashes(localFiles, (path) => readFileSync(resolve(packageRoot, path)));
+  const lockedLocalFiles = sortedHashes(
+    collectLocalFiles(),
+    (path) => readFileSync(resolve(packageRoot, path)),
+  );
   exactVendorPairs.forEach(([sourcePath, localPath]) => {
     if (lockedSourceFiles[sourcePath] !== lockedLocalFiles[localPath]) {
       throw new Error(`CHAPTER3_VENDOR_MISMATCH:${sourcePath}:${localPath}`);

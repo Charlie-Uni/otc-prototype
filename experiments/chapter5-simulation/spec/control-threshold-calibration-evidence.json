@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "purpose": "non-gating control-path reachability calibration; not a formal finding",
+  "formalFindingsAllowed": false,
+  "baselineConfigDigestSha256": "8f84b4877f6b766bc04500a8547de96c0bc143550af61a87eaa93310d77e48c0",
+  "calibrationConfigDigestSha256": "95754451029893d565aa896478834faa9c739bf594827e6675943c48f1c386bb",
+  "selectedKappaBps": 1500,
+  "reachability": [
+    {
+      "kappaBps": 1000,
+      "shockedActivationCount": 66,
+      "noShockActivationCount": 67,
+      "shockedActivationRateBps": 6600,
+      "noShockActivationRateBps": 6700
+    },
+    {
+      "kappaBps": 1250,
+      "shockedActivationCount": 55,
+      "noShockActivationCount": 48,
+      "shockedActivationRateBps": 5500,
+      "noShockActivationRateBps": 4800
+    },
+    {
+      "kappaBps": 1500,
+      "shockedActivationCount": 48,
+      "noShockActivationCount": 34,
+      "shockedActivationRateBps": 4800,
+      "noShockActivationRateBps": 3400
+    },
+    {
+      "kappaBps": 1750,
+      "shockedActivationCount": 29,
+      "noShockActivationCount": 30,
+      "shockedActivationRateBps": 2900,
+      "noShockActivationRateBps": 3000
+    },
+    {
+      "kappaBps": 2000,
+      "shockedActivationCount": 16,
+      "noShockActivationCount": 25,
+      "shockedActivationRateBps": 1600,
+      "noShockActivationRateBps": 2500
+    },
+    {
+      "kappaBps": 2500,
+      "shockedActivationCount": 9,
+      "noShockActivationCount": 8,
+      "shockedActivationRateBps": 900,
+      "noShockActivationRateBps": 800
+    },
+    {
+      "kappaBps": 3000,
+      "shockedActivationCount": 3,
+      "noShockActivationCount": 0,
+      "shockedActivationRateBps": 300,
+      "noShockActivationRateBps": 0
+    },
+    {
+      "kappaBps": 5000,
+      "shockedActivationCount": 0,
+      "noShockActivationCount": 0,
+      "shockedActivationRateBps": 0,
+      "noShockActivationRateBps": 0
+    },
+    {
+      "kappaBps": 6000,
+      "shockedActivationCount": 0,
+      "noShockActivationCount": 0,
+      "shockedActivationRateBps": 0,
+      "noShockActivationRateBps": 0
+    },
+    {
+      "kappaBps": 7000,
+      "shockedActivationCount": 0,
+      "noShockActivationCount": 0,
+      "shockedActivationRateBps": 0,
+      "noShockActivationRateBps": 0
+    },
+    {
+      "kappaBps": 8000,
+      "shockedActivationCount": 0,
+      "noShockActivationCount": 0,
+      "shockedActivationRateBps": 0,
+      "noShockActivationRateBps": 0
+    }
+  ],
+  "semanticDigestSha256": "6213076fdfd7c2d37114e77344f5202f1f8b7da8a253c493c50d66159bcf0658"
+}
