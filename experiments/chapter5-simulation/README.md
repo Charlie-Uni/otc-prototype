@@ -38,6 +38,9 @@ The foundation phase provides:
 - an explicit compiler for all 144 locked cells, including atomic dependent parameters and A1-A6 experiment-only mechanism switches;
 - valuation, liquidity, and redemption shock injectors with recomputable evidence and paired target/time coordinates;
 - a fail-closed formal executor that requires the preregistration tag, byte-identical lock, clean Chapter 5 worktree, and result provenance agreement.
+- deterministic pair-level shard planning for all 43,000 paired replicates without gaps or overlaps;
+- compact 30/60/90-day arm measurements and paired observations derived immediately after each run;
+- immutable shard evidence publication with digest validation, idempotent replay, conflict rejection, and separate failure records.
 
 `calc.ts`, `regimes.ts`, and `sensitivity.ts` are byte-identical copies from `chapter3-artifact-v1.4.0`. The observation helper is the pure scheduling subset of `detection.ts`; the complete source file is hash-locked and its observable behavior is covered by golden tests, avoiding unrelated ABI and indexer code in the simulation package.
 
@@ -53,8 +56,14 @@ pnpm --filter @ots/chapter5-simulation pilot:sanity
 pnpm --filter @ots/chapter5-simulation pilot:calibrate
 pnpm --filter @ots/chapter5-simulation pilot:control-threshold
 pnpm --filter @ots/chapter5-simulation prereg:check
+pnpm --filter @ots/chapter5-simulation exec tsx scripts/formal-shard-plan.ts 50 results/formal-shard-plan.json
+pnpm --filter @ots/chapter5-simulation exec tsx scripts/run-formal-shard.ts results/formal-shard-plan.json '<shard-id>' results/formal-shards
 ```
 
 Pilot results are calibration evidence only. Formal results may be generated only after the analysis plan and parameters are committed, pass CI, and are tagged `chapter5-sim-prereg-v1`. The committed matrix is a design artifact, not an experimental result.
 
 `spec/formal-execution-semantics.md` records post-preregistration implementation semantics only. It does not alter any locked hypothesis, parameter, cell, expected direction, replication count, or exclusion rule.
+
+The two formal commands are execution infrastructure, not an instruction to run the full experiment
+from a dirty worktree. The shard runner enforces the preregistration tag, lock, ancestry, and
+clean-worktree gates before accepting any observation.

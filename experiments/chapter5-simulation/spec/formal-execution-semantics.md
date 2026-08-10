@@ -52,3 +52,26 @@ before a result is accepted. Each result records the tag commit,
 execution commit, lock hash, matrix design hash, cell, replicate, treatment digest, and scenario.
 Unit tests may inject a test authorization object, but the production executor defaults to the Git
 and lock-backed gate.
+
+## Pair measurements and shard execution
+
+Formal work is partitioned by paired replicate rather than by single arm. Both arms of one pair use
+the same execution authorization and remain in memory only until their compact observation is
+derived. The observation retains the locked 30-, 60-, and 90-day outcome metrics, the regulator's
+warning-threshold result, the treatment and run digests, and the complete shock coordinates needed
+to audit pairing. Primary-policy pairs additionally retain the shock-linked DetectionLag object.
+Robustness shock-type pairs retain both arms' metric vectors; their contrast is the locked paired
+increase in the corresponding valuation-haircut, liquidity-shortfall, or redemption-pressure input,
+not an invented no-shock arm.
+
+With a maximum of 50 paired replicates per shard, the locked 144-cell matrix compiles to 72 pairs,
+43,000 paired replicates, 86,000 single-arm runs, and 860 shards. The plan validator requires two
+cells per pair, equal replicate counts, unique shard identifiers, contiguous half-open ranges, no
+unknown pairs, and exact coverage of every replicate. These counts are design facts, not findings.
+
+Successful shard files are published from a completed temporary file without replacing an existing
+path. Repeating an identical shard is idempotent; an existing valid shard with a different semantic
+digest is rejected. Every shard and nested arm/observation has a canonical semantic digest. Failure
+records are written separately and never replace successful evidence. Raw daily trajectories are not
+persisted by this layer; they are reduced immediately to the preregistered analysis windows so the
+formal run remains bounded in memory and storage.
