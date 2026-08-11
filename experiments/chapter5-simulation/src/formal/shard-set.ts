@@ -76,7 +76,15 @@ export function scanFormalShardSet(
   plan: FormalShardPlan,
   onObservation?: (observation: FormalPairObservation) => void,
 ): FormalShardSetSummary {
-  const files = readdirSync(inputDirectory, { withFileTypes: true })
+  const directoryEntries = readdirSync(inputDirectory, { withFileTypes: true });
+  const partialFiles = directoryEntries
+    .filter((entry) => entry.isFile() && entry.name.includes('.partial-'))
+    .map(({ name }) => name)
+    .sort();
+  if (partialFiles.length > 0) {
+    throw new Error(`FORMAL_SHARD_SET_NOT_QUIESCENT:${partialFiles.join(',')}`);
+  }
+  const files = directoryEntries
     .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
     .map(({ name }) => name)
     .sort();

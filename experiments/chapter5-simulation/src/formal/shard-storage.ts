@@ -1,17 +1,18 @@
 import { createHash } from 'node:crypto';
 import {
   existsSync,
-  linkSync,
   mkdirSync,
   readFileSync,
-  rmSync,
   writeFileSync,
 } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { semanticDigestSha256 } from '../runner/digest';
+import type { FormalExecutionAuthorization } from '../runner/formal-provenance';
+import { publishImmutableText } from './immutable-file';
 import type { FormalShardPlan } from './shard-plan';
 import { assertFormalShardResult, type FormalShardResult } from './shard-runner';
 
-let temporaryFileOrdinal = 0;
+let failureFileOrdinal = 0;
 
 function shardStem(shardId: string): string {
   const readable = shardId.replace(/[^A-Za-z0-9._-]/g, '_').slice(0, 96);
@@ -40,6 +41,42 @@ export type FormalShardPersistence = {
   semanticDigestSha256: string;
 };
 
+export type FormalPlanPersistence = {
+  path: string;
+  created: boolean;
+  semanticDigestSha256: string;
+};
+
+export function persistFormalShardPlanFile(
+  outputPath: string,
+  plan: FormalShardPlan,
+): FormalPlanPersistence {
+  const path = resolve(outputPath);
+  mkdirSync(dirname(path), { recursive: true });
+  const created = publishImmutableText(
+    path,
+    `${JSON.stringify(plan, null, 2)}\n`,
+    'IMMUTABLE_FORMAL_FILE_CONFLICT',
+  );
+  return { path, created, semanticDigestSha256: plan.semanticDigestSha256 };
+}
+
+export function formalShardResultExists(
+  outputDirectory: string,
+  shardId: string,
+  plan: FormalShardPlan,
+  expectedAuthorization: FormalExecutionAuthorization,
+): boolean {
+  const path = resolve(outputDirectory, formalShardResultFileName(shardId));
+  if (!existsSync(path)) return false;
+  const result = parseExisting(path, plan);
+  if (
+    result.shardId !== shardId
+    || semanticDigestSha256(result.authorization) !== semanticDigestSha256(expectedAuthorization)
+  ) throw new Error('EXISTING_FORMAL_SHARD_AUTHORIZATION_MISMATCH');
+  return true;
+}
+
 export function persistFormalShardResult(
   outputDirectory: string,
   result: FormalShardResult,
@@ -55,23 +92,12 @@ export function persistFormalShardResult(
     }
     return { path: finalPath, created: false, semanticDigestSha256: result.semanticDigestSha256 };
   }
-  temporaryFileOrdinal += 1;
-  const temporaryPath = `${finalPath}.partial-${process.pid}-${temporaryFileOrdinal}`;
-  writeFileSync(temporaryPath, `${JSON.stringify(result)}\n`, { flag: 'wx' });
-  try {
-    // A hard link publishes the completed temporary file without replacing an existing shard.
-    linkSync(temporaryPath, finalPath);
-  } catch (error) {
-    rmSync(temporaryPath, { force: true });
-    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
-    const existing = parseExisting(finalPath, plan);
-    if (existing.semanticDigestSha256 !== result.semanticDigestSha256) {
-      throw new Error('EXISTING_FORMAL_SHARD_CONFLICT');
-    }
-    return { path: finalPath, created: false, semanticDigestSha256: result.semanticDigestSha256 };
-  }
-  rmSync(temporaryPath, { force: true });
-  return { path: finalPath, created: true, semanticDigestSha256: result.semanticDigestSha256 };
+  const created = publishImmutableText(
+    finalPath,
+    `${JSON.stringify(result)}\n`,
+    'EXISTING_FORMAL_SHARD_CONFLICT',
+  );
+  return { path: finalPath, created, semanticDigestSha256: result.semanticDigestSha256 };
 }
 
 export function persistFormalShardFailure(
@@ -81,10 +107,10 @@ export function persistFormalShardFailure(
   error: unknown,
 ): string {
   mkdirSync(outputDirectory, { recursive: true });
-  temporaryFileOrdinal += 1;
+  failureFileOrdinal += 1;
   const path = resolve(
     outputDirectory,
-    `${shardStem(shardId)}.failure-${Date.now()}-${process.pid}-${temporaryFileOrdinal}.json`,
+    `${shardStem(shardId)}.failure-${Date.now()}-${process.pid}-${failureFileOrdinal}.json`,
   );
   const evidence = {
     schemaVersion: 1,

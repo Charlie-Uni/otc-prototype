@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 import { parseSimulationConfig } from '../core/config';
 import type { FormalExperimentMatrix } from '../preregistration/matrix';
 import { assertFormalShardPlan, createFormalShardPlan } from '../formal/shard-plan';
 import { compileFormalMatrix } from './formal-compiler';
 import { semanticDigestSha256 } from './digest';
+import { persistFormalShardPlanFile } from '../formal/shard-storage';
 
 const baseline = parseSimulationConfig(JSON.parse(readFileSync(
   new URL('../../config/formal-baseline.json', import.meta.url),
@@ -42,4 +45,21 @@ test('rejects a rehashed shard plan with a range gap', () => {
     () => assertFormalShardPlan(tampered, compiled),
     /INVALID_FORMAL_SHARD_RANGE/,
   );
+});
+
+test('publishes a shard plan immutably and rejects replacement content', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'chapter5-formal-plan-'));
+  const path = join(directory, 'plan.json');
+  try {
+    const plan = createFormalShardPlan(compiled, 50);
+    assert.equal(persistFormalShardPlanFile(path, plan).created, true);
+    assert.equal(persistFormalShardPlanFile(path, plan).created, false);
+    writeFileSync(path, '{}\n');
+    assert.throws(
+      () => persistFormalShardPlanFile(path, plan),
+      /IMMUTABLE_FORMAL_FILE_CONFLICT/,
+    );
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });

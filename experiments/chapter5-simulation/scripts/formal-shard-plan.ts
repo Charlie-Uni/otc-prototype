@@ -1,9 +1,9 @@
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { parseSimulationConfig } from '../src/core/config';
 import type { FormalExperimentMatrix } from '../src/preregistration/matrix';
 import { compileFormalMatrix } from '../src/runner/formal-compiler';
 import { createFormalShardPlan } from '../src/formal/shard-plan';
+import { persistFormalShardPlanFile } from '../src/formal/shard-storage';
 
 const [rawSize = '50', outputPath] = process.argv.slice(2);
 const maxReplicatesPerShard = Number(rawSize);
@@ -18,17 +18,10 @@ const matrix = JSON.parse(readFileSync(
   new URL('../spec/formal-experiment-matrix.json', import.meta.url),
   'utf8',
 )) as FormalExperimentMatrix;
-const serialized = `${JSON.stringify(createFormalShardPlan(
-  compileFormalMatrix(matrix, baseline),
-  maxReplicatesPerShard,
-), null, 2)}\n`;
+const plan = createFormalShardPlan(compileFormalMatrix(matrix, baseline), maxReplicatesPerShard);
+const serialized = `${JSON.stringify(plan, null, 2)}\n`;
 if (outputPath) {
-  const target = resolve(outputPath);
-  mkdirSync(dirname(target), { recursive: true });
-  const temporary = `${target}.partial-${process.pid}`;
-  writeFileSync(temporary, serialized, { flag: 'wx' });
-  renameSync(temporary, target);
-  process.stdout.write(`${JSON.stringify({ path: target })}\n`);
+  process.stdout.write(`${JSON.stringify(persistFormalShardPlanFile(outputPath, plan))}\n`);
 } else {
   process.stdout.write(serialized);
 }

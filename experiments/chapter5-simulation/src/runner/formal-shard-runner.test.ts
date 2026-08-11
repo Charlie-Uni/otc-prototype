@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -17,6 +17,7 @@ import { createFormalShardPlan } from '../formal/shard-plan';
 import { assertFormalShardResult, executeFormalShard } from '../formal/shard-runner';
 import { scanFormalShardSet } from '../formal/shard-set';
 import {
+  formalShardResultExists,
   persistFormalShardFailure,
   persistFormalShardResult,
 } from '../formal/shard-storage';
@@ -95,6 +96,16 @@ test('executes one complete pair shard with one shared authorization', () => {
     const second = persistFormalShardResult(directory, result, plan);
     assert.equal(first.created, true);
     assert.equal(second.created, false);
+    assert.equal(formalShardResultExists(directory, result.shardId, plan, authorization), true);
+    assert.throws(
+      () => formalShardResultExists(
+        directory,
+        result.shardId,
+        plan,
+        { ...authorization, executionCommit: 'e'.repeat(40) },
+      ),
+      /EXISTING_FORMAL_SHARD_AUTHORIZATION_MISMATCH/,
+    );
     assert.equal(first.path, second.path);
     assert.equal(JSON.parse(readFileSync(first.path, 'utf8')).semanticDigestSha256, result.semanticDigestSha256);
     const conflict = structuredClone(result);
@@ -129,6 +140,29 @@ test('executes one complete pair shard with one shared authorization', () => {
     assert.equal(shardSet.loadedPairObservations, 1);
     assert.equal(shardSet.failureEvidence.length, 1);
     assert.equal(shardSet.shardDigests[0]?.semanticDigestSha256, result.semanticDigestSha256);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('refuses to analyze a shard directory while a partial publication exists', () => {
+  const plan = createFormalShardPlan(miniCompiled, 1);
+  const result = executeFormalShard(
+    miniCompiled,
+    baseline,
+    plan,
+    'A1:r0000-0000',
+    { windowDays: [1], sensitivityThresholdBps: 6_000 },
+    { authorize: () => authorization, executeReplicate: executeOneDay },
+  );
+  const directory = mkdtempSync(join(tmpdir(), 'chapter5-formal-partial-'));
+  try {
+    persistFormalShardResult(directory, result, plan);
+    writeFileSync(join(directory, 'stale.json.partial-1'), '{}\n');
+    assert.throws(
+      () => scanFormalShardSet(directory, plan),
+      /FORMAL_SHARD_SET_NOT_QUIESCENT/,
+    );
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

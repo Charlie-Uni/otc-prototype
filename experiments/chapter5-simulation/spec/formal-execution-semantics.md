@@ -96,3 +96,30 @@ Streaming estimates use Welford moments, paired Monte Carlo standard errors, and
 interval. Two-sided normal p-values are adjusted by the Holm step-down method independently within each
 hypothesis family. These functions are fixed before formal outputs are read; the later report builder may
 only map locked contrasts to H1-H6 and may not introduce a result-dependent metric or exclusion rule.
+
+## Report mapping and resumable execution
+
+The report mapping is fixed before formal shard generation. R0-R4 comparisons join only observations
+with the same valuation-shock magnitude, replicate, shock second, and target fund. Detection differences
+remain missing when either side is censored and retain the contributing censor reason. The report includes
+detected/censored counts and rates for both the paired shock-linked clock and the 6000-bps warning-threshold
+sensitivity clock; it never replaces missing lags with zero. Thirty-day rows form the
+primary inference family, while 60- and 90-day rows are labeled window robustness and do not enlarge the
+primary Holm family.
+
+Direct ablations preserve `baseline - comparison`. For control-strength rows the production matrix places
+full control first, so H5 loss and liquidity benefits are deliberately reported as lower-control harm minus
+full-control harm; positive values favor stronger control. All three mentor-confirmed control-cost components
+(frozen share, extra wait, and pending share) remain separate. Loss reduction reports absolute bps and the
+relative reduction against lower-control loss, with a missing relative value when that denominator is zero.
+SpilloverScope reports both the continuous unshocked-fund mean and the 500-bps affected-fund share; 250- and
+1000-bps affected-share rows remain threshold robustness. Other robustness and behavior-LHS cells are
+streamed into a supplementary table and are not promoted into a new main-hypothesis test. The same table
+retains each R0-R4 policy pair's descriptive `shock - no_shock` redemption, loss, liquidity, control-cost,
+and spillover summaries so Chapter 6 tables do not require a second pass over raw shards.
+
+The bounded executor uses validated immutable shard files as its only checkpoint. It skips only a shard
+whose plan and execution authorization match the current run, stops assigning new work after a worker
+failure, and relies on the existing per-shard failure evidence. The deterministic plan is itself published
+without replacement. Final merging requires a quiescent directory with no `.partial-*` publication and the
+exact expected successful shard set before any observation reaches the statistics accumulator.

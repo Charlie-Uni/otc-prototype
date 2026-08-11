@@ -41,6 +41,8 @@ The foundation phase provides:
 - deterministic pair-level shard planning for all 43,000 paired replicates without gaps or overlaps;
 - compact 30/60/90-day arm measurements and paired observations derived immediately after each run;
 - immutable shard evidence publication with digest validation, idempotent replay, conflict rejection, and separate failure records.
+- bounded parallel execution with validated shard files as the only resume checkpoint;
+- pre-result H1-H6 effect-direction mapping, censoring counts, supplementary robustness summaries, and within-hypothesis Holm adjustment.
 
 `calc.ts`, `regimes.ts`, and `sensitivity.ts` are byte-identical copies from `chapter3-artifact-v1.4.0`. The observation helper is the pure scheduling subset of `detection.ts`; the complete source file is hash-locked and its observable behavior is covered by golden tests, avoiding unrelated ABI and indexer code in the simulation package.
 
@@ -58,6 +60,8 @@ pnpm --filter @ots/chapter5-simulation pilot:control-threshold
 pnpm --filter @ots/chapter5-simulation prereg:check
 pnpm --filter @ots/chapter5-simulation exec tsx scripts/formal-shard-plan.ts 50 results/formal-shard-plan.json
 pnpm --filter @ots/chapter5-simulation exec tsx scripts/run-formal-shard.ts results/formal-shard-plan.json '<shard-id>' results/formal-shards
+pnpm --filter @ots/chapter5-simulation exec tsx scripts/run-formal-experiment.ts results/formal-shard-plan.json results/formal-shards 4
+pnpm --filter @ots/chapter5-simulation exec tsx scripts/build-formal-report.ts results/formal-shard-plan.json results/formal-shards results/formal-report.json
 ```
 
 Pilot results are calibration evidence only. Formal results may be generated only after the analysis plan and parameters are committed, pass CI, and are tagged `chapter5-sim-prereg-v1`. The committed matrix is a design artifact, not an experimental result.
@@ -67,3 +71,8 @@ Pilot results are calibration evidence only. Formal results may be generated onl
 The two formal commands are execution infrastructure, not an instruction to run the full experiment
 from a dirty worktree. The shard runner enforces the preregistration tag, lock, ancestry, and
 clean-worktree gates before accepting any observation.
+
+The shard plan, shard results, and final report are non-replacing evidence files. Repeating the same
+content is idempotent; a different digest at an existing path is rejected. The plan file must be kept
+outside the shard directory because the complete-set validator accepts only expected shard and failure
+records. Analysis starts only after all workers stop and rejects any remaining `.partial-*` file.
