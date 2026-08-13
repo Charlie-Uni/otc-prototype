@@ -29,7 +29,7 @@ Formula IDs below are stable implementation IDs. Final thesis equation numbers w
 | F-LOSS-2 | LossReduction | `metrics/counterfactual.ts::lossReduction` | control/no-control paired loss | absolute and relative bps | Zero denominator and negative effect |
 | F-LIQ-1 | LiquidityBufferDepletion | `metrics/outcomes.ts::extractRunOutcomeMetrics` | initial and minimum runtime buffer | bps and first exhaustion time | Range and fixed-window extraction |
 | F-COST-1 | ControlCost | `metrics/counterfactual.ts::controlCost` | blocked, settled-delay, and pending request fields | bps / seconds | Weighted aggregation |
-| F-GATE-1 | Control attenuation and whole-request admission | `controls/gate.ts::controlledOutflow`; `redemptionBlockedByGate` | phi, requested outflow, paired request identity | amount/boolean | `controls/gate.test.ts`; actual settlement monotonicity in `controls/lifecycle.test.ts` |
+| F-GATE-1 | Control attenuation and FIFO whole-request settlement budget | `controls/gate.ts::controlledOutflow`; `redemption/lifecycle.ts::settlePendingRedemptions` | phi, eligible pending outflow, carried budget | value budget / settled queue state | `controls/gate.test.ts`; budget carry and actual settlement monotonicity in `redemption/lifecycle.test.ts` and `controls/lifecycle.test.ts` |
 | F-BENEFIT-1 | DetectionBenefit | `metrics/detection.ts::detectionBenefitSec` | R0 lag, regime lag | seconds | Paired difference and censoring |
 | F-STABILITY-1 | FundNetStabilityBenefit | `metrics/stability.ts::fundNetStabilityBenefit` | component metrics and weights | index | Alternative weight schemes |
 

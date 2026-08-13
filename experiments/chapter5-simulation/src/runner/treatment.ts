@@ -17,7 +17,6 @@ const PROTECTED_PAIR_PATHS = [
   'config.oracle.seed',
   'config.observation.seed',
   'config.behavior.seed',
-  'config.control.seed',
 ] as const;
 
 function requireIdentifier(value: string, field: string): void {

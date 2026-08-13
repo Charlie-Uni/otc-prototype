@@ -41,7 +41,9 @@ test('creates a complete pre-shock state from the generated network', () => {
     assert.equal(fund.gatedAt, null);
     assert.equal(fund.gateTriggerSubmissionId, null);
     assert.equal(fund.gateReleaseStreakTicks, 0);
-    assert.equal(fund.gateReleaseEligibleAtTick, null);
+    assert.equal(fund.gateReleaseDelayTicksRemaining, null);
+    assert.equal(fund.gateSettlementBudgetCarry, 0);
+    assert.equal(fund.gateSettlementBudgetUpdatedAt, null);
     assert.equal(fund.lastControlSubmissionId, null);
     assert.equal(fund.lastControlEvaluationTick, null);
   }
@@ -102,5 +104,37 @@ test('rejects invalid initial times and inconsistent runtime state', () => {
   assert.throws(
     () => validateSimulationState(inconsistentRegister, network),
     /HOLDER_SHARES_TOTAL_SUPPLY_MISMATCH/,
+  );
+
+  const staleBudget = createInitialSimulationState(network, INITIAL_AT);
+  staleBudget.funds[0]!.gateSettlementBudgetCarry = 1;
+  staleBudget.funds[0]!.gateSettlementBudgetUpdatedAt = INITIAL_AT;
+  assert.throws(
+    () => validateSimulationState(staleBudget, network),
+    /STALE_INACTIVE_GATE_STATE/,
+  );
+
+  const impossibleReleaseDelay = createInitialSimulationState(network, INITIAL_AT);
+  const fund = impossibleReleaseDelay.funds[0]!;
+  fund.gated = true;
+  fund.gatePhiBps = 5_000;
+  fund.gatedAt = INITIAL_AT;
+  fund.gateTriggerSubmissionId = 'missing-source';
+  fund.gateReleaseDelayTicksRemaining = 0;
+  assert.throws(
+    () => validateSimulationState(impossibleReleaseDelay, network),
+    /ZERO_ACTIVE_GATE_RELEASE_DELAY/,
+  );
+
+  const orphanBudget = createInitialSimulationState(network, INITIAL_AT);
+  const gatedFund = orphanBudget.funds[0]!;
+  gatedFund.gated = true;
+  gatedFund.gatePhiBps = 5_000;
+  gatedFund.gatedAt = INITIAL_AT;
+  gatedFund.gateTriggerSubmissionId = 'missing-source';
+  gatedFund.gateSettlementBudgetCarry = 1;
+  assert.throws(
+    () => validateSimulationState(orphanBudget, network),
+    /GATE_SETTLEMENT_BUDGET_WITHOUT_UPDATE_TIME/,
   );
 });

@@ -19,7 +19,9 @@ export type FundRuntimeState = {
   gatedAt: number | null;
   gateTriggerSubmissionId: string | null;
   gateReleaseStreakTicks: number;
-  gateReleaseEligibleAtTick: number | null;
+  gateReleaseDelayTicksRemaining: number | null;
+  gateSettlementBudgetCarry: number;
+  gateSettlementBudgetUpdatedAt: number | null;
   lastControlSubmissionId: string | null;
   lastControlEvaluationTick: number | null;
   reportedRiskMetrics: RiskMetrics;

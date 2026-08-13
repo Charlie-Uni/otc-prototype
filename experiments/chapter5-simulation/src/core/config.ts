@@ -107,7 +107,6 @@ export const simulationConfigSchema = z.object({
     marketDepthMultipleBps: z.number().int().min(10_000).safe(),
   }).strict(),
   control: z.object({
-    seed: positiveInteger,
     baselinePhiBps: bps,
     phiScanBps: z.array(bps).min(1),
     releaseConsecutiveTicks: positiveInteger,

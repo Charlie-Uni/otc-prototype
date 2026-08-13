@@ -50,6 +50,37 @@ function largestHolder(state: SimulationState, fundId: string): string {
     .sort((left, right) => right.shares - left.shares)[0]!.investorId;
 }
 
+function partialGateConfig(phiBps: number): SimulationConfig {
+  const input = structuredClone(baselineInput) as Record<string, Record<string, unknown>>;
+  input.thresholds.baselineKappaBps = 0;
+  input.thresholds.kappaScanBps = [0];
+  input.control.baselinePhiBps = phiBps;
+  input.control.phiScanBps = [phiBps];
+  input.liquidity.priceImpactLambdaBps = 0;
+  return parseSimulationConfig(input);
+}
+
+function gateFund(
+  state: SimulationState,
+  fundId: string,
+  controlConfig: SimulationConfig,
+): SimulationState {
+  const submitted = submitOracleRisk(state, network, controlConfig, {
+    replicateId: 0,
+    tick: 0,
+    fundId,
+    occurredAt: state.nowSec,
+    requestedSharesInWindow: 0,
+  });
+  assert.equal(submitted.status, 'submitted');
+  return applyGateControlForSubmission(
+    submitted.state,
+    network,
+    controlConfig,
+    submitted.state.oracleRiskSnapshots.at(-1)!.submissionId,
+  ).state;
+}
+
 test('queues full available holdings while reporting both pressure definitions', () => {
   const state = initialState();
   const fundId = 'fund-001';
@@ -61,7 +92,6 @@ test('queues full available holdings while reporting both pressure definitions',
     fundId,
     intentsFor(state, fundId, redeeming),
     config.liquidity.redemptionRequestFractionBps,
-    config.control.seed,
   );
 
   assert.equal(result.summary.eligibleInvestorCount, 20);
@@ -91,7 +121,6 @@ test('locks pending shares so later ticks can request only the remaining balance
     fundId,
     intentsFor(state, fundId, new Set([investorId]), 0),
     5_000,
-    config.control.seed,
   ).state;
   first.nowSec += TICK_SEC;
   const second = queueRedemptionRequestsForFund(
@@ -100,7 +129,6 @@ test('locks pending shares so later ticks can request only the remaining balance
     fundId,
     intentsFor(first, fundId, new Set([investorId]), 1),
     5_000,
-    config.control.seed,
   ).state;
   const requests = second.redemptionRequests.filter((request) => request.investorId === investorId);
 
@@ -125,7 +153,6 @@ test('settles FIFO requests from liquid assets and preserves share/AUM accountin
     fundId,
     intentsFor(state, fundId, new Set(holders.slice(0, 2).map(({ investorId }) => investorId))),
     10_000,
-    config.control.seed,
   ).state;
   const result = settlePendingRedemptions(queued, network, config);
   const fund = result.state.funds.find(({ fundId: id }) => id === fundId)!;
@@ -159,7 +186,6 @@ test('sells illiquid assets only after cash and records discount loss', () => {
     fundId,
     intentsFor(state, fundId, new Set([investorId])),
     10_000,
-    config.control.seed,
   ).state;
   const result = settlePendingRedemptions(queued, network, config);
   const request = result.state.redemptionRequests[0]!;
@@ -199,7 +225,6 @@ test('keeps a whole request pending without partial asset mutation when liquidit
     fundId,
     intentsFor(state, fundId, new Set([largestHolder(state, fundId)])),
     10_000,
-    config.control.seed,
   ).state;
   const positionsBefore = structuredClone(queued.assetPositions);
   const result = settlePendingRedemptions(queued, network, config);
@@ -224,7 +249,6 @@ test('applies settlement delay and gate checks before touching liquidity', () =>
     fundId,
     intentsFor(state, fundId, new Set([investorId])),
     10_000,
-    config.control.seed,
   ).state;
   const delayed = settlePendingRedemptions(queued, network, delayedConfig);
   assert.equal(delayed.summary.pendingByReason.settlement_delay, 1);
@@ -253,6 +277,44 @@ test('applies settlement delay and gate checks before touching liquidity', () =>
   assert.deepEqual(gated.state.assetPositions, queued.assetPositions);
 });
 
+test('carries unused partial-Gate budget without accruing twice in one tick', () => {
+  const controlConfig = partialGateConfig(5_000);
+  const fundId = 'fund-001';
+  const gated = gateFund(initialState(), fundId, controlConfig);
+  const investorId = largestHolder(gated, fundId);
+  const queued = queueRedemptionRequestsForFund(
+    gated,
+    network,
+    fundId,
+    intentsFor(gated, fundId, new Set([investorId])),
+    10_000,
+  ).state;
+  const requestedAmount = queued.redemptionRequests[0]!.requestedShares;
+
+  const firstAttempt = settlePendingRedemptions(queued, network, controlConfig);
+  const firstFund = firstAttempt.state.funds.find(({ fundId: id }) => id === fundId)!;
+  assert.equal(firstAttempt.summary.settledRequestCount, 0);
+  assert.equal(firstAttempt.summary.pendingByReason.gated, 1);
+  assert.equal(firstFund.gateSettlementBudgetCarry, Math.floor(requestedAmount / 2));
+
+  const sameTickAttempt = settlePendingRedemptions(firstAttempt.state, network, controlConfig);
+  assert.equal(sameTickAttempt.summary.settledRequestCount, 0);
+  assert.equal(
+    sameTickAttempt.state.funds.find(({ fundId: id }) => id === fundId)!
+      .gateSettlementBudgetCarry,
+    Math.floor(requestedAmount / 2),
+  );
+
+  const nextTickState = structuredClone(sameTickAttempt.state);
+  nextTickState.nowSec += TICK_SEC;
+  const nextTickAttempt = settlePendingRedemptions(nextTickState, network, controlConfig);
+  const finalFund = nextTickAttempt.state.funds.find(({ fundId: id }) => id === fundId)!;
+  assert.equal(nextTickAttempt.summary.settledRequestCount, 1);
+  assert.equal(nextTickAttempt.summary.settlementAmount, requestedAmount);
+  assert.equal(finalFund.gateSettlementBudgetCarry, 0);
+  assert.equal(nextTickAttempt.state.redemptionRequests[0]!.status, 'settled');
+});
+
 test('keeps requests pending when integer settlement rounds to zero', () => {
   const state = initialState();
   const fundId = 'fund-001';
@@ -267,7 +329,6 @@ test('keeps requests pending when integer settlement rounds to zero', () => {
     fundId,
     intentsFor(state, fundId, new Set([largestHolder(state, fundId)])),
     10_000,
-    config.control.seed,
   ).state;
   const result = settlePendingRedemptions(queued, network, config);
 
@@ -291,7 +352,6 @@ test('keeps final fund-closure redemption pending instead of inventing liquidati
     fundId,
     intentsFor(state, fundId, new Set([finalInvestorId])),
     10_000,
-    config.control.seed,
   ).state;
   const result = settlePendingRedemptions(queued, network, config);
 
@@ -310,7 +370,6 @@ test('rejects incomplete intent sets and detects queue-accounting tampering', ()
       fundId,
       [],
       10_000,
-      config.control.seed,
     ),
     /INCOMPLETE_REDEMPTION_INTENT_SET/,
   );
@@ -327,7 +386,6 @@ test('rejects incomplete intent sets and detects queue-accounting tampering', ()
       fundId,
       mismatchedTicks,
       10_000,
-      config.control.seed,
     ),
     /REDEMPTION_INTENT_TICK_MISMATCH/,
   );
@@ -338,7 +396,6 @@ test('rejects incomplete intent sets and detects queue-accounting tampering', ()
     fundId,
     intentsFor(state, fundId, new Set([largestHolder(state, fundId)])),
     10_000,
-    config.control.seed,
   ).state;
   queued.funds.find(({ fundId: id }) => id === fundId)!.queuedRedemptionShares += 1;
   assert.throws(
@@ -352,7 +409,6 @@ test('rejects incomplete intent sets and detects queue-accounting tampering', ()
     fundId,
     intentsFor(state, fundId, new Set([largestHolder(state, fundId)])),
     10_000,
-    config.control.seed,
   ).state;
   invalidReason.redemptionRequests[0]!.pendingReason = 'invalid_reason' as never;
   assert.throws(
@@ -376,7 +432,6 @@ test('batch queueing is state-equivalent to validated sequential fund queueing',
       input.fundId,
       input.intents,
       2_500,
-      config.control.seed,
     );
     sequentialState = result.state;
     return result.summary;
@@ -386,7 +441,6 @@ test('batch queueing is state-equivalent to validated sequential fund queueing',
     network,
     inputs,
     2_500,
-    config.control.seed,
   );
   assert.deepEqual(batch.state, sequentialState);
   assert.deepEqual(batch.summaries, sequentialSummaries);
@@ -395,6 +449,5 @@ test('batch queueing is state-equivalent to validated sequential fund queueing',
     network,
     [inputs[0]!, inputs[0]!],
     2_500,
-    config.control.seed,
   ), /DUPLICATE_REDEMPTION_QUEUE_FUND/);
 });

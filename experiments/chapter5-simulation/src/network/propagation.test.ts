@@ -57,7 +57,6 @@ function stateWithAssetSale(): SimulationState {
     fundId,
     intentsForOne(state, fundId),
     10_000,
-    config.control.seed,
   ).state;
   const settled = settlePendingRedemptions(queued, network, config).state;
   assert.ok(settled.assetSales.length > 0);

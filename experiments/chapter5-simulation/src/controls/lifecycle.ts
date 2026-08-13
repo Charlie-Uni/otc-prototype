@@ -53,7 +53,26 @@ function requireNextControlSubmission(
 
 function resetReleaseProgress(fund: FundRuntimeState): void {
   fund.gateReleaseStreakTicks = 0;
-  fund.gateReleaseEligibleAtTick = null;
+  fund.gateReleaseDelayTicksRemaining = null;
+}
+
+function resetSettlementBudget(fund: FundRuntimeState): void {
+  fund.gateSettlementBudgetCarry = 0;
+  fund.gateSettlementBudgetUpdatedAt = null;
+}
+
+function releaseGate(
+  fund: FundRuntimeState,
+  snapshot: OracleRiskSnapshot,
+): GateTransitionState {
+  const transition = transitionFor('GateReleased', snapshot, fund.gatePhiBps);
+  fund.gated = false;
+  fund.gatePhiBps = 0;
+  fund.gatedAt = null;
+  fund.gateTriggerSubmissionId = null;
+  resetReleaseProgress(fund);
+  resetSettlementBudget(fund);
+  return transition;
 }
 
 function applyGateControlForSubmissionUnchecked(
@@ -77,9 +96,6 @@ function applyGateControlForSubmissionUnchecked(
   const fund = next.funds.find(({ fundId }) => fundId === snapshot.fundId)!;
   requireNextControlSubmission(state, fund, source);
 
-  const previousEvaluationTick = fund.lastControlEvaluationTick;
-  const consecutiveTick = previousEvaluationTick !== null
-    && snapshot.tick === previousEvaluationTick + 1;
   let transition: GateTransitionState | null = null;
 
   if (!fund.gated && snapshot.interventionTriggered) {
@@ -88,29 +104,23 @@ function applyGateControlForSubmissionUnchecked(
     fund.gatedAt = snapshot.submittedAt;
     fund.gateTriggerSubmissionId = snapshot.submissionId;
     resetReleaseProgress(fund);
+    resetSettlementBudget(fund);
     transition = transitionFor('GateTriggered', snapshot, fund.gatePhiBps);
   } else if (fund.gated) {
     if (!qualifiesForGateRelease(snapshot.riskScoreBps, snapshot.kappaBps)) {
       resetReleaseProgress(fund);
-    } else {
-      if (!consecutiveTick) resetReleaseProgress(fund);
-      fund.gateReleaseStreakTicks += 1;
-      if (
-        fund.gateReleaseStreakTicks >= config.control.releaseConsecutiveTicks
-        && fund.gateReleaseEligibleAtTick === null
-      ) {
-        fund.gateReleaseEligibleAtTick = snapshot.tick + config.control.releaseDelayTicks;
+    } else if (fund.gateReleaseDelayTicksRemaining !== null) {
+      fund.gateReleaseDelayTicksRemaining -= 1;
+      if (fund.gateReleaseDelayTicksRemaining === 0) {
+        transition = releaseGate(fund, snapshot);
       }
-      if (
-        fund.gateReleaseEligibleAtTick !== null
-        && snapshot.tick >= fund.gateReleaseEligibleAtTick
-      ) {
-        transition = transitionFor('GateReleased', snapshot, fund.gatePhiBps);
-        fund.gated = false;
-        fund.gatePhiBps = 0;
-        fund.gatedAt = null;
-        fund.gateTriggerSubmissionId = null;
-        resetReleaseProgress(fund);
+    } else {
+      fund.gateReleaseStreakTicks += 1;
+      if (fund.gateReleaseStreakTicks >= config.control.releaseConsecutiveTicks) {
+        fund.gateReleaseDelayTicksRemaining = config.control.releaseDelayTicks;
+        if (fund.gateReleaseDelayTicksRemaining === 0) {
+          transition = releaseGate(fund, snapshot);
+        }
       }
     }
   }

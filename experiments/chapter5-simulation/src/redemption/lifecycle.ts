@@ -1,7 +1,7 @@
 import { MAX_BPS } from '../artifact/risk/calc';
 import type { SimulationConfig } from '../core/config';
 import { TICK_SEC } from '../core/pipeline';
-import { redemptionBlockedByGate } from '../controls/gate';
+import { controlledOutflow } from '../controls/gate';
 import { planSettlementLiquidity } from '../liquidity/settlement-plan';
 import {
   redemptionDecisionPressureBps,
@@ -22,6 +22,12 @@ import type {
 
 function requireSafeNonNegative(value: number, field: string): void {
   if (!Number.isSafeInteger(value) || value < 0) throw new Error(`INVALID_${field}`);
+}
+
+function safeAdd(left: number, right: number, error: string): number {
+  const sum = left + right;
+  if (!Number.isSafeInteger(sum) || sum < 0) throw new Error(error);
+  return sum;
 }
 
 function requestIdFor(intent: InvestorRedemptionIntent): string {
@@ -63,7 +69,6 @@ function queueRedemptionRequestsForFundUnchecked(
   fundId: string,
   intents: readonly InvestorRedemptionIntent[],
   requestFractionBps: number,
-  controlSeed: number,
   existingRequestIds: Set<string>,
   pendingByInvestor: ReadonlyMap<string, number>,
 ): QueueRedemptionResult {
@@ -124,14 +129,7 @@ function queueRedemptionRequestsForFundUnchecked(
       settlementNavPerShareBps: null,
       fireSaleDiscountLoss: null,
     };
-    if (
-      state.funds[fundIndex]!.gated
-      && redemptionBlockedByGate(
-        candidate,
-        state.funds[fundIndex]!.gatePhiBps,
-        controlSeed,
-      )
-    ) {
+    if (state.funds[fundIndex]!.gated && state.funds[fundIndex]!.gatePhiBps === MAX_BPS) {
       blockedByGateInvestorCount += 1;
       blockedSharesByGate += shares;
       continue;
@@ -181,7 +179,6 @@ export function queueRedemptionRequestsForFund(
   fundId: string,
   intents: readonly InvestorRedemptionIntent[],
   requestFractionBps: number,
-  controlSeed: number,
 ): QueueRedemptionResult {
   validateSimulationState(state, network);
   const result = queueRedemptionRequestsForFundUnchecked(
@@ -190,7 +187,6 @@ export function queueRedemptionRequestsForFund(
     fundId,
     intents,
     requestFractionBps,
-    controlSeed,
     new Set(state.redemptionRequests.map(({ requestId }) => requestId)),
     pendingSharesByHolder(state, fundId),
   );
@@ -206,7 +202,6 @@ export function queueRedemptionRequestsForFunds(
     intents: readonly InvestorRedemptionIntent[];
   }[],
   requestFractionBps: number,
-  controlSeed: number,
 ): { state: SimulationState; summaries: QueueRedemptionResult['summary'][] } {
   validateSimulationState(state, network);
   const seenFundIds = new Set<string>();
@@ -223,7 +218,6 @@ export function queueRedemptionRequestsForFunds(
       input.fundId,
       input.intents,
       requestFractionBps,
-      controlSeed,
       existingRequestIds,
       pendingByFund.get(input.fundId) ?? new Map(),
     );
@@ -236,6 +230,41 @@ export function queueRedemptionRequestsForFunds(
 
 function markPending(request: RedemptionRequestState, reason: PendingRedemptionReason): void {
   request.pendingReason = reason;
+}
+
+function settlementAmountFor(request: RedemptionRequestState, navPerShareBps: number): number {
+  return Number(
+    (BigInt(request.requestedShares) * BigInt(navPerShareBps)) / BigInt(MAX_BPS),
+  );
+}
+
+function accrueGateSettlementBudgets(
+  state: SimulationState,
+  config: SimulationConfig,
+): void {
+  for (const fund of state.funds) {
+    if (!fund.gated) continue;
+    if (fund.gatePhiBps === 0 || fund.gatePhiBps === MAX_BPS) continue;
+    if (fund.gateSettlementBudgetUpdatedAt === state.nowSec) continue;
+    let eligiblePendingOutflow = 0;
+    for (const request of state.redemptionRequests) {
+      if (request.fundId !== fund.fundId || request.status !== 'pending') continue;
+      const eligibleAt = request.requestedAt
+        + config.liquidity.baselineSettlementDelayDays * TICK_SEC;
+      if (state.nowSec < eligibleAt || request.requestedShares >= fund.totalShares) continue;
+      eligiblePendingOutflow = safeAdd(
+        eligiblePendingOutflow,
+        settlementAmountFor(request, fund.reportedNavPerShareBps),
+        'GATE_PENDING_OUTFLOW_OVERFLOW',
+      );
+    }
+    fund.gateSettlementBudgetCarry = safeAdd(
+      fund.gateSettlementBudgetCarry,
+      controlledOutflow(eligiblePendingOutflow, fund.gatePhiBps),
+      'GATE_SETTLEMENT_BUDGET_OVERFLOW',
+    );
+    fund.gateSettlementBudgetUpdatedAt = state.nowSec;
+  }
 }
 
 export function settlePendingRedemptions(
@@ -252,6 +281,7 @@ export function settlePendingRedemptions(
     redemptionRequests: state.redemptionRequests.map((request) => ({ ...request })),
     assetSales: [...state.assetSales],
   };
+  accrueGateSettlementBudgets(next, config);
   const pendingIndexes = next.redemptionRequests
     .map((request, index) => ({ request, index }))
     .filter(({ request }) => request.status === 'pending')
@@ -264,14 +294,17 @@ export function settlePendingRedemptions(
   let settledShares = 0;
   let settlementAmountTotal = 0;
   let fireSaleDiscountLoss = 0;
+  const gateBlockedFunds = new Set<string>();
 
   for (const requestIndex of pendingIndexes) {
     const request = next.redemptionRequests[requestIndex]!;
     const fund = next.funds.find(({ fundId }) => fundId === request.fundId)!;
-    if (
-      fund.gated
-      && redemptionBlockedByGate(request, fund.gatePhiBps, config.control.seed)
-    ) {
+    if (gateBlockedFunds.has(request.fundId)) {
+      markPending(request, 'gated');
+      continue;
+    }
+    if (fund.gated && fund.gatePhiBps === MAX_BPS) {
+      gateBlockedFunds.add(request.fundId);
       markPending(request, 'gated');
       continue;
     }
@@ -286,12 +319,18 @@ export function settlePendingRedemptions(
       continue;
     }
     const settlementNavPerShareBps = fund.reportedNavPerShareBps;
-    const settlementAmount = Number(
-      (BigInt(request.requestedShares) * BigInt(settlementNavPerShareBps))
-        / BigInt(MAX_BPS),
-    );
+    const settlementAmount = settlementAmountFor(request, settlementNavPerShareBps);
     if (settlementAmount === 0) {
       markPending(request, 'settlement_amount_rounds_to_zero');
+      continue;
+    }
+    if (
+      fund.gated
+      && fund.gatePhiBps > 0
+      && settlementAmount > fund.gateSettlementBudgetCarry
+    ) {
+      gateBlockedFunds.add(request.fundId);
+      markPending(request, 'gated');
       continue;
     }
     const plan = planSettlementLiquidity(
@@ -324,6 +363,9 @@ export function settlePendingRedemptions(
     fund.reportedNavPerShareBps = Number(
       (BigInt(fund.reportedAum) * BigInt(MAX_BPS)) / BigInt(fund.totalShares),
     );
+    if (fund.gated && fund.gatePhiBps > 0) {
+      fund.gateSettlementBudgetCarry -= settlementAmount;
+    }
 
     request.status = 'settled';
     request.pendingReason = null;
@@ -342,6 +384,17 @@ export function settlePendingRedemptions(
     settledShares += request.requestedShares;
     settlementAmountTotal += settlementAmount;
     fireSaleDiscountLoss += plan.fireSaleDiscountLoss;
+  }
+
+  for (const fund of next.funds) {
+    if (
+      fund.gated
+      && !next.redemptionRequests.some((request) => (
+        request.fundId === fund.fundId && request.status === 'pending'
+      ))
+    ) {
+      fund.gateSettlementBudgetCarry = 0;
+    }
   }
 
   validateSimulationState(next, network);

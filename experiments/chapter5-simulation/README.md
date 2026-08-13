@@ -25,7 +25,7 @@ The foundation phase provides:
 - FIFO whole-request settlement with share locking, cash-first liquidity use, and explicit pending states;
 - continuous first-mover advantage and deterministic price-impact asset sales with reconciled discount loss.
 - Oracle-driven Gate transitions with strict kappa boundaries and auditable source provenance;
-- paired whole-request control strength plus rule-based simulation release after consecutive low-risk periods.
+- deterministic FIFO whole-request control budgets plus rule-based simulation release after qualifying low-risk evidence periods.
 - four-component fund-network proximity with independent real-channel and analogy-channel ablations;
 - shared-asset mark-down transmission plus next-period overlap, public-risk, and public-control spillover inputs.
 - a deterministic full-replicate runner that composes the frozen ten-stage tick pipeline;

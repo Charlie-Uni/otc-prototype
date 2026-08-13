@@ -8,7 +8,7 @@ T15 composes the tested economic, disclosure, behavior, control, liquidity, and 
 
 A run is identified by a treatment, one pre-generated valuation-shock scenario, its replicate ID, and a horizon no longer than 90 configured days. The runner regenerates the network and shock candidates and rejects a scenario that does not exactly match its configuration.
 
-Paired counterfactuals must have the same scenario and horizon. Network, shock, Oracle, observation, behavior, and control seeds are protected and cannot be waived by an ablation allow-list. Every other changed leaf field must be listed explicitly. This makes the common-random-number convention machine-checkable.
+Paired counterfactuals must have the same scenario and horizon. Network, shock, Oracle, observation, and behavior seeds are protected and cannot be waived by an ablation allow-list. Gate control is deterministic and has no random seed. Every other changed leaf field must be listed explicitly. This makes the common-random-number convention machine-checkable.
 
 ## Tick clock and stage order
 
@@ -34,7 +34,7 @@ Investor observations use heterogeneous schedules and are deduplicated globally 
 
 The existing Logistic behavior model produces the base probability and one counter-based random draw. A previous-tick fund-level spillover rate is added to that probability and capped at one; the same draw is reused. This is a pilot operationalization of the reduced-form spillover term and must be frozen or revised before formal preregistration.
 
-Requests are queued for every active holder, Gate strength is applied at request and settlement, and settlement runs once after all fund decisions. New asset sales, request pressure, newly disclosed public risk, and newly disclosed Gate triggers then propagate. Private and future control events provide no signal input.
+Requests are queued for every active holder. Partial Gate strength applies only through the settlement-value budget; the full-freeze endpoint also blocks new requests. Settlement runs once after all fund decisions. New asset sales, request pressure, newly disclosed public risk, and newly disclosed Gate triggers then propagate. Private and future control events provide no signal input.
 
 ## Evidence and runtime storage
 

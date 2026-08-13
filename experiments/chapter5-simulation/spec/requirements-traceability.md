@@ -60,6 +60,8 @@ R0-R4 are policy packages. A1-A6 use custom experiment configurations in the ind
 
 No silent omission is allowed. Any descope decision must be added to this table with a reason before formal preregistration.
 
+T13 implements deterministic settlement-side Gate control. For `phi<1`, valid requests enter the queue and FIFO whole-request settlement consumes a `(1-phi)` value budget with unused budget carried forward; only `phi=1` blocks both new requests and settlement. Triggering remains `score > kappa`, while successful `score <= kappa` periods count toward the simulation-only release rule. Failed or missing Oracle periods freeze release progress. The 2026-08-13 correction removed the earlier request-level Gate random draw. Consequently `chapter5-sim-prereg-v1` and its 860-shard execution plan are retained only as historical artifacts and cannot authorize corrected formal results; a reviewed v2 preregistration is required.
+
 T14 implements all four proximity components, exact shared-asset loss propagation, investor-overlap demand propagation, and public risk/control signal propagation. The equal chi weights and full pass-through pilot coefficients remain unfrozen until pilot diagnostics and preregistration.
 
 T15 composes these mechanisms into the fixed ten-stage runner. It checks paired seeds, scenarios, horizons, and allowed treatment differences; applies network demand only in the next tick; and emits deterministic tick evidence. The additive probability mapping for incoming spillover is a pilot parameterization and is not a formal result until preregistered.

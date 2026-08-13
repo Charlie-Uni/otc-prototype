@@ -345,7 +345,6 @@ export function runSimulation(input: SimulationRunInput): SimulationRunResult {
           intents: behavior.intentsByFund.get(fund.id) ?? [],
         })),
       config.liquidity.redemptionRequestFractionBps,
-      config.control.seed,
     );
     state = queued.state;
     const queues: TickTrace['queues'] = queued.summaries;

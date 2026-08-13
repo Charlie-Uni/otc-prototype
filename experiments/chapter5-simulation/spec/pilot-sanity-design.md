@@ -19,7 +19,7 @@ The machine checks are:
 7. detection uses `score >= tau`, while intervention uses `score > kappa`;
 8. increasing phi cannot increase settlement or buffer consumption in controlled funds.
 
-The shock checks run for at least 14 days so every 1/7/14-day NAV tier has one reporting opportunity. The phi check uses the same paired control seed and whole-request draw across the complete configured phi grid.
+The shock checks run for at least 14 days so every 1/7/14-day NAV tier has one reporting opportunity. The phi check uses the same economic inputs across the complete configured phi grid and verifies the controlled-fund settlement/buffer monotonicity produced by deterministic value budgets.
 
 ## Non-gating diagnostics
 

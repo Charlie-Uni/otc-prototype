@@ -21,13 +21,23 @@ export function validateFundGateFields(fund: FundRuntimeState, stateTime: number
   if (fund.lastControlEvaluationTick !== null) {
     requireSafeNonNegative(fund.lastControlEvaluationTick, 'LAST_CONTROL_EVALUATION_TICK');
   }
-  if (fund.gateReleaseEligibleAtTick !== null) {
-    requireSafeNonNegative(fund.gateReleaseEligibleAtTick, 'GATE_RELEASE_ELIGIBLE_TICK');
-    if (
-      fund.lastControlEvaluationTick === null
-      || fund.gateReleaseEligibleAtTick < fund.lastControlEvaluationTick
-    ) {
-      throw new Error('INVALID_GATE_RELEASE_ELIGIBLE_TICK');
+  if (fund.gateReleaseDelayTicksRemaining !== null) {
+    requireSafeNonNegative(
+      fund.gateReleaseDelayTicksRemaining,
+      'GATE_RELEASE_DELAY_TICKS_REMAINING',
+    );
+    if (fund.gateReleaseDelayTicksRemaining === 0) {
+      throw new Error('ZERO_ACTIVE_GATE_RELEASE_DELAY');
+    }
+  }
+  requireSafeNonNegative(fund.gateSettlementBudgetCarry, 'GATE_SETTLEMENT_BUDGET_CARRY');
+  if (fund.gateSettlementBudgetCarry > 0 && fund.gateSettlementBudgetUpdatedAt === null) {
+    throw new Error('GATE_SETTLEMENT_BUDGET_WITHOUT_UPDATE_TIME');
+  }
+  if (fund.gateSettlementBudgetUpdatedAt !== null) {
+    requireSafeNonNegative(fund.gateSettlementBudgetUpdatedAt, 'GATE_SETTLEMENT_BUDGET_UPDATED_AT');
+    if (fund.gateSettlementBudgetUpdatedAt > stateTime) {
+      throw new Error('GATE_SETTLEMENT_BUDGET_UPDATED_AFTER_STATE_TIME');
     }
   }
   if (fund.gated) {
@@ -36,12 +46,32 @@ export function validateFundGateFields(fund: FundRuntimeState, stateTime: number
     }
     requireSafeNonNegative(fund.gatedAt, 'GATED_AT');
     if (fund.gatedAt > stateTime) throw new Error('GATE_TRIGGERED_AFTER_STATE_TIME');
+    if (
+      fund.gateSettlementBudgetUpdatedAt !== null
+      && fund.gateSettlementBudgetUpdatedAt < fund.gatedAt
+    ) {
+      throw new Error('GATE_SETTLEMENT_BUDGET_UPDATED_BEFORE_TRIGGER');
+    }
+    if (fund.gateReleaseDelayTicksRemaining !== null && fund.gateReleaseStreakTicks === 0) {
+      throw new Error('GATE_RELEASE_DELAY_WITHOUT_EVIDENCE');
+    }
+    if (
+      (fund.gatePhiBps === 0 || fund.gatePhiBps === MAX_BPS)
+      && (
+        fund.gateSettlementBudgetCarry !== 0
+        || fund.gateSettlementBudgetUpdatedAt !== null
+      )
+    ) {
+      throw new Error('UNUSED_GATE_SETTLEMENT_BUDGET_STATE');
+    }
   } else if (
     fund.gatePhiBps !== 0
     || fund.gatedAt !== null
     || fund.gateTriggerSubmissionId !== null
     || fund.gateReleaseStreakTicks !== 0
-    || fund.gateReleaseEligibleAtTick !== null
+    || fund.gateReleaseDelayTicksRemaining !== null
+    || fund.gateSettlementBudgetCarry !== 0
+    || fund.gateSettlementBudgetUpdatedAt !== null
   ) {
     throw new Error('STALE_INACTIVE_GATE_STATE');
   }
@@ -75,11 +105,14 @@ export function validateControlTransitions(state: SimulationState): void {
     if (transition.kind === 'GateTriggered' && !source.interventionTriggered) {
       throw new Error('GATE_TRIGGER_WITHOUT_INTERVENTION');
     }
-    if (transition.kind === 'GateReleased' && source.riskScoreBps >= source.kappaBps) {
+    if (transition.kind === 'GateReleased' && source.riskScoreBps > source.kappaBps) {
       throw new Error('GATE_RELEASE_WITHOUT_LOW_SCORE');
     }
     const fundTransitions = transitionsByFund.get(transition.fundId) ?? [];
     const previous = fundTransitions.at(-1);
+    if (!previous && transition.kind !== 'GateTriggered') {
+      throw new Error('INVALID_GATE_TRANSITION_SEQUENCE');
+    }
     if (
       previous
       && (

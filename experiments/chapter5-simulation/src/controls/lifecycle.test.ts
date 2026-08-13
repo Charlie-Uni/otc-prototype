@@ -146,30 +146,91 @@ test('releases only after consecutive low-score ticks and the regulatory delay',
   assert.equal(fund.gated, false);
   assert.equal(fund.gatePhiBps, 0);
   assert.equal(fund.gateReleaseStreakTicks, 0);
-  assert.equal(fund.gateReleaseEligibleAtTick, null);
+  assert.equal(fund.gateReleaseDelayTicksRemaining, null);
+  assert.equal(fund.gateSettlementBudgetCarry, 0);
+  assert.equal(fund.gateSettlementBudgetUpdatedAt, null);
   assert.deepEqual(state.controlTransitions.map(({ kind }) => kind), [
     'GateTriggered',
     'GateReleased',
   ]);
 });
 
-test('a missing successful tick breaks the low-score release streak', () => {
+test('counts a successful score exactly equal to kappa as release evidence', () => {
   const triggerConfig = controlConfig({ kappaBps: 0 });
-  const lowConfig = controlConfig({
+  const releaseConfig = controlConfig({
     kappaBps: 10_000,
-    releaseConsecutiveTicks: 2,
+    releaseConsecutiveTicks: 1,
     releaseDelayTicks: 0,
   });
   let state = applyLatest(
     submitAt(createInitialSimulationState(network, BASE_AT), triggerConfig, 0),
     triggerConfig,
   ).state;
-  state = applyLatest(submitAt(state, lowConfig, 2), lowConfig).state;
+  state = submitAt(state, releaseConfig, 1);
+  const snapshot = state.oracleRiskSnapshots.at(-1)!;
+  snapshot.kappaBps = snapshot.riskScoreBps;
+  snapshot.interventionTriggered = false;
+
+  const released = applyLatest(state, releaseConfig);
+  assert.equal(released.status, 'released');
+  assert.equal(released.transition?.riskScoreBps, released.transition?.kappaBps);
+});
+
+test('failed Oracle ticks freeze release evidence and delay progress', () => {
+  const triggerConfig = controlConfig({ kappaBps: 0 });
+  const lowConfig = controlConfig({
+    kappaBps: 10_000,
+    releaseConsecutiveTicks: 3,
+    releaseDelayTicks: 1,
+  });
+  let state = applyLatest(
+    submitAt(createInitialSimulationState(network, BASE_AT), triggerConfig, 0),
+    triggerConfig,
+  ).state;
+  state = applyLatest(submitAt(state, lowConfig, 1), lowConfig).state;
+  const failed = submitOracleRisk(state, network, lowConfig, {
+    replicateId: 0,
+    tick: 2,
+    fundId,
+    occurredAt: BASE_AT + 2 * TICK_SEC,
+    requestedSharesInWindow: 0,
+  }, {
+    latencySec: 0,
+    executionFailureBps: 10_000,
+    maxAttempts: 1,
+    retryDelaySec: 0,
+  });
+  assert.equal(failed.status, 'failed');
+  assert.deepEqual(failed.state, state);
+  state = applyLatest(submitAt(state, lowConfig, 3), lowConfig).state;
   assert.equal(
     state.funds.find(({ fundId: id }) => id === fundId)!.gateReleaseStreakTicks,
+    2,
+  );
+  state = applyLatest(submitAt(state, lowConfig, 4), lowConfig).state;
+  assert.equal(
+    state.funds.find(({ fundId: id }) => id === fundId)!.gateReleaseDelayTicksRemaining,
     1,
   );
-  const released = applyLatest(submitAt(state, lowConfig, 3), lowConfig);
+  const failedDuringDelay = submitOracleRisk(state, network, lowConfig, {
+    replicateId: 0,
+    tick: 5,
+    fundId,
+    occurredAt: BASE_AT + 5 * TICK_SEC,
+    requestedSharesInWindow: 0,
+  }, {
+    latencySec: 0,
+    executionFailureBps: 10_000,
+    maxAttempts: 1,
+    retryDelaySec: 0,
+  });
+  assert.equal(failedDuringDelay.status, 'failed');
+  assert.equal(
+    failedDuringDelay.state.funds.find(({ fundId: id }) => id === fundId)!
+      .gateReleaseDelayTicksRemaining,
+    1,
+  );
+  const released = applyLatest(submitAt(state, lowConfig, 6), lowConfig);
   assert.equal(released.status, 'released');
 });
 
@@ -192,7 +253,6 @@ test('full Gate blocks new requests while preserving latent demand in the queue 
     fundId,
     allRedeemIntents(gated),
     10_000,
-    config.control.seed,
   );
 
   assert.equal(queued.summary.redeemingInvestorCount, 20);
@@ -204,6 +264,25 @@ test('full Gate blocks new requests while preserving latent demand in the queue 
   assert.equal(queued.state.funds.find(({ fundId: id }) => id === fundId)!.queuedRedemptionShares, 0);
 });
 
+test('partial Gate preserves all valid requests for settlement-side throttling', () => {
+  const config = controlConfig({ kappaBps: 0, phiBps: 5_000 });
+  const initial = createInitialSimulationState(network, BASE_AT);
+  const gated = applyLatest(submitAt(initial, config, 0), config).state;
+  const queued = queueRedemptionRequestsForFund(
+    gated,
+    network,
+    fundId,
+    allRedeemIntents(gated),
+    10_000,
+  );
+
+  assert.equal(queued.summary.blockedByGateInvestorCount, 0);
+  assert.equal(queued.summary.blockedSharesByGate, 0);
+  assert.equal(queued.summary.requestedShares, 100_000_000);
+  assert.equal(queued.summary.latentRequestedShares, 100_000_000);
+  assert.equal(queued.state.redemptionRequests.length, 20);
+});
+
 test('higher phi cannot increase controlled-fund settlement or liquid-asset consumption', () => {
   const initial = createInitialSimulationState(network, BASE_AT);
   const queued = queueRedemptionRequestsForFund(
@@ -212,7 +291,6 @@ test('higher phi cannot increase controlled-fund settlement or liquid-asset cons
     fundId,
     allRedeemIntents(initial),
     10_000,
-    baseline.control.seed,
   ).state;
   const triggerConfig = controlConfig({ kappaBps: 0, zeroPriceImpact: true });
   const submitted = submitAt(

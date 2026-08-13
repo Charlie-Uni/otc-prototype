@@ -81,9 +81,9 @@ Each draw is identified by `(masterSeed, replicateId, entityId, moduleId, tick, 
 
 ## Control boundary
 
-The Chapter 3 artifact triggers Gate automatically and releases it through a regulator transaction carrying `reasonHash`. The simulation adds a rule-based release after the score remains below kappa for `k` consecutive periods plus a regulatory delay. This is a Stage 2 model extension, not a claim about the deployed artifact.
+The Chapter 3 artifact triggers Gate automatically and releases it through a regulator transaction carrying `reasonHash`. The simulation adds a rule-based release after `k` successful evidence periods at or below kappa plus a regulatory delay counted only by later qualifying successful periods. Missing or failed Oracle periods freeze progress. This is a Stage 2 model extension, not a claim about the deployed artifact.
 
-Control strength uses `phiBps in [0,10000]`. The continuous formula defines the aggregate attenuation envelope; actual simulation settlement preserves whole requests through one paired deterministic admission draw per request. Higher phi cannot expand the admitted request set. Equality at kappa qualifies for neither trigger nor release.
+Control strength uses `phiBps in [0,10000]`. For `phi<10000`, requests enter the queue and the formula defines a deterministic per-period settlement-value budget. Whole requests settle FIFO, unused budget carries forward, and no Gate random draw is used. Only `phi=10000` blocks new requests and settlement, matching the artifact's full-freeze endpoint. Equality at kappa does not trigger Gate but does qualify as release evidence.
 
 ## Network propagation
 

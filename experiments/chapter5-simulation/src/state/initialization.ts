@@ -73,7 +73,9 @@ export function createInitialSimulationState(network: NetworkModel, atSec: numbe
       gatedAt: null,
       gateTriggerSubmissionId: null,
       gateReleaseStreakTicks: 0,
-      gateReleaseEligibleAtTick: null,
+      gateReleaseDelayTicksRemaining: null,
+      gateSettlementBudgetCarry: 0,
+      gateSettlementBudgetUpdatedAt: null,
       lastControlSubmissionId: null,
       lastControlEvaluationTick: null,
       reportedRiskMetrics: initialRiskMetrics(
