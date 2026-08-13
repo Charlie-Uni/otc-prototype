@@ -44,7 +44,7 @@
       "changedPath": "config.propagation.channels.investorOverlap",
       "baselineValue": true,
       "comparisonValue": false,
-      "hypothesisIds": ["H4"]
+      "hypothesisIds": ["H4a"]
     },
     {
       "id": "A5",
@@ -53,7 +53,7 @@
       "changedPath": "config.propagation.channels.sharedIlliquidAssets",
       "baselineValue": true,
       "comparisonValue": false,
-      "hypothesisIds": ["H4"]
+      "hypothesisIds": ["H4a"]
     },
     {
       "id": "A6",
@@ -74,7 +74,7 @@
       "changedPath": "config.propagation.channels.signalAnalogy",
       "baselineValue": true,
       "comparisonValue": false,
-      "hypothesisIds": ["H4"]
+      "hypothesisIds": ["H4b"]
     }
   ],
   "robustnessScans": [

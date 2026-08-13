@@ -4,7 +4,7 @@ import { shockMagnitudeBps } from '../shocks/scenario';
 import type { FormalPairContrast } from './contrasts';
 import type { FormalPairObservation } from './measurement';
 
-export type HypothesisId = 'H1' | 'H2' | 'H3' | 'H4' | 'H5' | 'H6';
+export type HypothesisId = 'H1' | 'H2' | 'H3' | 'H4a' | 'H4b' | 'H5' | 'H6';
 export type AnalysisTier = 'primary' | 'window_robustness';
 
 export type FormalEstimateDefinition = {
@@ -134,7 +134,7 @@ export function directMetricDefinitions(
       : [...spilloverRows, ['LossMagnitude', 'LossMagnitude'] as const];
     return rows.map(([testSuffix, metricId]) => ({
       ...common,
-      hypothesisId: 'H4',
+      hypothesisId: pairId === 'A7' ? 'H4b' : 'H4a',
       testId: `${pairId}:${testSuffix}:w${windowDays}`,
       metricId,
       unit: 'bps',

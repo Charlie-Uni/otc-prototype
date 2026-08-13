@@ -2,7 +2,7 @@
 
 ## Status and boundary
 
-T17.5 is exploratory calibration. Its runs are excluded from Chapter 6 formal results and `formalFindingsAllowed` is always false. The grid cannot pass or fail based on an R0-R4 ordering or an H1-H6 direction.
+T17.5 is exploratory calibration. Its runs are excluded from Chapter 6 formal results and `formalFindingsAllowed` is always false. The grid cannot pass or fail based on an R0-R4 ordering or a direction expected by H1-H3, H4a, H4b, H5, or H6.
 
 The grid changes three declared demand-scale parameters: the Logistic intercept, the fraction of available shares requested after a positive decision, and one symmetric transmission value applied to investor-overlap, public-risk, and public-control demand channels. Shared-asset loss pass-through is not changed. Network topology plus shock, Oracle, observation, and behavior seeds remain unchanged; Gate control is deterministic and has no seed. Each candidate uses the same replicate-level scenario across its no-shock and R0-R4 arms.
 

@@ -66,10 +66,17 @@
       "usedAsModelGate": false
     },
     {
-      "id": "H4",
-      "expectedDirection": "asset overlap, investor overlap, and signal analogy increase redemption spillovers; overlap channels may also propagate losses",
+      "id": "H4a",
+      "expectedDirection": "asset overlap and investor overlap increase redemption spillovers; shared-asset overlap may also propagate losses",
       "primaryMetricIds": ["SpilloverRedemption", "SpilloverScope", "LossMagnitude"],
-      "contrastIds": ["A4", "A5", "A7"],
+      "contrastIds": ["A4", "A5"],
+      "usedAsModelGate": false
+    },
+    {
+      "id": "H4b",
+      "expectedDirection": "signal analogy increases redemption spillovers and spillover scope without directly creating accounting loss",
+      "primaryMetricIds": ["SpilloverRedemption", "SpilloverScope"],
+      "contrastIds": ["A7"],
       "usedAsModelGate": false
     },
     {
@@ -99,7 +106,7 @@
     { "id": "loss_heavy", "weightBps": [2000, 2000, 4000, 2000] }
   ],
   "plannedOutputs": [
-    "H1-H6 paired-estimate table",
+    "H1-H3, H4a, H4b, H5, and H6 paired-estimate table",
     "R0-R4 detection and censoring table",
     "redemption and liquidity outcome table",
     "network spillover table",

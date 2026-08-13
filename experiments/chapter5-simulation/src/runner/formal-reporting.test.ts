@@ -281,10 +281,10 @@ test('maps A1-A7 into only their declared hypothesis families', () => {
     ['A1', ['H2', 'H3']],
     ['A2', ['H2']],
     ['A3', ['H2', 'H3']],
-    ['A4', ['H4']],
-    ['A5', ['H4']],
+    ['A4', ['H4a']],
+    ['A5', ['H4a']],
     ['A6', ['H6']],
-    ['A7', ['H4']],
+    ['A7', ['H4b']],
   ] as const;
   for (const replicateId of [0, 1]) {
     pairFamilies.forEach(([pairId]) => accumulator.addObservation(observation({
@@ -317,6 +317,8 @@ test('maps A1-A7 into only their declared hypothesis families', () => {
   assert.ok(report.supplementaryEstimateSummaries.some(({ pairId, metricId }) => (
     pairId === 'A7' && metricId === 'SpilloverScope.AffectedFundShare@250'
   )));
+  assert.ok(report.estimateSummaries.some(({ hypothesisId }) => hypothesisId === 'H4a'));
+  assert.ok(report.estimateSummaries.some(({ hypothesisId }) => hypothesisId === 'H4b'));
 });
 
 test('joins identical primary scenarios across R0-R4 before computing H1 and H3', () => {

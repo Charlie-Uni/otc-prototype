@@ -110,7 +110,7 @@ function robustnessCells(design: FormalExperimentDesign): FormalCell[] {
         shockMagnitudeBps: 2_000,
         shockEnabled: true,
         replicates: scan.replicates,
-        hypothesisIds: ['H1', 'H2', 'H4', 'H5', 'H6'],
+        hypothesisIds: ['H1', 'H2', 'H4a', 'H4b', 'H5', 'H6'],
       };
       return [
         {

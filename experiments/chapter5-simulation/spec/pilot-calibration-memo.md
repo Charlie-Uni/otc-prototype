@@ -4,7 +4,7 @@
 
 This memo records exploratory calibration only. It is not a Chapter 6 result and cannot be cited as hypothesis evidence. The run follows the model definitions in `论文框架0630.docx`, the lifecycle and transparency semantics in the Chapter 3 design, and the mentor-confirmed 100-replicate pilot rule in `副本待确认清单2(1).pdf`.
 
-The run used a 30-day window, a 20% single-fund valuation shock, one paired no-shock arm, and R0-R4 arms for every replicate. Candidate selection did not use an expected regime ordering or any H1-H6 direction.
+The run used a 30-day window, a 20% single-fund valuation shock, one paired no-shock arm, and R0-R4 arms for every replicate. Candidate selection did not use an expected regime ordering or any direction expected by H1-H3, H4a, H4b, H5, or H6.
 
 ## Behavior selection
 

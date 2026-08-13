@@ -35,7 +35,7 @@ Formal execution must implement every declared treatment path and fail before ru
 
 Detection outcomes are either numeric seconds or explicitly censored with a reason. Pending redemption is a lifecycle status and is never called censored. Failed runs retain evidence and may only be rerun with identical locked inputs. Config-digest mismatch, incomplete replicate matrices, undeclared treatment differences, and paired-seed or paired-shock drift are fail-fast errors.
 
-Expected H1-H6 directions are analysis statements only. They are not model gates, sanity gates, cell-selection rules, or reasons to alter parameters. Pilot observations cannot be pooled with formal results.
+Expected directions for the seven statistical families H1-H3, H4a, H4b, H5, and H6 are analysis statements only. They are not model gates, sanity gates, cell-selection rules, or reasons to alter parameters. Pilot observations cannot be pooled with formal results.
 
 ## Freeze procedure
 

@@ -8,9 +8,12 @@ const input = JSON.parse(readFileSync(
   'utf8',
 ));
 
-test('freezes all six hypotheses without turning expected directions into model gates', () => {
+test('freezes seven hypothesis families without turning expected directions into model gates', () => {
   const plan = parseFormalAnalysisPlan(input);
-  assert.deepEqual(plan.hypotheses.map(({ id }) => id), ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
+  assert.deepEqual(
+    plan.hypotheses.map(({ id }) => id),
+    ['H1', 'H2', 'H3', 'H4a', 'H4b', 'H5', 'H6'],
+  );
   assert.ok(plan.hypotheses.every(({ usedAsModelGate }) => !usedAsModelGate));
   assert.equal(plan.detection.anchor, 'paired_valuation_haircut_increase');
   assert.equal(plan.detection.sensitivityThresholdBps, 6_000);
@@ -18,8 +21,12 @@ test('freezes all six hypotheses without turning expected directions into model 
   assert.equal(plan.controlExperiment.mechanismExperimentKappaBps, 1_500);
   assert.equal(plan.formalExecutionRequiresTag, 'chapter5-sim-prereg-v2');
   assert.deepEqual(
-    plan.hypotheses.find(({ id }) => id === 'H4')?.contrastIds,
-    ['A4', 'A5', 'A7'],
+    plan.hypotheses.find(({ id }) => id === 'H4a')?.contrastIds,
+    ['A4', 'A5'],
+  );
+  assert.deepEqual(
+    plan.hypotheses.find(({ id }) => id === 'H4b')?.contrastIds,
+    ['A7'],
   );
 });
 

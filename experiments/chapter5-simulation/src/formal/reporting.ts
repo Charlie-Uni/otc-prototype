@@ -595,7 +595,9 @@ export function assertFormalAnalysisReportComplete(report: FormalAnalysisReport)
     throw new Error('FORMAL_REPORT_DIGEST_MISMATCH');
   }
   const hypothesisIds = new Set(report.estimateSummaries.map(({ hypothesisId }) => hypothesisId));
-  if ((['H1', 'H2', 'H3', 'H4', 'H5', 'H6'] as const).some((id) => !hypothesisIds.has(id))) {
+  if ((['H1', 'H2', 'H3', 'H4a', 'H4b', 'H5', 'H6'] as const).some((id) => (
+    !hypothesisIds.has(id)
+  ))) {
     throw new Error('FORMAL_REPORT_HYPOTHESIS_COVERAGE_INCOMPLETE');
   }
   const expectedPolicyRows = POLICY_REGIMES.length * 3 * 2;

@@ -103,7 +103,8 @@ invalid join. Their normalized arm-level outcomes remain available for robustnes
 Streaming estimates use Welford moments, paired Monte Carlo standard errors, and the locked 95% normal
 interval. Two-sided normal p-values are adjusted by the Holm step-down method independently within each
 hypothesis family. These functions are fixed before formal outputs are read; the later report builder may
-only map locked contrasts to H1-H6 and may not introduce a result-dependent metric or exclusion rule.
+only map locked contrasts to the seven families H1-H3, H4a, H4b, H5, and H6 and may not introduce a
+result-dependent metric or exclusion rule.
 
 ## Report mapping and resumable execution
 

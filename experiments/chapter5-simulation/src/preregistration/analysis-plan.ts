@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const bps = z.number().int().min(0).max(10_000);
-const hypothesisId = z.enum(['H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
+const hypothesisId = z.enum(['H1', 'H2', 'H3', 'H4a', 'H4b', 'H5', 'H6']);
 
 const analysisPlanSchema = z.object({
   schemaVersion: z.literal(1),
@@ -66,7 +66,7 @@ const analysisPlanSchema = z.object({
     primaryMetricIds: z.array(z.string().min(1)).min(1),
     contrastIds: z.array(z.string().min(1)).min(1),
     usedAsModelGate: z.literal(false),
-  }).strict()).length(6),
+  }).strict()).length(7),
   exclusionRules: z.array(z.string().min(1)).min(1),
   supplementaryStabilityWeightSchemes: z.array(z.object({
     id: z.string().min(1),

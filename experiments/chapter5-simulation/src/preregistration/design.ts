@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const regimeId = z.enum(['R0', 'R1', 'R2', 'R3', 'R4']);
-const hypothesisId = z.enum(['H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
+const hypothesisId = z.enum(['H1', 'H2', 'H3', 'H4a', 'H4b', 'H5', 'H6']);
 export const FORMAL_TREATMENT_PATHS = [
   'mechanisms.publicRiskDisclosureEnabled',
   'regime.delaySec',

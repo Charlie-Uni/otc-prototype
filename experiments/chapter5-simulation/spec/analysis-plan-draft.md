@@ -7,7 +7,7 @@ This document records the analysis structure before model implementation. Pilot 
 
 Before formal execution, a separate commit and annotated tag `chapter5-sim-prereg-v2` will freeze:
 
-- H1-H6 directional hypotheses without using them as model pass/fail gates;
+- seven statistical families (H1-H3, H4a, H4b, H5, and H6) without using expected directions as model pass/fail gates;
 - primary and supplementary metrics;
 - paired counterfactual definitions;
 - censoring, pending, exclusion, and failure rules;

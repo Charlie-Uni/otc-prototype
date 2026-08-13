@@ -44,8 +44,14 @@ test('design covers the policy packages, seven ablations, and required robustnes
       baselineValue: true,
       comparisonValue: false,
       fixedChanges: [],
-      hypothesisIds: ['H4'],
+      hypothesisIds: ['H4b'],
     },
+  );
+  assert.deepEqual(
+    design.ablations
+      .filter(({ id }) => id === 'A4' || id === 'A5')
+      .map(({ hypothesisIds }) => hypothesisIds),
+    [['H4a'], ['H4a']],
   );
   const scans = new Set(design.robustnessScans.map(({ id }) => id));
   for (const required of [

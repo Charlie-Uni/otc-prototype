@@ -42,7 +42,7 @@ The foundation phase provides:
 - compact 30/60/90-day arm measurements and paired observations derived immediately after each run;
 - immutable shard evidence publication with digest validation, idempotent replay, conflict rejection, and separate failure records.
 - bounded parallel execution with validated shard files as the only resume checkpoint;
-- pre-result H1-H6 effect-direction mapping, censoring counts, supplementary robustness summaries, and within-hypothesis Holm adjustment.
+- pre-result mapping for H1-H3, H4a, H4b, H5, and H6, with censoring counts, supplementary robustness summaries, and within-hypothesis Holm adjustment.
 
 `calc.ts`, `regimes.ts`, and `sensitivity.ts` are byte-identical copies from `chapter3-artifact-v1.4.0`. The observation helper is the pure scheduling subset of `detection.ts`; the complete source file is hash-locked and its observable behavior is covered by golden tests, avoiding unrelated ABI and indexer code in the simulation package.
 

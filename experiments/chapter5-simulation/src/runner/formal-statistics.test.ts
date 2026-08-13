@@ -57,3 +57,15 @@ test('applies monotone Holm adjustment within each hypothesis only', () => {
     /INVALID_FORMAL_HYPOTHESIS_TEST/,
   );
 });
+
+test('keeps real-transmission H4a and signal-analogy H4b in separate Holm families', () => {
+  assert.deepEqual(holmAdjustWithinHypothesis([
+    { hypothesisId: 'H4a', testId: 'A4', pValue: 0.01 },
+    { hypothesisId: 'H4a', testId: 'A5', pValue: 0.04 },
+    { hypothesisId: 'H4b', testId: 'A7', pValue: 0.02 },
+  ]), [
+    { hypothesisId: 'H4a', testId: 'A4', pValue: 0.01, adjustedPValue: 0.02, familySize: 2, rank: 1 },
+    { hypothesisId: 'H4a', testId: 'A5', pValue: 0.04, adjustedPValue: 0.04, familySize: 2, rank: 2 },
+    { hypothesisId: 'H4b', testId: 'A7', pValue: 0.02, adjustedPValue: 0.02, familySize: 1, rank: 1 },
+  ]);
+});

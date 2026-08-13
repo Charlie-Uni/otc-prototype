@@ -51,6 +51,16 @@ const { semanticDigestSha256: recordedControlDigest, ...controlEvidenceWithoutDi
 if (recordedControlDigest !== semanticDigestSha256(controlEvidenceWithoutDigest)) {
   throw new Error('CONTROL_THRESHOLD_EVIDENCE_SEMANTIC_DIGEST_MISMATCH');
 }
+for (const ablation of design.ablations) {
+  const declaredHypotheses = new Set(ablation.hypothesisIds);
+  const plannedHypotheses = new Set(plan.hypotheses
+    .filter(({ contrastIds }) => contrastIds.includes(ablation.id))
+    .map(({ id }) => id));
+  if (
+    declaredHypotheses.size !== plannedHypotheses.size
+    || [...declaredHypotheses].some((id) => !plannedHypotheses.has(id))
+  ) throw new Error(`ABLATION_HYPOTHESIS_FAMILY_MISMATCH:${ablation.id}`);
+}
 for (const id of ['A6', 'CONTROL_PHI', 'CONTROL_RELEASE_STREAK', 'CONTROL_RELEASE_DELAY']) {
   const cells = expectedMatrix.cells.filter((cell) => (
     cell.pairId === id || cell.pairId.startsWith(`ROBUST-${id}-`)
