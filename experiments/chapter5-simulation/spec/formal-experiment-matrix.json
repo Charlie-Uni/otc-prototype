@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "designDigestSha256": "2ae6acadc56e50a88697a380de1658951c2315d6aa321e25704e58ae1bf09165",
-  "cellCount": 144,
+  "designDigestSha256": "eeb3a37345295ec2ff036455f9d0f6392256e59faadfd10eef20d0119352c374",
+  "cellCount": 146,
   "cells": [
     {
       "family": "primary_policy",
@@ -762,6 +762,46 @@
         {
           "path": "regime.controlDisclosure",
           "value": "private"
+        }
+      ]
+    },
+    {
+      "family": "ablation",
+      "pairId": "A7",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H4"
+      ],
+      "cellId": "A7-BASELINE",
+      "arm": "baseline",
+      "treatmentChanges": [
+        {
+          "path": "config.propagation.channels.signalAnalogy",
+          "value": true
+        }
+      ]
+    },
+    {
+      "family": "ablation",
+      "pairId": "A7",
+      "regimeId": "R1",
+      "shockType": "valuation",
+      "shockMagnitudeBps": 2000,
+      "shockEnabled": true,
+      "replicates": 500,
+      "hypothesisIds": [
+        "H4"
+      ],
+      "cellId": "A7-COMPARISON",
+      "arm": "comparison",
+      "treatmentChanges": [
+        {
+          "path": "config.propagation.channels.signalAnalogy",
+          "value": false
         }
       ]
     },

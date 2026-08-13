@@ -37,7 +37,7 @@ When NAV is due, reported AUM and NAV move to current economic state, the valuat
 
 ## Latency, failure, and retries
 
-Oracle latency and execution failure are real treatment hooks. Pilot defaults are zero seconds and zero failure bps; formal values will be frozen before `chapter5-sim-prereg-v1`.
+Oracle latency and execution failure are real treatment hooks. Pilot defaults are zero seconds and zero failure bps; formal values are frozen by `chapter5-sim-prereg-v2`.
 
 - Attempt time is `occurredAt + latencySec + retryIndex * retryDelaySec`.
 - An attempt fails when its deterministic draw is below `executionFailureBps`.

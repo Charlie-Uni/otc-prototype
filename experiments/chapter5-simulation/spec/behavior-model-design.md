@@ -56,7 +56,7 @@ The Logistic implementation is numerically stable for positive and negative log 
 | `a4` | 1.0 | strategic-complementarity direction |
 | `a5` | 1.0 | first-mover-advantage direction |
 
-These values are deliberately labeled pilot and are not empirical estimates. Formal coefficient ranges, scan design, and seeds must be committed before `chapter5-sim-prereg-v1`.
+These values are deliberately labeled pilot and are not empirical estimates. Formal coefficient ranges, scan design, and seeds are frozen by `chapter5-sim-prereg-v2`.
 
 ## Paired decision draw
 

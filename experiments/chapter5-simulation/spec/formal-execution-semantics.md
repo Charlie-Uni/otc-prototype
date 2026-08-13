@@ -1,7 +1,8 @@
 # Chapter 5 Formal Execution Semantics
 
-This document describes the post-preregistration execution implementation. It does not amend the
-locked analysis plan, formal matrix, expected directions, replication counts, or exclusion rules.
+This document describes the corrected v2 candidate execution implementation. It does not authorize
+formal output before the candidate design, matrix, runner, and analysis plan receive a new lock and
+annotated v2 tag. The invalid v1 tag remains historical evidence only.
 
 ## Treatment compilation
 
@@ -9,12 +10,17 @@ Every row of `formal-experiment-matrix.json` is compiled through an explicit pat
 duplicated, malformed, or unimplemented paths fail before simulation. No generic deep-object writer
 is used. Network scale expands atomically to fund, investor, and asset-class counts. Risk-weight
 scheme identifiers expand atomically to the exact Chapter 3 equal or legacy six-weight vector.
-When the control-mechanism kappa is 1500 bps, the compiler also adds that value to the config's
-validation scan without changing any paired treatment contrast.
+The corrected-Gate reachability rerun reselected the control-experiment value of 1500 bps under the
+unchanged candidate set, pairing, sample size, and selection rule. When that value is compiled, it is
+also added to the config's validation scan without changing any paired treatment contrast.
 
 The A1 mechanism switch removes public risk disclosures, investor observations derived from them,
 and `public_risk` propagation sources. It does not remove regulator disclosures, public control
 events, economic transmission, or any other transparency-regime dimension.
+
+The A7 mechanism switch changes only `config.propagation.channels.signalAnalogy`. Its disabled arm
+zeros the common-service/manager and valuation-method similarity components while retaining shared
+assets, investor overlap, shocks, random identities, regime R1, and all transmission coefficients.
 
 ## Paired shock coordinates
 
@@ -45,11 +51,13 @@ lifecycle status and is not treated as detection censoring.
 
 ## Execution gate and provenance
 
-The formal executor requires annotated tag `chapter5-sim-prereg-v1`, requires the execution commit
-to descend from that tag, compares the current preregistration lock byte-for-byte with the tagged
-copy, rejects uncommitted files under `experiments/chapter5-simulation`, and reruns the lock checker
-before a result is accepted. Each result records the tag commit,
-execution commit, lock hash, matrix design hash, cell, replicate, treatment digest, and scenario.
+The formal executor names annotated tag `chapter5-sim-prereg-v2` and requires the execution commit
+to descend from that tag. It compares both the preregistration lock and the complete foundation lock
+byte-for-byte with their tagged copies, reruns both lock checkers, and rejects uncommitted files under
+`experiments/chapter5-simulation` before accepting a result. This closes the v1 gap in which design
+bytes were locked but a later model-implementation change was not part of execution authorization.
+Each eventual result records the tag commit, execution commit, both lock hashes, matrix design hash,
+cell, replicate, treatment digest, and scenario.
 Unit tests may inject a test authorization object, but the production executor defaults to the Git
 and lock-backed gate.
 
@@ -64,8 +72,8 @@ Robustness shock-type pairs retain both arms' metric vectors; their contrast is 
 increase in the corresponding valuation-haircut, liquidity-shortfall, or redemption-pressure input,
 not an invented no-shock arm.
 
-With a maximum of 50 paired replicates per shard, the locked 144-cell matrix compiles to 72 pairs,
-43,000 paired replicates, 86,000 single-arm runs, and 860 shards. The plan validator requires two
+With a maximum of 50 paired replicates per shard, the 146-cell v2 candidate compiles to 73 pairs,
+43,500 paired replicates, 87,000 single-arm runs, and 870 shards. The plan validator requires two
 cells per pair, equal replicate counts, unique shard identifiers, contiguous half-open ranges, no
 unknown pairs, and exact coverage of every replicate. These counts are design facts, not findings.
 

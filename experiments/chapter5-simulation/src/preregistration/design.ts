@@ -9,6 +9,7 @@ export const FORMAL_TREATMENT_PATHS = [
   'regime.controlDisclosure',
   'config.propagation.channels.investorOverlap',
   'config.propagation.channels.sharedIlliquidAssets',
+  'config.propagation.channels.signalAnalogy',
   'design.networkScale',
   'config.network.sharedInvestorCoreBps',
   'config.heterogeneity.liquidAssetShareBpsByLiquidityMismatchTier',
@@ -55,7 +56,7 @@ export const formalExperimentDesignSchema = z.object({
     includeMatchedNoShock: z.literal(true),
   }).strict(),
   ablations: z.array(z.object({
-    id: z.enum(['A1', 'A2', 'A3', 'A4', 'A5', 'A6']),
+    id: z.enum(['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7']),
     label: z.string().min(1),
     regimeId,
     changedPath: formalTreatmentPath,
@@ -63,7 +64,7 @@ export const formalExperimentDesignSchema = z.object({
     comparisonValue: treatmentValue,
     fixedChanges: z.array(treatmentChange).default([]),
     hypothesisIds: z.array(hypothesisId).min(1),
-  }).strict()).length(6),
+  }).strict()).length(7),
   robustnessScans: z.array(z.object({
     id: z.string().regex(/^[A-Z0-9_]+$/),
     changedPath: formalTreatmentPath,

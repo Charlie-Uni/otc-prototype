@@ -52,10 +52,11 @@ function executeForTest(compiledCell: CompiledFormalCell): FormalReplicateResult
     shockMagnitudeBps: compiledCell.cell.shockMagnitudeBps,
     shockEnabled: input.shockEnabled ?? true,
     authorization: {
-      preregistrationTag: 'chapter5-sim-prereg-v1',
+      preregistrationTag: 'chapter5-sim-prereg-v2',
       preregistrationCommit: 'a'.repeat(40),
       executionCommit: 'b'.repeat(40),
       preregistrationLockSha256: 'c'.repeat(64),
+      foundationLockSha256: 'd'.repeat(64),
     },
     result,
   };

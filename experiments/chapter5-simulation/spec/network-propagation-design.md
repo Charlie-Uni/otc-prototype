@@ -24,7 +24,7 @@ All terms use integer basis points. The four chi weights must sum to 10000. The 
 - A common manager contributes 5000 bps and a common service provider contributes 5000 bps to the combined component.
 - Equal valuation-method identifiers contribute 10000 bps.
 
-Structural relation weights remain fixed within a run. Dynamic lifecycle state evolves over this graph. This is an experimental-identification choice: A4 and A5 can remove one edge family without allowing treatment-induced redemptions to redefine the treatment graph.
+Structural relation weights remain fixed within a run. Dynamic lifecycle state evolves over this graph. This is an experimental-identification choice: A4 and A5 can remove one real-transmission edge family without allowing treatment-induced redemptions to redefine the treatment graph, while A7 can remove only the signal-analogy components.
 
 ## Real transmission
 
@@ -43,7 +43,7 @@ The thesis reduced-form loss coefficient `lambda(i,m,t)` is therefore implemente
 
 ## Signal analogy and control disclosure
 
-Public risk and control signals use full effective network proximity. The signal-analogy ablation zeros only common service/manager and valuation-method components; shared-asset and investor similarity remain available. A public control signal is binary at 10000 bps. A private, delayed-before-release, or otherwise unavailable control event is omitted from the propagation input rather than encoded as zero-risk evidence.
+Public risk and control signals use full effective network proximity. A7 is the dedicated signal-analogy ablation: it zeros only common service/manager and valuation-method components; shared-asset and investor similarity remain available. A public control signal is binary at 10000 bps. A private, delayed-before-release, or otherwise unavailable control event is omitted from the propagation input rather than encoded as zero-risk evidence.
 
 Each propagation record stores the source identity and time, raw and effective components, chi weights, effective transmission coefficient, target, spillover input, and transmitted loss. Every source produces exactly one record for every other fund, including zero-effect records. Duplicate processing fails closed.
 

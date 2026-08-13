@@ -193,7 +193,12 @@ export class FormalAnalysisAccumulator {
     observation: FormalPairObservation,
     windowDays: number,
   ): void {
-    if (observation.pairId !== 'A4' && observation.pairId !== 'A5' && observation.pairId !== 'A6') {
+    if (
+      observation.pairId !== 'A4'
+      && observation.pairId !== 'A5'
+      && observation.pairId !== 'A6'
+      && observation.pairId !== 'A7'
+    ) {
       return;
     }
     for (const thresholdBps of [250, 1_000]) {

@@ -21,15 +21,31 @@ test('formal baseline uses only the pilot-selected behavior and demand parameter
   assert.equal(config.propagation.sharedAssetPassThroughBps, 10_000);
 });
 
-test('design covers the policy packages, six ablations, and required robustness dimensions', () => {
+test('design covers the policy packages, seven ablations, and required robustness dimensions', () => {
   const design = parseFormalExperimentDesign(read('formal-experiment-design.json'));
   assert.deepEqual(design.primaryPolicy.regimeIds, ['R0', 'R1', 'R2', 'R3', 'R4']);
   assert.deepEqual(design.primaryPolicy.valuationShockBps, [1_000, 2_000, 3_000]);
-  assert.deepEqual(design.ablations.map(({ id }) => id), ['A1', 'A2', 'A3', 'A4', 'A5', 'A6']);
+  assert.deepEqual(
+    design.ablations.map(({ id }) => id),
+    ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7'],
+  );
   assert.equal(design.controlExperimentKappaBps, 1_500);
   assert.deepEqual(
     design.ablations.find(({ id }) => id === 'A6')?.fixedChanges,
     [{ path: 'config.thresholds.baselineKappaBps', value: 1_500 }],
+  );
+  assert.deepEqual(
+    design.ablations.find(({ id }) => id === 'A7'),
+    {
+      id: 'A7',
+      label: 'signal-analogy channel on versus off',
+      regimeId: 'R1',
+      changedPath: 'config.propagation.channels.signalAnalogy',
+      baselineValue: true,
+      comparisonValue: false,
+      fixedChanges: [],
+      hypothesisIds: ['H4'],
+    },
   );
   const scans = new Set(design.robustnessScans.map(({ id }) => id));
   for (const required of [

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "purpose": "non-gating control-path reachability calibration; not a formal finding",
   "formalFindingsAllowed": false,
-  "baselineConfigDigestSha256": "8f84b4877f6b766bc04500a8547de96c0bc143550af61a87eaa93310d77e48c0",
+  "baselineConfigDigestSha256": "e5c840c70497d114980b0554a51b5a167fc4448981d8ef7fc8cd869e7c461de1",
   "calibrationConfigDigestSha256": "95754451029893d565aa896478834faa9c739bf594827e6675943c48f1c386bb",
   "selectedKappaBps": 1500,
   "reachability": [
@@ -84,5 +84,5 @@
       "noShockActivationRateBps": 0
     }
   ],
-  "semanticDigestSha256": "6213076fdfd7c2d37114e77344f5202f1f8b7da8a253c493c50d66159bcf0658"
+  "semanticDigestSha256": "912026b58a361f2f48617720f330a79d72c838e117e86efe7961c83b8869754e"
 }

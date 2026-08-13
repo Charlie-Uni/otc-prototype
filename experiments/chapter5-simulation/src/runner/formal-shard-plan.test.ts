@@ -20,11 +20,11 @@ const matrix = JSON.parse(readFileSync(
 )) as FormalExperimentMatrix;
 const compiled = compileFormalMatrix(matrix, baseline);
 
-test('partitions all 43,000 paired replicates without gaps or overlaps', () => {
+test('partitions all 43,500 paired replicates without gaps or overlaps', () => {
   const plan = createFormalShardPlan(compiled, 50);
-  assert.equal(plan.pairCount, 72);
-  assert.equal(plan.totalPairReplicates, 43_000);
-  assert.equal(plan.shardCount, 860);
+  assert.equal(plan.pairCount, 73);
+  assert.equal(plan.totalPairReplicates, 43_500);
+  assert.equal(plan.shardCount, 870);
   assert.ok(plan.shards.every(({ replicateCount }) => replicateCount === 50));
   assert.deepEqual(createFormalShardPlan(compiled, 50), plan);
   assert.doesNotThrow(() => assertFormalShardPlan(plan, compiled));

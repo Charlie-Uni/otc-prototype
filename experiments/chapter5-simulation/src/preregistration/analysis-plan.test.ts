@@ -16,6 +16,11 @@ test('freezes all six hypotheses without turning expected directions into model 
   assert.equal(plan.detection.sensitivityThresholdBps, 6_000);
   assert.equal(plan.controlExperiment.artifactPolicyBaselineKappaBps, 7_000);
   assert.equal(plan.controlExperiment.mechanismExperimentKappaBps, 1_500);
+  assert.equal(plan.formalExecutionRequiresTag, 'chapter5-sim-prereg-v2');
+  assert.deepEqual(
+    plan.hypotheses.find(({ id }) => id === 'H4')?.contrastIds,
+    ['A4', 'A5', 'A7'],
+  );
 });
 
 test('rejects result contamination and invalid supplementary weights', () => {

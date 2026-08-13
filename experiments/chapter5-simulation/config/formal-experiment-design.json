@@ -66,6 +66,15 @@
         { "path": "config.thresholds.baselineKappaBps", "value": 1500 }
       ],
       "hypothesisIds": ["H6"]
+    },
+    {
+      "id": "A7",
+      "label": "signal-analogy channel on versus off",
+      "regimeId": "R1",
+      "changedPath": "config.propagation.channels.signalAnalogy",
+      "baselineValue": true,
+      "comparisonValue": false,
+      "hypothesisIds": ["H4"]
     }
   ],
   "robustnessScans": [

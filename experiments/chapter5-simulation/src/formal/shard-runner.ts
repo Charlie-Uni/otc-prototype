@@ -1,6 +1,9 @@
 import type { SimulationConfig } from '../core/config';
-import type { FormalExecutionAuthorization } from '../runner/formal-provenance';
-import { assertFormalExecutionAuthorized } from '../runner/formal-provenance';
+import {
+  assertFormalExecutionAuthorization,
+  assertFormalExecutionAuthorized,
+  type FormalExecutionAuthorization,
+} from '../runner/formal-provenance';
 import {
   executeFormalReplicate,
   type FormalExecutionDependencies,
@@ -59,6 +62,7 @@ export function executeFormalShard(
     .sort((left, right) => left.cell.cellId.localeCompare(right.cell.cellId));
   if (pair.length !== 2) throw new Error(`INVALID_FORMAL_SHARD_PAIR:${shard.pairId}`);
   const authorization = (dependencies.authorize ?? assertFormalExecutionAuthorized)();
+  assertFormalExecutionAuthorization(authorization);
   const execute = dependencies.executeReplicate ?? executeFormalReplicate;
   const observations: FormalPairObservation[] = [];
   for (
@@ -101,6 +105,7 @@ export function assertFormalShardResult(
   result: FormalShardResult,
   plan: FormalShardPlan,
 ): void {
+  assertFormalExecutionAuthorization(result.authorization);
   const { semanticDigestSha256: recordedDigest, ...withoutDigest } = result;
   if (semanticDigestSha256(withoutDigest) !== recordedDigest) {
     throw new Error('FORMAL_SHARD_RESULT_DIGEST_MISMATCH');

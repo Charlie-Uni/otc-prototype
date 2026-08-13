@@ -38,7 +38,7 @@ function buildLock() {
   return {
     schemaVersion: 1,
     purpose: 'Chapter 5 formal analysis and experiment-design preregistration lock',
-    requiredTag: 'chapter5-sim-prereg-v1',
+    requiredTag: 'chapter5-sim-prereg-v2',
     files: Object.fromEntries([...lockedFiles].sort().map((path) => [
       path,
       sha256(readFileSync(resolve(root, path))),

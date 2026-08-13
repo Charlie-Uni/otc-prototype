@@ -6,7 +6,7 @@ const hypothesisId = z.enum(['H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
 const analysisPlanSchema = z.object({
   schemaVersion: z.literal(1),
   status: z.literal('preregistration_specification'),
-  formalExecutionRequiresTag: z.literal('chapter5-sim-prereg-v1'),
+  formalExecutionRequiresTag: z.literal('chapter5-sim-prereg-v2'),
   pilotDataExcluded: z.literal(true),
   primaryWindowDays: z.literal(30),
   robustnessWindowDays: z.tuple([z.literal(60), z.literal(90)]),

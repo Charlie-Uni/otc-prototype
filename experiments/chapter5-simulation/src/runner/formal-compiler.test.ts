@@ -10,7 +10,11 @@ import {
   compileFormalRunInput,
 } from './formal-compiler';
 import { executeFormalReplicate } from './formal-executor';
-import { assertFormalWorktreeClean } from './formal-provenance';
+import {
+  assertFormalExecutionAuthorization,
+  assertFormalLockBytesEqual,
+  assertFormalWorktreeClean,
+} from './formal-provenance';
 import { semanticDigestSha256 } from './digest';
 import { runSimulation } from './run';
 
@@ -23,11 +27,11 @@ const matrix = JSON.parse(readFileSync(
   'utf8',
 )) as FormalExperimentMatrix;
 
-test('compiles all 144 preregistered cells and every paired shock coordinate', () => {
+test('compiles all 146 candidate cells and every paired shock coordinate', () => {
   const compiled = compileFormalMatrix(matrix, baseline);
   assert.deepEqual(compileFormalMatrix(matrix, baseline), compiled);
-  assert.equal(compiled.cellCount, 144);
-  assert.equal(compiled.cells.length, 144);
+  assert.equal(compiled.cellCount, 146);
+  assert.equal(compiled.cells.length, 146);
   for (const cell of compiled.cells) {
     const input = compileFormalRunInput(cell, baseline, 0);
     assert.equal(input.scenario.shockType, cell.cell.shockType);
@@ -40,6 +44,7 @@ test('compiles experiment-only mechanisms and atomic dependent values', () => {
   const compiled = compileFormalMatrix(matrix, baseline);
   const a1Off = compiled.cells.find(({ cell }) => cell.cellId === 'A1-COMPARISON')!;
   const a6Private = compiled.cells.find(({ cell }) => cell.cellId === 'A6-COMPARISON')!;
+  const a7NoAnalogy = compiled.cells.find(({ cell }) => cell.cellId === 'A7-COMPARISON')!;
   const large = compiled.cells.find(({ cell }) => (
     cell.cellId === 'ROBUST-NETWORK_SCALE-large-COMPARISON'
   ))!;
@@ -51,6 +56,9 @@ test('compiles experiment-only mechanisms and atomic dependent values', () => {
   assert.equal(a6Private.treatment.regime.controlDisclosure, 'private');
   assert.equal(a6Private.treatment.config.thresholds.baselineKappaBps, 1_500);
   assert.ok(a6Private.treatment.config.thresholds.kappaScanBps.includes(1_500));
+  assert.equal(a7NoAnalogy.treatment.config.propagation.channels.signalAnalogy, false);
+  assert.equal(a7NoAnalogy.treatment.config.propagation.channels.investorOverlap, true);
+  assert.equal(a7NoAnalogy.treatment.config.propagation.channels.sharedIlliquidAssets, true);
   assert.deepEqual(
     [large.treatment.config.network.fundCount,
       large.treatment.config.network.investorCount,
@@ -122,10 +130,11 @@ test('executor verifies result provenance and A1 removes only public risk disclo
     0,
     {
       authorize: () => ({
-        preregistrationTag: 'chapter5-sim-prereg-v1',
+        preregistrationTag: 'chapter5-sim-prereg-v2',
         preregistrationCommit: 'a'.repeat(40),
         executionCommit: 'b'.repeat(40),
         preregistrationLockSha256: 'c'.repeat(64),
+        foundationLockSha256: 'd'.repeat(64),
       }),
       execute: (input) => {
         const result = runSimulation({ ...input, horizonDays: 1 });
@@ -147,10 +156,11 @@ test('executor verifies result provenance and A1 removes only public risk disclo
     0,
     {
       authorize: () => ({
-        preregistrationTag: 'chapter5-sim-prereg-v1',
+        preregistrationTag: 'chapter5-sim-prereg-v2',
         preregistrationCommit: 'a'.repeat(40),
         executionCommit: 'b'.repeat(40),
         preregistrationLockSha256: 'c'.repeat(64),
+        foundationLockSha256: 'd'.repeat(64),
       }),
       execute: (input) => {
         const result = runSimulation({ ...input, horizonDays: 1 });
@@ -171,5 +181,42 @@ test('formal execution rejects uncommitted Chapter 5 implementation bytes', () =
   assert.throws(
     () => assertFormalWorktreeClean(' M experiments/chapter5-simulation/src/runner/run.ts\n'),
     /FORMAL_EXECUTION_WORKTREE_DIRTY/,
+  );
+});
+
+test('formal execution rejects preregistration or foundation lock drift', () => {
+  const locked = Buffer.from('locked');
+  assert.doesNotThrow(() => assertFormalLockBytesEqual('PREREGISTRATION', locked, locked));
+  assert.doesNotThrow(() => assertFormalLockBytesEqual('FOUNDATION', locked, locked));
+  assert.throws(
+    () => assertFormalLockBytesEqual('PREREGISTRATION', locked, Buffer.from('changed')),
+    /FORMAL_PREREGISTRATION_LOCK_DRIFT/,
+  );
+  assert.throws(
+    () => assertFormalLockBytesEqual('FOUNDATION', locked, Buffer.from('changed')),
+    /FORMAL_FOUNDATION_LOCK_DRIFT/,
+  );
+});
+
+test('formal execution rejects legacy or incomplete authorization evidence', () => {
+  const valid = {
+    preregistrationTag: 'chapter5-sim-prereg-v2',
+    preregistrationCommit: 'a'.repeat(40),
+    executionCommit: 'b'.repeat(40),
+    preregistrationLockSha256: 'c'.repeat(64),
+    foundationLockSha256: 'd'.repeat(64),
+  };
+  assert.doesNotThrow(() => assertFormalExecutionAuthorization(valid));
+  assert.throws(
+    () => assertFormalExecutionAuthorization({
+      ...valid,
+      preregistrationTag: 'chapter5-sim-prereg-v1',
+    }),
+    /INVALID_FORMAL_EXECUTION_AUTHORIZATION/,
+  );
+  const { foundationLockSha256: _missing, ...incomplete } = valid;
+  assert.throws(
+    () => assertFormalExecutionAuthorization(incomplete),
+    /INVALID_FORMAL_EXECUTION_AUTHORIZATION/,
   );
 });

@@ -7,6 +7,7 @@ import {
   type CompiledFormalMatrix,
 } from './formal-compiler';
 import {
+  assertFormalExecutionAuthorization,
   assertFormalExecutionAuthorized,
   type FormalExecutionAuthorization,
 } from './formal-provenance';
@@ -62,6 +63,7 @@ export function executeFormalReplicate(
   dependencies: FormalExecutionDependencies = {},
 ): FormalReplicateResult {
   const authorization = (dependencies.authorize ?? assertFormalExecutionAuthorized)();
+  assertFormalExecutionAuthorization(authorization);
   const execute = dependencies.execute ?? runSimulation;
   const cell = matrix.cells.find((candidate) => candidate.cell.cellId === cellId);
   if (!cell) throw new Error(`UNKNOWN_FORMAL_CELL:${cellId}`);

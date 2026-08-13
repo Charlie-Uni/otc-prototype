@@ -13,7 +13,7 @@ test('generates deterministic paired policy, ablation, and robustness cells', ()
   const first = generateFormalExperimentMatrix(design);
   const second = generateFormalExperimentMatrix(design);
   assert.deepEqual(first, second);
-  assert.equal(first.cellCount, 144);
+  assert.equal(first.cellCount, 146);
   assert.equal(first.cellCount, first.cells.length);
   assert.equal(new Set(first.cells.map(({ cellId }) => cellId)).size, first.cellCount);
 
@@ -37,7 +37,7 @@ test('uses matched no-shock policy cells and only one declared ablation dimensio
     }
   }
   const ablations = matrix.cells.filter(({ family }) => family === 'ablation');
-  assert.equal(ablations.length, 12);
+  assert.equal(ablations.length, 14);
   for (const ablation of design.ablations) {
     const [baseline, comparison] = ablations.filter(({ pairId }) => pairId === ablation.id);
     assert.ok(baseline);

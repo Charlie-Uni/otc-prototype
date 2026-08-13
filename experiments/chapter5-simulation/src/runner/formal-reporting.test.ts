@@ -229,10 +229,11 @@ function observation(options: {
     family: options.family,
     replicateId: options.replicateId,
     authorization: {
-      preregistrationTag: 'chapter5-sim-prereg-v1' as const,
+      preregistrationTag: 'chapter5-sim-prereg-v2' as const,
       preregistrationCommit: 'a'.repeat(40),
       executionCommit: 'b'.repeat(40),
       preregistrationLockSha256: 'c'.repeat(64),
+      foundationLockSha256: 'd'.repeat(64),
     },
     arms,
     primaryShockLinkedDetection: primary ? {
@@ -274,7 +275,7 @@ test('fixes H5 signs as lower-control outcomes minus full-control outcomes', () 
   )));
 });
 
-test('maps A1-A6 into only their preregistered hypothesis families', () => {
+test('maps A1-A7 into only their declared hypothesis families', () => {
   const accumulator = new FormalAnalysisAccumulator(analysisPlan);
   const pairFamilies = [
     ['A1', ['H2', 'H3']],
@@ -283,6 +284,7 @@ test('maps A1-A6 into only their preregistered hypothesis families', () => {
     ['A4', ['H4']],
     ['A5', ['H4']],
     ['A6', ['H6']],
+    ['A7', ['H4']],
   ] as const;
   for (const replicateId of [0, 1]) {
     pairFamilies.forEach(([pairId]) => accumulator.addObservation(observation({
@@ -305,6 +307,15 @@ test('maps A1-A6 into only their preregistered hypothesis families', () => {
   )));
   assert.ok(report.supplementaryEstimateSummaries.some(({ pairId, metricId }) => (
     pairId === 'A6' && metricId === 'SpilloverScope.AffectedFundShare@250'
+  )));
+  assert.ok(report.estimateSummaries.some(({ testId }) => (
+    testId === 'A7:SpilloverRedemption:w30'
+  )));
+  assert.ok(!report.estimateSummaries.some(({ testId }) => (
+    testId === 'A7:LossMagnitude:w30'
+  )));
+  assert.ok(report.supplementaryEstimateSummaries.some(({ pairId, metricId }) => (
+    pairId === 'A7' && metricId === 'SpilloverScope.AffectedFundShare@250'
   )));
 });
 
@@ -400,10 +411,11 @@ test('anchors a report to one result-set digest and publishes it without replace
     designDigestSha256: 'a'.repeat(64),
     shardPlanDigestSha256: 'b'.repeat(64),
     authorization: {
-      preregistrationTag: 'chapter5-sim-prereg-v1',
+      preregistrationTag: 'chapter5-sim-prereg-v2',
       preregistrationCommit: 'c'.repeat(40),
       executionCommit: 'd'.repeat(40),
       preregistrationLockSha256: 'e'.repeat(64),
+      foundationLockSha256: 'f'.repeat(64),
     },
     expectedShardCount: 1,
     loadedShardCount: 1,

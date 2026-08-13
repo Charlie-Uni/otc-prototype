@@ -10,6 +10,7 @@ import type {
 import { semanticDigestSha256 } from '../runner/digest';
 import type { CompiledFormalCell } from '../runner/formal-compiler';
 import type { FormalReplicateResult } from '../runner/formal-executor';
+import { assertFormalExecutionAuthorization } from '../runner/formal-provenance';
 import type { ShockScenario } from '../shocks/scenario';
 
 export type FormalMeasurementSpec = {
@@ -179,6 +180,7 @@ export function createFormalPairObservation(
 }
 
 export function assertFormalPairObservationDigest(observation: FormalPairObservation): void {
+  assertFormalExecutionAuthorization(observation.authorization);
   const { semanticDigestSha256: recordedDigest, ...withoutDigest } = observation;
   if (semanticDigestSha256(withoutDigest) !== recordedDigest) {
     throw new Error('FORMAL_PAIR_OBSERVATION_DIGEST_MISMATCH');

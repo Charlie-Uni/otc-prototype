@@ -1,6 +1,6 @@
 # Chapter 5 Formal Preregistration Specification
 
-Status: candidate to be frozen by a dedicated commit and annotated tag `chapter5-sim-prereg-v1`. No formal Monte Carlo output has been generated from this specification.
+Status: corrected v2 candidate. `chapter5-sim-prereg-v1` remains an invalid historical record and cannot authorize results. This candidate must be reviewed and frozen by a dedicated commit, lock, green CI run, and annotated v2 tag before formal Monte Carlo execution.
 
 ## Source and calibration boundary
 
@@ -16,18 +16,18 @@ For the baseline valuation-shock experiment, the primary anchor is therefore the
 
 The artifact rule `riskScoreBps >= tau` remains a separately reported sensitivity outcome at `tau=6000`, including censoring rate and censor reason. It is never substituted for the primary anchor when censored. Shock-type robustness uses the same paired-increase rule with `liquidityShortfallBps` for liquidity shocks and `redemptionPressureBps` for redemption shocks.
 
-The production-policy baseline retains the Chapter 3 scenario value `kappa=7000`. A separate non-gating reachability pilot evaluated 100 paired R1 runs over the 30-day window for the H5/H6 control experiments. Its declared selection rule chose the candidate whose shocked target-fund activation rate was closest to 50%, with ties resolved toward the higher threshold. It selected `kappa=1500` at 48% shocked activation; no-shock activation was 34% and was diagnostic only. Candidates at 5000, 6000, 7000, and 8000 had zero activation. Therefore `1500` is used only as a common condition in the control-strength/release scans and the A6 disclosure pair. It is not a regulatory estimate, was not preregistered before pilot execution, and does not replace the policy-package baseline.
+The production-policy baseline retains the Chapter 3 scenario value `kappa=7000`. After T13 corrected the Gate state machine, the separate non-gating reachability pilot was rerun over 100 paired R1 runs and the 30-day window for the H5/H6 control experiments. The unchanged selection rule chooses the candidate whose shocked target-fund activation rate is closest to 50%, with ties resolved toward the higher threshold. The corrected run reselected `kappa=1500`: shocked activation was 48% and no-shock activation was 34%, with the latter retained as a diagnostic only. The complete candidate table and corrected baseline digest are recorded in `control-threshold-calibration-evidence.json`. This control-experiment value is not a regulatory estimate and never replaces the policy-package baseline.
 
 ## Formal matrix
 
-`formal-experiment-matrix.json` is generated deterministically from `formal-experiment-design.json`. It contains 144 cells:
+`formal-experiment-matrix.json` is generated deterministically from `formal-experiment-design.json`. The v2 candidate contains 146 cells:
 
 - 30 matched policy cells: five R0-R4 packages, three valuation-shock magnitudes, and a same-scenario no-shock arm for each;
-- 12 cells for six two-arm, one-dimension mechanism ablations A1-A6;
+- 14 cells for seven two-arm, one-dimension mechanism ablations A1-A7;
 - 70 cells for one-dimension robustness comparisons;
 - 32 cells for 16 Latin-hypercube behavior profiles, each paired with the same formal baseline.
 
-The six ablations vary public risk access, delay, granularity, investor-overlap transmission, shared-asset transmission, and control-event disclosure separately. R0-R4 remain parameter packages rather than assumed outcome rankings. The 16-point behavior Latin hypercube is the only intentionally multidimensional sensitivity design and has its seed and coefficient ranges fixed in the design file.
+The seven ablations vary public risk access, delay, granularity, investor-overlap transmission, shared-asset transmission, control-event disclosure, and signal-analogy transmission separately. A7 fixes R1, the network, shocks, random identities, real-transmission channels, and all coefficients while changing only `config.propagation.channels.signalAnalogy`. R0-R4 remain parameter packages rather than assumed outcome rankings. The 16-point behavior Latin hypercube is the only intentionally multidimensional sensitivity design and has its seed and coefficient ranges fixed in the design file.
 
 Formal execution must implement every declared treatment path and fail before running if a path cannot be compiled into a valid treatment. In particular, A1 requires an experiment-only public-risk disclosure toggle; liquidity and redemption shock robustness require their declared shock injectors; network-scale and risk-weight-scheme entries expand atomically into their linked configuration fields. These are runner requirements, not production API changes.
 
@@ -44,7 +44,7 @@ Before formal execution:
 1. run type checking, all Chapter 5 tests, matrix regeneration check, plan validation, foundation lock check, and preregistration lock check;
 2. commit the plan, baseline, design, generated matrix, validators, and both lock files together;
 3. push and require a green Chapter 5 workflow;
-4. create annotated tag `chapter5-sim-prereg-v1` at that exact commit;
+4. create annotated tag `chapter5-sim-prereg-v2` at that exact commit;
 5. allow the formal runner to accept only that tag or a commit whose preregistration lock is byte-identical.
 
 Changing a locked analysis or design file after the tag requires a new preregistration version. Result files, estimates, verdicts, and observed values are forbidden in the preregistration inputs.

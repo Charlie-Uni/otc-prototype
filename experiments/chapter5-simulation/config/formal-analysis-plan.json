@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "status": "preregistration_specification",
-  "formalExecutionRequiresTag": "chapter5-sim-prereg-v1",
+  "formalExecutionRequiresTag": "chapter5-sim-prereg-v2",
   "pilotDataExcluded": true,
   "primaryWindowDays": 30,
   "robustnessWindowDays": [60, 90],
@@ -67,9 +67,9 @@
     },
     {
       "id": "H4",
-      "expectedDirection": "asset and investor overlap increase loss and redemption spillovers",
+      "expectedDirection": "asset overlap, investor overlap, and signal analogy increase redemption spillovers; overlap channels may also propagate losses",
       "primaryMetricIds": ["SpilloverRedemption", "SpilloverScope", "LossMagnitude"],
-      "contrastIds": ["A4", "A5"],
+      "contrastIds": ["A4", "A5", "A7"],
       "usedAsModelGate": false
     },
     {

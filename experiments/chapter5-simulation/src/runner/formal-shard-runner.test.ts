@@ -45,10 +45,11 @@ function miniMatrix(replicates: number): typeof compiled {
 }
 const miniCompiled = miniMatrix(1);
 const authorization = {
-  preregistrationTag: 'chapter5-sim-prereg-v1' as const,
+  preregistrationTag: 'chapter5-sim-prereg-v2' as const,
   preregistrationCommit: 'a'.repeat(40),
   executionCommit: 'b'.repeat(40),
   preregistrationLockSha256: 'c'.repeat(64),
+  foundationLockSha256: 'd'.repeat(64),
 };
 
 function executeOneDay(

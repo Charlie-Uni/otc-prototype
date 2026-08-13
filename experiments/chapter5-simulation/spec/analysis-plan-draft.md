@@ -5,7 +5,7 @@ Status: historical foundation draft. The executable candidate is now
 
 This document records the analysis structure before model implementation. Pilot runs may calibrate numerical behavior ranges and estimate Monte Carlo standard errors. Pilot observations are excluded from formal thesis results.
 
-Before formal execution, a separate commit and annotated tag `chapter5-sim-prereg-v1` will freeze:
+Before formal execution, a separate commit and annotated tag `chapter5-sim-prereg-v2` will freeze:
 
 - H1-H6 directional hypotheses without using them as model pass/fail gates;
 - primary and supplementary metrics;

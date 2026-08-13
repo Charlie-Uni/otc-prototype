@@ -145,6 +145,9 @@ function applyTreatmentChange(
     case 'config.propagation.channels.sharedIlliquidAssets':
       config.propagation.channels.sharedIlliquidAssets = requireBoolean(value, path);
       return { appliedPaths: [path] };
+    case 'config.propagation.channels.signalAnalogy':
+      config.propagation.channels.signalAnalogy = requireBoolean(value, path);
+      return { appliedPaths: [path] };
     case 'design.networkScale': {
       const scale = requireNumberRecord(
         value,
@@ -384,7 +387,7 @@ export function compileFormalMatrix(
 ): CompiledFormalMatrix {
   if (
     matrix.schemaVersion !== 1
-    || matrix.cellCount !== 144
+    || matrix.cellCount !== 146
     || matrix.cellCount !== matrix.cells.length
     || !/^[0-9a-f]{64}$/.test(matrix.designDigestSha256)
   ) {

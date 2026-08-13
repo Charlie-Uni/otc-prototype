@@ -118,16 +118,20 @@ export function directMetricDefinitions(
       ...coordinationRows,
     ];
   }
-  if (pairId === 'A4' || pairId === 'A5') {
+  if (pairId === 'A4' || pairId === 'A5' || pairId === 'A7') {
     const orientation = pairId === 'A4'
       ? 'investor-overlap enabled minus disabled'
-      : 'shared-asset enabled minus disabled';
-    const rows = [
+      : pairId === 'A5'
+        ? 'shared-asset enabled minus disabled'
+        : 'signal-analogy enabled minus disabled';
+    const spilloverRows = [
       ['SpilloverRedemption', 'SpilloverRedemption'],
       ['SpilloverAffectedShare', 'SpilloverScope.AffectedFundShare'],
       ['SpilloverScope', 'SpilloverScope.MeanContinuous'],
-      ['LossMagnitude', 'LossMagnitude'],
     ] as const;
+    const rows = pairId === 'A7'
+      ? spilloverRows
+      : [...spilloverRows, ['LossMagnitude', 'LossMagnitude'] as const];
     return rows.map(([testSuffix, metricId]) => ({
       ...common,
       hypothesisId: 'H4',
