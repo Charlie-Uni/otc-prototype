@@ -316,7 +316,9 @@ async function productionCheckpointProjections() {
     const state = createReplayState(scenario.genesis);
     let navRefs = 0;
     for (const event of scenario.rawLogs) navRefs += applyReplayEvent(state, event).length;
-    return { projections, acceptedEvents: scenario.rawLogs.length, navReferences: navRefs, finalProjection: normalizedProjection(state) };
+    const eventTypes = {};
+    for (const event of scenario.rawLogs) eventTypes[event.eventName] = (eventTypes[event.eventName] ?? 0) + 1;
+    return { projections, acceptedEvents: scenario.rawLogs.length, eventTypes, navReferences: navRefs, finalProjection: normalizedProjection(state) };
   } finally {
     await scenario.close();
   }
@@ -324,7 +326,7 @@ async function productionCheckpointProjections() {
 
 async function runRecoverability() {
   const production = await productionCheckpointProjections();
-  const result = { productionAcceptedEvents: production.acceptedEvents, productionNavReferences: production.navReferences, comparators: {} };
+  const result = { productionAcceptedEvents: production.acceptedEvents, productionEventTypes: production.eventTypes, productionNavReferences: production.navReferences, comparators: {} };
   for (const [kind, port] of [['B1', 18670], ['B2', 18671]]) {
     const run = await runComparatorTrajectory(kind, port);
     const replay = replayComparator(kind, run.decoded);
