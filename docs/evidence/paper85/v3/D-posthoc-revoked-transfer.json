@@ -1,0 +1,17 @@
+{
+  "experiment": "paper85-v3-posthoc-revoked-holder-transfer",
+  "preregistered": false,
+  "provenance": {
+    "commit": "89c8194706676dc6b2df4a4c2d82c38747a88aac",
+    "governedInputsDirty": false,
+    "tools": {
+      "node": "v22.22.0",
+      "forge": "forge Version: 1.7.1",
+      "anvil": "anvil Version: 1.7.1",
+      "viem": "2.55.10"
+    },
+    "runAt": "2026-10-19T13:34:20.372Z"
+  },
+  "revokedHolderTransferToEligible": "accepted",
+  "revokedHolderRedemptionRequest": "rejected:NOT_WHITELISTED"
+}

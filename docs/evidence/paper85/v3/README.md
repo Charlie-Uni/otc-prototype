@@ -38,6 +38,12 @@ the production gas table.
 - Part C (`C-case-summary.json`): 26/26 scripted steps and Q1–Q7 matched the
   pre-registered outcomes.
 
+- Post-hoc probe (`D-posthoc-revoked-transfer.json`, not pre-registered):
+  after eligibility revocation, a holder's transfer to an eligible investor
+  was accepted and the same holder's redemption request was rejected
+  (`NOT_WHITELISTED`). It confirms a code-reading observation used in the
+  Section 5.6 gap analysis.
+
 ## Interpretation boundaries
 
 - Comparator mappings are researcher judgements fixed before execution; they
