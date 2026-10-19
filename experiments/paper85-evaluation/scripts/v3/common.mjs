@@ -93,7 +93,7 @@ export function account(index) {
   return mnemonicToAccount(MNEMONIC, { addressIndex: index });
 }
 
-export async function startAnvil(port, { accounts = 10 } = {}) {
+export async function startAnvil(port, { accounts = 10, extraArgs = [] } = {}) {
   let stderr = '';
   const child = spawn('anvil', [
     '--port', String(port),
@@ -103,6 +103,7 @@ export async function startAnvil(port, { accounts = 10 } = {}) {
     '--mnemonic', MNEMONIC,
     '--accounts', String(accounts),
     '--quiet',
+    ...extraArgs,
   ], { stdio: ['ignore', 'ignore', 'pipe'] });
   child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
   const rpcUrl = `http://127.0.0.1:${port}`;

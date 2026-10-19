@@ -31,7 +31,8 @@ const TARGETS = (args[0] ?? '100,1000,10000').split(',').map(Number);
 const SEEDS = (args[1] ?? '1,2,3').split(',').map(Number);
 
 async function runOne(target, seed, port) {
-  const env = await startAnvil(port, { accounts: 4 + INVESTOR_COUNT });
+  // Views are read live, so Anvil need not spill historical states to disk.
+  const env = await startAnvil(port, { accounts: 4 + INVESTOR_COUNT, extraArgs: ['--max-persisted-states', '0'] });
   const rng = makeRng(seed * 1_000_003 + target);
   const admin = account(0); const manager = account(1); const operator2 = account(2);
   const investors = Array.from({ length: INVESTOR_COUNT }, (_, i) => account(4 + i));
