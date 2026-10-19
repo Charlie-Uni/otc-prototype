@@ -1,0 +1,12 @@
+# Comparator contracts for the v3 evaluation. Compiler settings deliberately
+# mirror contracts/foundry.toml (solc 0.8.30, Foundry defaults otherwise) so
+# that gas differences reflect contract logic rather than compiler options.
+[profile.default]
+src = 'src'
+out = 'out'
+cache_path = 'cache'
+libs = ['../../../contracts/lib']
+solc_version = '0.8.30'
+remappings = [
+  'openzeppelin/=../../../contracts/lib/openzeppelin-contracts/contracts/'
+]

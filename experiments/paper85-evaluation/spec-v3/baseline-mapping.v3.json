@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "paper85-v3-baseline-mapping-1",
+  "purpose": "Map each sealed v1 scenario (spec/scenarios.v1.json, SHA-256 97eabdaab3de5cc4d3cb41bbce1b82e445edfa7c8ea060618dc7b51fa5be4c69) to the business-equivalent action on two comparator contracts. Expected classifications are fixed before execution; the runner writes only observed outcomes and verdicts.",
+  "comparators": {
+    "B1": {
+      "contract": "baselines/src/B1TokenOnly.sol",
+      "description": "Issuer-controlled ERC-20 share balance: owner mint/burn of off-chain-computed amounts, free transfer. No eligibility, NAV, request lifecycle, operating status, or semantic lifecycle events."
+    },
+    "B2": {
+      "contract": "baselines/src/B2PermissionedAllowlist.sol",
+      "description": "Conventional permissioned token: role-based issuance (ISSUER_ROLE), allowlist enforced on every non-zero sender and receiver including mint/burn counterparties (COMPLIANCE_ROLE), global pause (PAUSER_ROLE). No NAV versions, requests, queued shares, disposition states or semantic lifecycle events."
+    }
+  },
+  "actorMapping": {
+    "admin": "B1 owner (also performs issuance); B2 DEFAULT_ADMIN_ROLE and COMPLIANCE_ROLE",
+    "subscriptionOperator": "B1 owner; B2 issuer (ISSUER_ROLE)",
+    "redemptionOperator": "B1 owner; B2 issuer (ISSUER_ROLE)",
+    "pauser": "B2 PAUSER_ROLE (B1 has no pause)",
+    "manager": "NAV submission has no on-chain counterpart in B1 or B2",
+    "alice": "investor", "bob": "investor", "operator2": "candidate role holder",
+    "transferOperator": "ERC-20 spender", "stranger": "unauthorized account"
+  },
+  "operationMapping": {
+    "setWhitelisted": "B2 setAllowlisted by compliance; not representable in B1",
+    "postInitialNAV/postNAV": "not representable in B1 or B2 (valuation stays off chain)",
+    "requestSubscription/requestSubscriptionFor": "not representable (request phase is off chain in both comparators)",
+    "acceptSubscription": "issuer mint(investor, shares computed off chain); 100e18 shares at NAV 1e18; 0 shares for zero or rounds-to-zero amounts",
+    "requestRedemption/requestRedemptionFor/flagSettlementDelayed": "not representable (request queue and delay flag are off chain)",
+    "settleRedemption": "issuer burn(investor, shares)",
+    "transfer/transferFrom": "ERC-20 transfer/transferFrom",
+    "pause/unpause": "B2 pause/unpause; not representable in B1",
+    "grantRole/revokeRole(SUBSCRIPTION_ROLE)": "B2 grantRole/revokeRole(ISSUER_ROLE); not representable in B1 (single owner)"
+  },
+  "fixtureMapping": {
+    "bare": "deploy; B2 grants ISSUER_ROLE to issuer, COMPLIANCE_ROLE to admin, PAUSER_ROLE to pauser",
+    "eligible": "B2 allowlist alice",
+    "initial_nav": "bare (NAV off chain)",
+    "eligible_initial_nav": "eligible",
+    "pending_subscription": "eligible (request off chain)",
+    "pending_subscription_no_nav": "eligible",
+    "tiny_pending_subscription": "eligible",
+    "funded_alice": "eligible + mint alice 100e18",
+    "funded_alice_bob": "funded_alice + B2 allowlist bob + alice transfers 20e18 to bob",
+    "pending_redemption": "funded_alice (request off chain)",
+    "queued_alice": "funded_alice + B2 allowlist bob (80e18 redemption request off chain)",
+    "settled_redemption": "funded_alice + burn alice 20e18",
+    "paused_funded": "funded_alice_bob + B2 pause",
+    "revoked_funded_alice": "funded_alice + B2 de-allowlist alice",
+    "revoked_pending_subscription": "eligible + B2 de-allowlist alice",
+    "allowanced_paused_funded": "funded_alice_bob + alice approves transferOperator 10e18 + B2 pause",
+    "paused_pending_subscription": "eligible + B2 pause",
+    "paused_pending_redemption": "funded_alice + B2 pause",
+    "role_granted_operator2": "B2 grant ISSUER_ROLE to operator2",
+    "nav_history": "bare"
+  },
+  "classifications": {
+    "represented_accept": "valid business operation has an on-chain counterpart and is accepted",
+    "not_representable": "the governing state variable or operation has no on-chain counterpart; any check is externalized to off-chain procedure",
+    "blocked": "invalid business operation is rejected on chain",
+    "accepted_state_change": "invalid business operation is accepted and changes balances or total supply",
+    "accepted_no_state_change": "invalid business operation is accepted without balance change but writes a ledger record (zero-value Transfer log)"
+  },
+  "scenarios": [
+    {"id":"V01","B1":{"action":null,"expected":"not_representable"},"B2":{"action":"setAllowlisted(alice,true) by admin","expected":"represented_accept"}},
+    {"id":"V02","B1":{"action":null,"expected":"not_representable"},"B2":{"action":"setAllowlisted(alice,false) by admin","expected":"represented_accept"}},
+    {"id":"V03","B1":{"action":null,"expected":"not_representable"},"B2":{"action":null,"expected":"not_representable"}},
+    {"id":"V04","B1":{"action":null,"expected":"not_representable"},"B2":{"action":null,"expected":"not_representable"}},
+    {"id":"V05","B1":{"action":null,"expected":"not_representable"},"B2":{"action":null,"expected":"not_representable"}},
+    {"id":"V06","B1":{"action":null,"expected":"not_representable"},"B2":{"action":null,"expected":"not_representable"}},
+    {"id":"V07","B1":{"action":null,"expected":"not_representable"},"B2":{"action":null,"expected":"not_representable"}},
+    {"id":"V08","B1":{"action":"mint(alice,100e18) by owner","expected":"represented_accept"},"B2":{"action":"mint(alice,100e18) by issuer","expected":"represented_accept"}},
+    {"id":"V09","B1":{"action":"transfer bob->alice 5e18","expected":"represented_accept"},"B2":{"action":"transfer bob->alice 5e18","expected":"represented_accept"}},
+    {"id":"V10","B1":{"action":null,"expected":"not_representable"},"B2":{"action":null,"expected":"not_representable"}},
+    {"id":"V11","B1":{"action":null,"expected":"not_representable"},"B2":{"action":null,"expected":"not_representable"}},
+    {"id":"V12","B1":{"action":null,"expected":"not_representable"},"B2":{"action":null,"expected":"not_representable"}},
+    {"id":"V13","B1":{"action":"burn(alice,20e18) by owner","expected":"represented_accept"},"B2":{"action":"burn(alice,20e18) by issuer","expected":"represented_accept"}},
+    {"id":"V14","B1":{"action":null,"expected":"not_representable"},"B2":{"action":"pause by pauser","expected":"represented_accept"}},
+    {"id":"V15","B1":{"action":null,"expected":"not_representable"},"B2":{"action":"unpause by pauser","expected":"represented_accept"}},
+    {"id":"V16","B1":{"action":null,"expected":"not_representable"},"B2":{"action":"grantRole(ISSUER_ROLE,operator2) by admin","expected":"represented_accept"}},
+    {"id":"V17","B1":{"action":null,"expected":"not_representable"},"B2":{"action":"revokeRole(ISSUER_ROLE,operator2) by admin","expected":"represented_accept"}},
+    {"id":"V18","B1":{"action":null,"expected":"not_representable"},"B2":{"action":null,"expected":"not_representable"}},
+    {"id":"I01","B1":{"action":null,"expected":"not_representable"},"B2":{"action":"setAllowlisted(alice,true) by stranger","expected":"blocked"}},
+    {"id":"I02","B1":{"action":null,"expected":"not_representable"},"B2":{"action":null,"expected":"not_representable"}},
+    {"id":"I03","B1":{"action":"mint(alice,100e18) by stranger","expected":"blocked"},"B2":{"action":"mint(alice,100e18) by stranger","expected":"blocked"}},
+    {"id":"I04","B1":{"action":"burn(alice,20e18) by stranger","expected":"blocked"},"B2":{"action":"burn(alice,20e18) by stranger","expected":"blocked"}},
+    {"id":"I05","B1":{"action":null,"expected":"not_representable"},"B2":{"action":"grantRole(ISSUER_ROLE,operator2) by stranger","expected":"blocked"}},
+    {"id":"I06","B1":{"action":"mint(alice,100e18) to non-eligible alice","expected":"accepted_state_change"},"B2":{"action":"mint(alice,100e18) to non-allowlisted alice","expected":"blocked"}},
+    {"id":"I07","B1":{"action":"mint(alice,100e18) after eligibility revocation","expected":"accepted_state_change"},"B2":{"action":"mint(alice,100e18) after de-allowlisting","expected":"blocked"}},
+    {"id":"I08","B1":{"action":"transfer alice->bob 20e18 (bob not eligible)","expected":"accepted_state_change"},"B2":{"action":"transfer alice->bob 20e18 (bob not allowlisted)","expected":"blocked"}},
+    {"id":"I09","B1":{"action":"burn(alice,20e18) after eligibility revocation","expected":"accepted_state_change"},"B2":{"action":"burn(alice,20e18) after de-allowlisting","expected":"blocked"}},
+    {"id":"I10","B1":{"action":"mint(alice,100e18) with no NAV on record","expected":"accepted_state_change"},"B2":{"action":"mint(alice,100e18) with no NAV on record","expected":"accepted_state_change"}},
+    {"id":"I11","B1":{"action":null,"expected":"not_representable"},"B2":{"action":null,"expected":"not_representable"}},
+    {"id":"I12","B1":{"action":null,"expected":"not_representable"},"B2":{"action":null,"expected":"not_representable"}},
+    {"id":"I13","B1":{"action":null,"expected":"not_representable"},"B2":{"action":null,"expected":"not_representable"}},
+    {"id":"I14","B1":{"action":"transfer alice->bob 5e18 during suspension","expected":"accepted_state_change"},"B2":{"action":"transfer alice->bob 5e18 while paused","expected":"blocked"}},
+    {"id":"I15","B1":{"action":"mint(alice,100e18) during suspension","expected":"accepted_state_change"},"B2":{"action":"mint(alice,100e18) while paused","expected":"blocked"}},
+    {"id":"I16","B1":{"action":"burn(alice,20e18) during suspension","expected":"accepted_state_change"},"B2":{"action":"burn(alice,20e18) while paused","expected":"blocked"}},
+    {"id":"I17","B1":{"action":"transferFrom alice->bob 5e18 by spender during suspension","expected":"accepted_state_change"},"B2":{"action":"transferFrom alice->bob 5e18 by spender while paused","expected":"blocked"}},
+    {"id":"I18","B1":{"action":"mint(alice,0) for zero subscription amount","expected":"accepted_no_state_change"},"B2":{"action":"mint(alice,0) for zero subscription amount","expected":"accepted_no_state_change"}},
+    {"id":"I19","B1":{"action":"mint(alice,0) for amount rounding to zero shares","expected":"accepted_no_state_change"},"B2":{"action":"mint(alice,0) for amount rounding to zero shares","expected":"accepted_no_state_change"}},
+    {"id":"I20","B1":{"action":"second mint(alice,100e18) for an already accepted subscription","expected":"accepted_state_change"},"B2":{"action":"second mint(alice,100e18) for an already accepted subscription","expected":"accepted_state_change"}},
+    {"id":"I21","B1":{"action":"burn(alice,0)","expected":"accepted_no_state_change"},"B2":{"action":"burn(alice,0)","expected":"accepted_no_state_change"}},
+    {"id":"I22","B1":{"action":"burn(alice,100e18+1) above balance","expected":"blocked"},"B2":{"action":"burn(alice,100e18+1) above balance","expected":"blocked"}},
+    {"id":"I23","B1":{"action":"transfer alice->bob 20e18+1 while 80e18 is committed to an off-chain redemption request","expected":"accepted_state_change"},"B2":{"action":"transfer alice->bob 20e18+1 while 80e18 is committed to an off-chain redemption request","expected":"accepted_state_change"}},
+    {"id":"I24","B1":{"action":"second burn(alice,20e18) for an already settled redemption","expected":"accepted_state_change"},"B2":{"action":"second burn(alice,20e18) for an already settled redemption","expected":"accepted_state_change"}}
+  ],
+  "expectedTotals": {
+    "B1": {"validRepresented": 3, "validNotRepresentable": 15, "invalidBlocked": 3, "invalidAcceptedStateChange": 12, "invalidAcceptedNoStateChange": 3, "invalidNotRepresentable": 6},
+    "B2": {"validRepresented": 9, "validNotRepresentable": 9, "invalidBlocked": 13, "invalidAcceptedStateChange": 4, "invalidAcceptedNoStateChange": 3, "invalidNotRepresentable": 4},
+    "proposedReference": "Sealed v2.1 evidence: 18/18 valid accepted, 24/24 invalid rejected (STCR 42/42)."
+  }
+}
