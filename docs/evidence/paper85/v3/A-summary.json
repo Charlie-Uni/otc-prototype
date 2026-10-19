@@ -1,0 +1,341 @@
+{
+  "experiment": "paper85-v3-part-A-comparators",
+  "provenance": {
+    "commit": "cdc0af5f56e91677fee34f4445e94c9052c724b6",
+    "governedInputsDirty": false,
+    "mappingSha256": "3276991c9664bab856b7501cae9a52b58d30953c21bfa78d64408d08b506b0b7",
+    "planSha256": "6a886b38e3286daf2665e8826a41c8c971c364606966845522c988f0251479ff",
+    "sealedManifestSha256": "97eabdaab3de5cc4d3cb41bbce1b82e445edfa7c8ea060618dc7b51fa5be4c69",
+    "b1SourceSha256": "b851326e132dae2fba391b7b01430bd282e104282fb9af3e05563579de404344",
+    "b2SourceSha256": "b54ee14d1021cb9f468b607ed71a1095549ad2598577facc7ec3a30d02729e13",
+    "tools": {
+      "node": "v22.22.0",
+      "forge": "forge Version: 1.7.1",
+      "anvil": "anvil Version: 1.7.1",
+      "viem": "2.55.10"
+    },
+    "genesisTimestamp": 1710000000,
+    "runAt": "2026-10-19T13:32:10.246Z"
+  },
+  "scenarioComparison": {
+    "totals": {
+      "B1": {
+        "validRepresented": 3,
+        "validNotRepresentable": 15,
+        "validRejected": 0,
+        "invalidBlocked": 3,
+        "invalidAcceptedStateChange": 12,
+        "invalidAcceptedNoStateChange": 3,
+        "invalidNotRepresentable": 6,
+        "expectedMatches": 42,
+        "rows": 42
+      },
+      "B2": {
+        "validRepresented": 9,
+        "validNotRepresentable": 9,
+        "validRejected": 0,
+        "invalidBlocked": 13,
+        "invalidAcceptedStateChange": 4,
+        "invalidAcceptedNoStateChange": 3,
+        "invalidNotRepresentable": 4,
+        "expectedMatches": 42,
+        "rows": 42
+      }
+    },
+    "preregisteredTotals": {
+      "B1": {
+        "validRepresented": 3,
+        "validNotRepresentable": 15,
+        "invalidBlocked": 3,
+        "invalidAcceptedStateChange": 12,
+        "invalidAcceptedNoStateChange": 3,
+        "invalidNotRepresentable": 6
+      },
+      "B2": {
+        "validRepresented": 9,
+        "validNotRepresentable": 9,
+        "invalidBlocked": 13,
+        "invalidAcceptedStateChange": 4,
+        "invalidAcceptedNoStateChange": 3,
+        "invalidNotRepresentable": 4
+      },
+      "proposedReference": "Sealed v2.1 evidence: 18/18 valid accepted, 24/24 invalid rejected (STCR 42/42)."
+    },
+    "byPredicate": {
+      "Authorized": {
+        "scenarios": 5,
+        "B1": {
+          "not_representable": 3,
+          "blocked": 2
+        },
+        "B2": {
+          "blocked": 4,
+          "not_representable": 1
+        }
+      },
+      "ComplianceValid": {
+        "scenarios": 4,
+        "B1": {
+          "accepted_state_change": 4
+        },
+        "B2": {
+          "blocked": 4
+        }
+      },
+      "NAVValid": {
+        "scenarios": 4,
+        "B1": {
+          "accepted_state_change": 1,
+          "not_representable": 3
+        },
+        "B2": {
+          "accepted_state_change": 1,
+          "not_representable": 3
+        }
+      },
+      "LifecycleValid": {
+        "scenarios": 4,
+        "B1": {
+          "accepted_state_change": 4
+        },
+        "B2": {
+          "blocked": 4
+        }
+      },
+      "ParamConsistent": {
+        "scenarios": 7,
+        "B1": {
+          "accepted_no_state_change": 3,
+          "accepted_state_change": 3,
+          "blocked": 1
+        },
+        "B2": {
+          "accepted_no_state_change": 3,
+          "accepted_state_change": 3,
+          "blocked": 1
+        }
+      }
+    },
+    "allRowsMatchPreregistration": true
+  },
+  "recoverability": {
+    "productionAcceptedEvents": 22,
+    "productionEventTypes": {
+      "InvestorWhitelisted": 2,
+      "NAVUpdatedEvent": 2,
+      "SubscriptionRequested": 1,
+      "SubscriptionAccepted": 1,
+      "Transfer": 3,
+      "ShareBalanceUpdated": 4,
+      "RedemptionRequested": 1,
+      "RedemptionQueueUpdated": 2,
+      "SettlementDelayed": 1,
+      "RedemptionSettled": 1,
+      "Paused": 1,
+      "Unpaused": 1,
+      "RoleGranted": 1,
+      "RoleRevoked": 1
+    },
+    "productionNavReferences": 2,
+    "comparators": {
+      "B1": {
+        "representedOperations": 3,
+        "totalOperations": 14,
+        "eventsWritten": 3,
+        "eventTypes": [
+          "Transfer"
+        ],
+        "components": {
+          "balances": {
+            "recorded": true,
+            "matched": 14,
+            "checkpoints": 14
+          },
+          "eligibility": {
+            "recorded": false,
+            "matched": null,
+            "checkpoints": 14
+          },
+          "navHistory": {
+            "recorded": false,
+            "matched": null,
+            "checkpoints": 14
+          },
+          "operatingStatus": {
+            "recorded": false,
+            "matched": null,
+            "checkpoints": 14
+          },
+          "executionRoles": {
+            "recorded": false,
+            "matched": null,
+            "checkpoints": 14
+          },
+          "requestRecords": {
+            "recorded": false,
+            "matched": null,
+            "checkpoints": 14
+          },
+          "completeProjection": {
+            "recorded": true,
+            "matched": 0,
+            "checkpoints": 14
+          },
+          "completeProjectionValueEquality": {
+            "recorded": true,
+            "matched": 0,
+            "checkpoints": 14
+          }
+        },
+        "navReferencesRecorded": 0,
+        "navReferencesRequired": 2
+      },
+      "B2": {
+        "representedOperations": 9,
+        "totalOperations": 14,
+        "eventsWritten": 9,
+        "eventTypes": [
+          "AllowlistUpdated",
+          "Transfer",
+          "Paused",
+          "Unpaused",
+          "RoleGranted",
+          "RoleRevoked"
+        ],
+        "components": {
+          "balances": {
+            "recorded": true,
+            "matched": 14,
+            "checkpoints": 14
+          },
+          "eligibility": {
+            "recorded": true,
+            "matched": 14,
+            "checkpoints": 14
+          },
+          "navHistory": {
+            "recorded": false,
+            "matched": null,
+            "checkpoints": 14
+          },
+          "operatingStatus": {
+            "recorded": true,
+            "matched": 14,
+            "checkpoints": 14
+          },
+          "executionRoles": {
+            "recorded": true,
+            "matched": 14,
+            "checkpoints": 14
+          },
+          "requestRecords": {
+            "recorded": false,
+            "matched": null,
+            "checkpoints": 14
+          },
+          "completeProjection": {
+            "recorded": true,
+            "matched": 0,
+            "checkpoints": 14
+          },
+          "completeProjectionValueEquality": {
+            "recorded": true,
+            "matched": 2,
+            "checkpoints": 14
+          }
+        },
+        "navReferencesRecorded": 0,
+        "navReferencesRequired": 2
+      }
+    }
+  },
+  "comparatorGas": {
+    "B1": {
+      "repetitions": 5,
+      "deploymentGas": [
+        1132724
+      ],
+      "deploymentGasIdenticalAcrossRuns": true,
+      "deployedRuntimeBytes": 4584,
+      "operations": {
+        "subscription": {
+          "samples": 5,
+          "meanGas": 71263,
+          "sdGas": 0,
+          "min": 71263,
+          "max": 71263
+        },
+        "transfer": {
+          "samples": 5,
+          "meanGas": 52167,
+          "sdGas": 0,
+          "min": 52167,
+          "max": 52167
+        },
+        "redemption": {
+          "samples": 5,
+          "meanGas": 36940,
+          "sdGas": 0,
+          "min": 36940,
+          "max": 36940
+        }
+      }
+    },
+    "B2": {
+      "repetitions": 5,
+      "deploymentGas": [
+        1763489,
+        52068,
+        52068,
+        52056
+      ],
+      "deploymentGasIdenticalAcrossRuns": true,
+      "deployedRuntimeBytes": 7506,
+      "operations": {
+        "qualification": {
+          "samples": 10,
+          "meanGas": 48543,
+          "sdGas": 0,
+          "min": 48543,
+          "max": 48543
+        },
+        "subscription": {
+          "samples": 5,
+          "meanGas": 76118,
+          "sdGas": 0,
+          "min": 76118,
+          "max": 76118
+        },
+        "transfer": {
+          "samples": 5,
+          "meanGas": 59001,
+          "sdGas": 0,
+          "min": 59001,
+          "max": 59001
+        },
+        "redemption": {
+          "samples": 5,
+          "meanGas": 41796,
+          "sdGas": 0,
+          "min": 41796,
+          "max": 41796
+        },
+        "pauseResume": {
+          "samples": 10,
+          "meanGas": 36485,
+          "sdGas": 11544.421644721364,
+          "min": 25533,
+          "max": 47437
+        },
+        "roleUpdate": {
+          "samples": 10,
+          "meanGas": 41107,
+          "sdGas": 11553.908477701869,
+          "min": 30146,
+          "max": 52068
+        }
+      }
+    }
+  },
+  "rowsSha256": "273501a8f9fc83e0bdd2f89927086514508fcc1722b6ba23eaffffc11c0fc324"
+}

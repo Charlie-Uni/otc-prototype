@@ -1,0 +1,158 @@
+{
+  "target": 10000,
+  "seed": 3,
+  "investors": 24,
+  "transactions": 4782,
+  "acceptedEvents": 10000,
+  "eventsByType": {
+    "RoleGranted": 108,
+    "RoleRevoked": 108,
+    "NAVUpdatedEvent": 450,
+    "InvestorWhitelisted": 395,
+    "SubscriptionRequested": 677,
+    "SubscriptionAccepted": 677,
+    "Transfer": 2078,
+    "ShareBalanceUpdated": 2948,
+    "Paused": 195,
+    "Unpaused": 195,
+    "RedemptionRequested": 531,
+    "RedemptionQueueUpdated": 1062,
+    "RedemptionSettled": 531,
+    "SettlementDelayed": 45
+  },
+  "operationsByType": {
+    "roleUpdate": 216,
+    "navSubmission": 450,
+    "qualificationUpdate": 395,
+    "subscriptionRequest": 677,
+    "subscriptionAcceptance": 677,
+    "pauseResume": 390,
+    "transfer": 870,
+    "redemptionRequest": 531,
+    "redemptionSettlement": 531,
+    "settlementDelay": 45
+  },
+  "gas": {
+    "total": 529675542,
+    "perTransaction": 110764.43789209536,
+    "perEvent": 52967.5542,
+    "byType": {
+      "roleUpdate": {
+        "n": 216,
+        "mean": 41117.5,
+        "sd": 11008.011068054873,
+        "min": 30135,
+        "max": 52100
+      },
+      "navSubmission": {
+        "n": 450,
+        "mean": 178377.07777777777,
+        "sd": 1914.0960116518022,
+        "min": 149233,
+        "max": 178596
+      },
+      "qualificationUpdate": {
+        "n": 395,
+        "mean": 34651.34683544304,
+        "sd": 8772.95081825965,
+        "min": 28210,
+        "max": 50164
+      },
+      "subscriptionRequest": {
+        "n": 677,
+        "mean": 131584.11225997045,
+        "sd": 1617.2957373875447,
+        "min": 129948,
+        "max": 147072
+      },
+      "subscriptionAcceptance": {
+        "n": 677,
+        "mean": 153174.35450516987,
+        "sd": 3235.8045620959865,
+        "min": 152586,
+        "max": 186774
+      },
+      "pauseResume": {
+        "n": 390,
+        "mean": 36464,
+        "sd": 10944.039825954686,
+        "min": 25534,
+        "max": 47394
+      },
+      "transfer": {
+        "n": 870,
+        "mean": 50225.324137931035,
+        "sd": 2219.6427009544027,
+        "min": 45210,
+        "max": 67110
+      },
+      "redemptionRequest": {
+        "n": 531,
+        "mean": 161819.1129943503,
+        "sd": 10941.915035831677,
+        "min": 136827,
+        "max": 191232
+      },
+      "redemptionSettlement": {
+        "n": 531,
+        "mean": 162856.2824858757,
+        "sd": 5622.42412259966,
+        "min": 144162,
+        "max": 170874
+      },
+      "settlementDelay": {
+        "n": 45,
+        "mean": 83024.13333333333,
+        "sd": 7.063349707533178,
+        "min": 83006,
+        "max": 83030
+      }
+    }
+  },
+  "deploymentGas": {
+    "NAVRegistry": 2330636,
+    "FundToken": 4855351,
+    "RiskRegistry": 4579664
+  },
+  "storage": {
+    "nonZeroSlots": {
+      "FundToken": 8022,
+      "NAVRegistry": 2700,
+      "RiskRegistry": 10
+    },
+    "totalNonZeroSlots": 10732
+  },
+  "eventIndex": {
+    "logs": 10000,
+    "rawPayloadBytes": 1889120,
+    "normalizedJsonlBytes": 8989971
+  },
+  "latencyMs": {
+    "getLogs": {
+      "repetitions": 5,
+      "mean": 108.62591120002325,
+      "sd": 20.18323950887432
+    },
+    "replay": {
+      "repetitions": 10,
+      "mean": 14.251065400004155,
+      "sd": 2.697781992425704
+    }
+  },
+  "correctness": {
+    "arc": {
+      "replayed": 10000,
+      "accepted": 10000
+    },
+    "nri": {
+      "valid": 1208,
+      "total": 1208
+    },
+    "pcr": {
+      "matched": 10,
+      "checkpoints": 10
+    },
+    "finalProjectionSha256": "bdfb3dad8d7ef231326a1e69f5d17dac4e4a05a04e057d18044124a709a8c390"
+  },
+  "wallClockSec": 107.77070297599997
+}
