@@ -26,7 +26,10 @@ Module boundaries:
 - `evidence.mjs`: source guard, isolation, append-only receipts and file sealing.
 - `build.mjs`: pinned build and independent literal-input bytecode reproduction.
 - `audit-pricing.mjs`: pure case-policy NAV audit, shared by runner and verifier.
-- `audit-case.mjs`: pure Q1–Q7 queries and explicit expectation checks.
+- `audit-case.mjs`: pure Q1–Q7 queries, the single step oracle and case summary fields.
+- `audit-baselines.mjs`: classification, comparator replay, component and gas calculations.
+- `verify-baselines.mjs`: scenario/chain-scoped joins to archived journals and receipts.
+- `table-coverage.mjs`: Table 3–13 coverage and displayed-cell checks for Tables 8–10.
 - `run-*.mjs`: experiment orchestration; `probe-*.mjs`: disclosed counterexamples.
 - `verify-run.mjs`: offline raw-log replay, view/receipt/storage/timing checks.
 
@@ -59,7 +62,12 @@ change its 101 sealed files or its original `verification.json`. An external
 verification report records both measurement identity and verifier identity.
 An uncommitted review candidate has `verifier.commit: null`, a base commit,
 `governedInputsDirty: true`, and a hash for every current governed input,
-including untracked new source files. This does not bypass the clean-source
+including untracked new source files. Offline identity scans the governed paths
+on disk; absent optional manifests are recorded as null. Git commit/status are
+optional metadata: a source package without Git records `gitAvailable: false`,
+`commit: null`, and `governedInputsDirty: null`. No historical tags or commits
+are required to verify data. Missing or unreadable source inputs are not hidden
+(except explicitly recorded absent paths). This does not bypass the clean-source
 requirement for generating new measurement runs.
 
 `sourceIdentity` owns the single governed-path list. Its optional repository
@@ -105,9 +113,48 @@ input run:
 node experiments/paper85-evaluation/scripts/v3/verify-run.mjs /absolute/path/to/sealed/run /absolute/path/outside/verification-candidate.json
 ```
 
-Coverage is recorded in the report. Case Q1–Q7 and raw replay/scale checks are
-recomputed. Comparator classification counts remain consistency checks of
-archived observations; EVM execution, compiler builds, timings and the revoked
-holder probe are not rerun by this offline verifier. Sharing query functions
-checks consistency; independent expected fixtures and mutation tests are still
-needed to catch shared implementation mistakes.
+Coverage is recorded per table in `coverage.tables` (Tables 3–13). Case Q1–Q7,
+raw replay/scale checks and Table 8–10 baseline calculations are reconstructed.
+The displayed-cell source map is checked for Tables 8–10, except Table 8's
+inherited prototype column; this is not a fresh DOCX/layout check. Tables 6–7
+retain v2.1 evidence and are explicitly not recomputed here. Table 4 environment
+metadata and Table 12 rejected-case observations have partial verification.
+EVM execution, compiler builds, timings and the revoked-holder probe are not
+rerun by this offline verifier. Sharing query functions checks consistency;
+independent expected fixtures and mutation tests remain necessary.
+
+## Baseline verification details
+
+- Table 8: verify 42 unique scenarios per comparator against the frozen mapping
+  and scenario specification. Reconstruct before/after snapshots from fixture
+  and action receipt logs within each snapshot boundary. Confirm accepted
+  receipts or positively recorded EVM simulation reverts, then derive all labels,
+  match flags, totals and predicate breakdowns. A null action in the preserved
+  mapping supplies the capability-absence classification, not a failed call.
+  Recorded snapshots cover total supply, Alice and Bob plus B2 control fields;
+  this remains the current 42-scenario account scope. The broader equivalence
+  between the prose business mapping and executed operations remains a review
+  assumption, not an automatic semantic proof.
+- Table 9: independently decode production and B1/B2 trajectory logs, bind
+  comparator logs to receipts, replay 14 corresponding checkpoints, and compare
+  recoverable components. Both comparator ledgers start empty after deployment;
+  B2 starts unpaused with no investor allowlist entries and no candidate issuer
+  role. Fixture account positions are preserved: comparator Alice/Bob/operator2
+  are public test accounts 3/4/5; production Alice/Bob are genesis entries 2/3
+  and the candidate role is the declared disabled genesis role. Missing NAV and
+  request components remain unrecorded even when production state is empty.
+- Table 10: bind five production trajectories (ports 19100–19104) and five per
+  comparator (18680–18684) to chain-scoped receipts. Comparator journals are
+  selected by both port and deployment name, since B1/B2 may reuse hashes and
+  addresses. Recompute 130 operation gas values, all archived means/sample SD,
+  comparator min/max and deployment gas consistency. Sum request/effect for
+  subscription/redemption; average the paired qualification, NAV, pause/resume
+  and role operation means. Recompute ratios and displayed numeric cells.
+
+These are deterministic checks of preserved executions, not new measurements
+or third-party validation. Mutation tests use disposable copies of baseline
+files, never the sealed directory. `PAPER85_TEST_EVIDENCE` optionally selects a
+sealed measurement directory; otherwise the baseline tests discover the unique
+run bound to `347ea26`. A complete verification test also runs with Git absent
+from PATH. The source-identity test uses a temporary Git repository before any
+historical tags exist; new measurement checks retain their reference guards.

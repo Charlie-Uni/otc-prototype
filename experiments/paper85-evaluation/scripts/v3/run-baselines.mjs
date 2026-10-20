@@ -6,10 +6,11 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { assertRuntime, record, recordReceipt, save } from './evidence.mjs';
 import {
-  E18, EVAL_DIR, GENESIS_TIMESTAMP, RESULTS_DIR, ZERO_ADDRESS, ZERO_ROLE,
+  E18, EVAL_DIR, GENESIS_TIMESTAMP, RESULTS_DIR,
   account, artifact, decodeLogs, deploy, gitHead, invariant, lower, mean, mustWrite, sd,
   sha256File, startAnvil, toolVersions, tryWrite, viem, writeJson,
 } from './common.mjs';
+import { replayComparator } from './audit-baselines.mjs';
 import { startReplayScenario } from '../replay-chain.mjs';
 import { applyReplayEvent, createReplayState, normalizedProjection } from '../replay-engine.mjs';
 
@@ -253,34 +254,6 @@ function trajectory(kind) {
   ];
 }
 
-// Replay a comparator event log into its recordable components.
-function replayComparator(kind, decoded) {
-  const state = { balances: {}, totalSupply: 0n, allowlist: kind === 'B2' ? {} : null, paused: kind === 'B2' ? false : null, operator2Issuer: kind === 'B2' ? false : null };
-  const snapshots = [];
-  return {
-    apply(event) {
-      const a = event.args;
-      if (event.eventName === 'Transfer') {
-        const v = BigInt(a.value);
-        if (lower(a.from) === ZERO_ADDRESS) state.totalSupply += v; else state.balances[lower(a.from)] = (state.balances[lower(a.from)] ?? 0n) - v;
-        if (lower(a.to) === ZERO_ADDRESS) state.totalSupply -= v; else state.balances[lower(a.to)] = (state.balances[lower(a.to)] ?? 0n) + v;
-      } else if (event.eventName === 'AllowlistUpdated') {
-        state.allowlist[lower(a.account)] = Boolean(a.allowed);
-      } else if (event.eventName === 'Paused') {
-        state.paused = true;
-      } else if (event.eventName === 'Unpaused') {
-        state.paused = false;
-      } else if (event.eventName === 'RoleGranted' || event.eventName === 'RoleRevoked') {
-        if (lower(a.role) === lower(ISSUER_ROLE) && lower(a.account) === lower(actors.operator2.address)) state.operator2Issuer = event.eventName === 'RoleGranted';
-      }
-    },
-    snapshot() {
-      snapshots.push(structuredClone(state));
-      return snapshots.at(-1);
-    },
-  };
-}
-
 async function runComparatorTrajectory(kind, port) {
   const env = await startAnvil(port);
   try {
@@ -347,7 +320,7 @@ async function runRecoverability() {
   const result = { productionAcceptedEvents: production.acceptedEvents, productionEventTypes: production.eventTypes, productionNavReferences: production.navReferences, comparators: {} };
   for (const [kind, port] of [['B1', 18670], ['B2', 18671]]) {
     const run = await runComparatorTrajectory(kind, port);
-    const replay = replayComparator(kind, run.decoded);
+    const replay = replayComparator(kind, { issuerRole: ISSUER_ROLE, operator2: actors.operator2.address });
     // Walk checkpoints: after each canonical operation, apply logs of that block.
     const byBlock = new Map();
     for (const e of run.decoded) {

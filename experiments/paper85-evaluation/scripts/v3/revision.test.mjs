@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { auditPricing, navCorrections } from './audit-pricing.mjs';
 import { assertBuild } from './build.mjs';
-import { ROOT, GOVERNED_INPUTS, assertRuntime, record, sourceIdentity } from './evidence.mjs';
+import { ROOT, GOVERNED_INPUTS, assertRuntime, record, sourceIdentity, verificationIdentity } from './evidence.mjs';
 import { tryWrite, viem } from './common.mjs';
 
 const nav = (asOf, storedAt = asOf) => ({ asOf: String(asOf), storedAt: String(storedAt) });
@@ -94,6 +94,11 @@ test('governed input guard uses a temporary Git repository with real reference c
   git('config', 'user.name', 'Paper85 fixture'); git('config', 'user.email', 'fixture@example.invalid');
   git('config', 'commit.gpgsign', 'false'); git('config', 'core.hooksPath', '/dev/null');
   git('add', '.'); git('commit', '--quiet', '-m', 'fixture inputs');
+  // No historical commits or tags exist in this fixture yet.
+  const offline = await verificationIdentity({ root });
+  assert.equal(offline.gitAvailable, true);
+  assert.equal(offline.commit, git('rev-parse', 'HEAD'));
+  assert.equal(offline.governedInputsDirty, false);
   git('tag', 'chapter3-artifact-v1.4.0'); git('tag', 'fixture-preregistration');
   const identity = () => sourceIdentity({ root, preregistrationRef: 'fixture-preregistration' });
   assert.equal((await identity()).governedInputsDirty, false);

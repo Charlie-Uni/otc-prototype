@@ -1,0 +1,1405 @@
+diff --git a/docs/evidence/paper85/v3-revision/README.md b/docs/evidence/paper85/v3-revision/README.md
+index 4d9a7b6..95c35a2 100644
+--- a/docs/evidence/paper85/v3-revision/README.md
++++ b/docs/evidence/paper85/v3-revision/README.md
+@@ -4,7 +4,11 @@ Run: [2026-10-20T01-15-00.607Z-f5edfdac](2026-10-20T01-15-00.607Z-f5edfdac/manif
+ 
+ Measurement code: `347ea2636dce91b5381f72c084006de8aea971aa` (generated the sealed run)
+ 
+-Verification code: `f0127fa538105974b7721c2289dca0ae480eb249` (approved repairs)
++Previous approved verification code: `f0127fa538105974b7721c2289dca0ae480eb249`.
++
++The [Table 8–10 review candidate](review-tables-candidate/README.md) adds raw-data
++baseline checks and table-level coverage. It is pending approval, has no new
++commit yet, and preserves the earlier formal report below.
+ 
+ The [formal verification report](verification-f0127fa538105974b7721c2289dca0ae480eb249.json)
+ records that exact code commit, clean governed inputs, all source hashes and
+@@ -101,9 +105,10 @@ nine scale runs pass. Case Q1–Q7, including the complete Q2 affected set and
+ Q3/Q4/Q5/Q7 details, reproduce the archived answers.
+ 
+ The original `verification.json` and all 101 manifest-bound files remain
+-unchanged. No gas or latency measurements were repeated. Baseline rows remain
+-summary-consistency checks, not an independent re-execution of comparator
+-transitions. The formal report is archived in a separate documentation commit;
++unchanged. No gas or latency measurements were repeated. In that historical
++report, baseline rows were summary-consistency checks. The current review
++candidate below adds reconstruction from preserved records; it still does not
++re-execute EVM transitions. The formal report is archived in a separate documentation commit;
+ its `verifier.commit` identifies the code commit used for the check.
+ 
+ The machine-readable expectation file is explicitly a post-review regression
+@@ -152,3 +157,40 @@ python tools/audit-paper85-followup.py docs/evidence/paper85/v3-revision/2026-10
+   non-preregistered and describe its order/NAV1/NAV2/acceptance design. The C26
+   rejection is reported as a gap in historical correction support under the
+   case's CSSF 24/856 grounding, not as an implementation benefit.
++
++
++## Current review candidate: baseline tables and verifier portability
++
++This follow-up fixes the undefined `q1` reference in fresh case-summary creation,
++removes duplicate inline step expectations, and makes historical Git references
++unnecessary for offline verification. New measurement runs still require clean
++source and frozen-reference checks. Both changes are verified separately.
++
++Tables 8–10 now have raw-record reconstruction and displayed source-map checks:
++84 classifications (50 executed, 34 capability absences), 14 production and
++14 checkpoints per comparator, and 130 operation receipts across 15 fresh
++archived gas trajectories. Subscription/redemption ratios remain 4.39×/7.95×.
++No gas or latency measurement has been repeated in this follow-up.
++
++The machine-readable report includes `coverage.tables` and the recomputed values
++under `coverage.baselines`, with the precise file paths used for every table.
++The displayed-cell check validates the preserved JSON source map, not DOCX
++rendering. The manuscript and source map have not been edited in this round.
++
++| Table | Current verification coverage | Limit |
++| --- | --- | --- |
++| 3 | EQ/protocol/source description | No empirical quantity to recompute |
++| 4 | Canonical deployment receipt gas and comparator runtime sizes | Environment metadata/production sizes not fully rechecked |
++| 5 | Source/model mapping description | Requires source review |
++| 6–7 | Inherited frozen v2.1 results | Not reconstructed or rerun by this verifier |
++| 8 | B1/B2 labels, snapshots, records, counts, predicate groups and displayed cells | Prototype column inherited; capability absence from frozen mapping; mapped business equivalence not proven |
++| 9 | Raw-log replay, component matches, event/NAV counts and displayed cells | Declared genesis/fixture and limited candidate-role correspondence |
++| 10 | Receipt gas, means/sample SD, workflow arithmetic, ratios and displayed cells | No new execution or attribution of individual guard costs |
++| 11 | Nine runs: gas/storage/log/index/replay/timing-sample aggregates | Saved timing samples, no new benchmark; rounding not separately checked |
++| 12 | Complete step oracle and 23 accepted checkpoint projections | Rejected-step error labels remain archived observations |
++| 13 | Complete Q1–Q7 answers and next-NAV pricing probe | Case-policy assumptions, not independent regulatory or expert validation |
++
++The original preregistration, amendment, frozen production and baseline
++contracts, and 101 manifest-bound run files remain unchanged. Candidate reports
++and tests are stored outside the sealed run. The candidate report records a
++source digest and dirty review state; approval and a new commit are still pending.
+diff --git a/docs/manuscript/paper85-v3.1/delivery-manifest.json b/docs/manuscript/paper85-v3.1/delivery-manifest.json
+index bbb089b..4b71782 100644
+--- a/docs/manuscript/paper85-v3.1/delivery-manifest.json
++++ b/docs/manuscript/paper85-v3.1/delivery-manifest.json
+@@ -4,7 +4,7 @@
+   "evidenceRun": "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac",
+   "files": {
+     "tools/revise-paper85-section5.py": "0f11b861ba7570c99a2559ef2b3c2dfecd658d1d1e08ee97c98fe0921f9d4ee8",
+-    "docs/evidence/paper85/v3-revision/README.md": "241b1376164b8be126952edb126d0b8981a2ffd47094a9ff136da11f8d395d80",
++    "docs/evidence/paper85/v3-revision/README.md": "ca94e84a04741439218fb5c510bfa1aff9e3b49176bf226b4a298a79d4311d3e",
+     "docs/evidence/paper85/v3-revision/regression-tests.tap": "e069251b053073e109ddf82f04cc74aa2585e4b4688938d5d035be1f8d231a00",
+     "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/manifest.json": "913cd2aef3cbd861b97f761bc2cabc64027fce15ce9b10c63f1ff1cfef5d1f31",
+     "docs/manuscript/paper85-v3.1/paper85-section5-claims.json": "e8aefd3fbe733e7447d15521385d40d335c20fd4c36fdf779b63a044522df309",
+@@ -13,8 +13,17 @@
+     "docs/manuscript/paper85-v3.1/From_Tokenization_to_Lifecycle_Execution_v11_Section5_Revised.docx": "a73b5201dd0dacf5262a5b8f1250edd751f18aa19f00c96c8b319f6850b2814c",
+     "tools/audit-paper85-followup.py": "05ef9360674789aad5cc9b7fa81da9da13022b7badd68246290b195b0916250d",
+     "docs/evidence/paper85/v3-revision/followup-audit.json": "17c0ac2847dda798ff73fdeb3cc58add627f23c8d43c544a11992c8875c2eca6",
+-    "docs/evidence/paper85/v3-revision/verification-f0127fa538105974b7721c2289dca0ae480eb249.json": "d02f66057b17721a50e2693d01dfe280edcf0b3859ea55133c4774cfb4af38c7"
++    "docs/evidence/paper85/v3-revision/verification-f0127fa538105974b7721c2289dca0ae480eb249.json": "d02f66057b17721a50e2693d01dfe280edcf0b3859ea55133c4774cfb4af38c7",
++    "docs/evidence/paper85/v3-revision/review-tables-candidate/README.md": "a77a110b83919b84a076d276e5f95f521b75d8f3acef56003fbb8141ca1408a6",
++    "docs/evidence/paper85/v3-revision/review-tables-candidate/regression-tests.tap": "7fba80b95ab2dad35325933e6d9e7098d5ad404be69e28931f7a340210346b8a",
++    "docs/evidence/paper85/v3-revision/review-tables-candidate/verification-candidate-a8fc7185749b.json": "5ad7c1d9c8e4d47d7a0d368c505899c182236287e6e7022ddb2f670a64113c6d"
+   },
+   "verificationCodeCommit": "f0127fa538105974b7721c2289dca0ae480eb249",
+-  "verificationReport": "docs/evidence/paper85/v3-revision/verification-f0127fa538105974b7721c2289dca0ae480eb249.json"
++  "verificationReport": "docs/evidence/paper85/v3-revision/verification-f0127fa538105974b7721c2289dca0ae480eb249.json",
++  "reviewCandidate": {
++    "status": "pending user approval; no commit or push",
++    "sourceSha256": "a8fc7185749be72ea3fd546fa41f31cc85499e2da1ad5389aecaffac1d1e5a64",
++    "report": "docs/evidence/paper85/v3-revision/review-tables-candidate/verification-candidate-a8fc7185749b.json",
++    "readme": "docs/evidence/paper85/v3-revision/review-tables-candidate/README.md"
++  }
+ }
+diff --git a/experiments/paper85-evaluation/scripts/v3/README.md b/experiments/paper85-evaluation/scripts/v3/README.md
+index 6ce3efb..47a0d72 100644
+--- a/experiments/paper85-evaluation/scripts/v3/README.md
++++ b/experiments/paper85-evaluation/scripts/v3/README.md
+@@ -26,7 +26,10 @@ Module boundaries:
+ - `evidence.mjs`: source guard, isolation, append-only receipts and file sealing.
+ - `build.mjs`: pinned build and independent literal-input bytecode reproduction.
+ - `audit-pricing.mjs`: pure case-policy NAV audit, shared by runner and verifier.
+-- `audit-case.mjs`: pure Q1–Q7 queries and explicit expectation checks.
++- `audit-case.mjs`: pure Q1–Q7 queries, the single step oracle and case summary fields.
++- `audit-baselines.mjs`: classification, comparator replay, component and gas calculations.
++- `verify-baselines.mjs`: scenario/chain-scoped joins to archived journals and receipts.
++- `table-coverage.mjs`: Table 3–13 coverage and displayed-cell checks for Tables 8–10.
+ - `run-*.mjs`: experiment orchestration; `probe-*.mjs`: disclosed counterexamples.
+ - `verify-run.mjs`: offline raw-log replay, view/receipt/storage/timing checks.
+ 
+@@ -59,7 +62,12 @@ change its 101 sealed files or its original `verification.json`. An external
+ verification report records both measurement identity and verifier identity.
+ An uncommitted review candidate has `verifier.commit: null`, a base commit,
+ `governedInputsDirty: true`, and a hash for every current governed input,
+-including untracked new source files. This does not bypass the clean-source
++including untracked new source files. Offline identity scans the governed paths
++on disk; absent optional manifests are recorded as null. Git commit/status are
++optional metadata: a source package without Git records `gitAvailable: false`,
++`commit: null`, and `governedInputsDirty: null`. No historical tags or commits
++are required to verify data. Missing or unreadable source inputs are not hidden
++(except explicitly recorded absent paths). This does not bypass the clean-source
+ requirement for generating new measurement runs.
+ 
+ `sourceIdentity` owns the single governed-path list. Its optional repository
+@@ -105,9 +113,48 @@ input run:
+ node experiments/paper85-evaluation/scripts/v3/verify-run.mjs /absolute/path/to/sealed/run /absolute/path/outside/verification-candidate.json
+ ```
+ 
+-Coverage is recorded in the report. Case Q1–Q7 and raw replay/scale checks are
+-recomputed. Comparator classification counts remain consistency checks of
+-archived observations; EVM execution, compiler builds, timings and the revoked
+-holder probe are not rerun by this offline verifier. Sharing query functions
+-checks consistency; independent expected fixtures and mutation tests are still
+-needed to catch shared implementation mistakes.
++Coverage is recorded per table in `coverage.tables` (Tables 3–13). Case Q1–Q7,
++raw replay/scale checks and Table 8–10 baseline calculations are reconstructed.
++The displayed-cell source map is checked for Tables 8–10, except Table 8's
++inherited prototype column; this is not a fresh DOCX/layout check. Tables 6–7
++retain v2.1 evidence and are explicitly not recomputed here. Table 4 environment
++metadata and Table 12 rejected-case observations have partial verification.
++EVM execution, compiler builds, timings and the revoked-holder probe are not
++rerun by this offline verifier. Sharing query functions checks consistency;
++independent expected fixtures and mutation tests remain necessary.
++
++## Baseline verification details
++
++- Table 8: verify 42 unique scenarios per comparator against the frozen mapping
++  and scenario specification. Reconstruct before/after snapshots from fixture
++  and action receipt logs within each snapshot boundary. Confirm accepted
++  receipts or positively recorded EVM simulation reverts, then derive all labels,
++  match flags, totals and predicate breakdowns. A null action in the preserved
++  mapping supplies the capability-absence classification, not a failed call.
++  Recorded snapshots cover total supply, Alice and Bob plus B2 control fields;
++  this remains the current 42-scenario account scope. The broader equivalence
++  between the prose business mapping and executed operations remains a review
++  assumption, not an automatic semantic proof.
++- Table 9: independently decode production and B1/B2 trajectory logs, bind
++  comparator logs to receipts, replay 14 corresponding checkpoints, and compare
++  recoverable components. Both comparator ledgers start empty after deployment;
++  B2 starts unpaused with no investor allowlist entries and no candidate issuer
++  role. Fixture account positions are preserved: comparator Alice/Bob/operator2
++  are public test accounts 3/4/5; production Alice/Bob are genesis entries 2/3
++  and the candidate role is the declared disabled genesis role. Missing NAV and
++  request components remain unrecorded even when production state is empty.
++- Table 10: bind five production trajectories (ports 19100–19104) and five per
++  comparator (18680–18684) to chain-scoped receipts. Comparator journals are
++  selected by both port and deployment name, since B1/B2 may reuse hashes and
++  addresses. Recompute 130 operation gas values, all archived means/sample SD,
++  comparator min/max and deployment gas consistency. Sum request/effect for
++  subscription/redemption; average the paired qualification, NAV, pause/resume
++  and role operation means. Recompute ratios and displayed numeric cells.
++
++These are deterministic checks of preserved executions, not new measurements
++or third-party validation. Mutation tests use disposable copies of baseline
++files, never the sealed directory. `PAPER85_TEST_EVIDENCE` optionally selects a
++sealed measurement directory; otherwise the baseline tests discover the unique
++run bound to `347ea26`. A complete verification test also runs with Git absent
++from PATH. The source-identity test uses a temporary Git repository before any
++historical tags exist; new measurement checks retain their reference guards.
+diff --git a/experiments/paper85-evaluation/scripts/v3/audit-case.mjs b/experiments/paper85-evaluation/scripts/v3/audit-case.mjs
+index 1d9c09c..8d38f50 100644
+--- a/experiments/paper85-evaluation/scripts/v3/audit-case.mjs
++++ b/experiments/paper85-evaluation/scripts/v3/audit-case.mjs
+@@ -99,3 +99,28 @@ export function assertCaseAnswers(recomputed, archived) {
+     assert.deepEqual(recomputed[question], archived[question], `Archived case answer ${question}`);
+   }
+ }
++
++// Step outcomes and summary fields have one oracle, shared by runner and verifier.
++export function caseStepExpectation(spec, id) {
++  assert(Object.hasOwn(spec.steps, id), `Missing case step expectation ${id}`);
++  return spec.steps[id];
++}
++
++export function caseOutcomeSummary(steps, answers, spec) {
++  const observed = Object.fromEntries(steps.map((step) => [step.id, step.observed]));
++  assert.equal(Object.keys(observed).length, steps.length, 'Duplicate case step');
++  assert.deepEqual(observed, spec.steps, 'Complete case step outcomes');
++  for (const step of steps) {
++    assert.equal(step.expected, caseStepExpectation(spec, step.id), `Step expectation ${step.id}`);
++    assert.equal(step.match, step.observed === step.expected, `Step match ${step.id}`);
++  }
++  return {
++    steps,
++    stepsMatchingPreregistration: steps.filter((step) => step.match).length,
++    acceptedOperations: steps.filter((step) => step.observed === 'accepted').length,
++    rejectedAttempts: steps.filter((step) => step.observed !== 'accepted')
++      .map((step) => ({ id: step.id, reason: step.observed })),
++    revisedAnswersMatch: assertCaseExpectations(answers, spec),
++    originalPreregisteredQ1Proxy: { matching: answers.Q1.originalProxyMatching, total: answers.Q1.total },
++  };
++}
+diff --git a/experiments/paper85-evaluation/scripts/v3/audit-case.test.mjs b/experiments/paper85-evaluation/scripts/v3/audit-case.test.mjs
+index 4b5d49a..73b2445 100644
+--- a/experiments/paper85-evaluation/scripts/v3/audit-case.test.mjs
++++ b/experiments/paper85-evaluation/scripts/v3/audit-case.test.mjs
+@@ -5,7 +5,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
+ import { tmpdir } from 'node:os';
+ import { join, resolve } from 'node:path';
+ import { gunzipSync } from 'node:zlib';
+-import { actorNames, auditCase, assertCaseExpectations } from './audit-case.mjs';
++import { actorNames, auditCase, assertCaseExpectations, caseOutcomeSummary, caseStepExpectation } from './audit-case.mjs';
+ import { ROOT } from './evidence.mjs';
+ import { verifyCase } from './verify-run.mjs';
+ 
+@@ -23,6 +23,21 @@ test('all seven case queries reproduce the sealed answers and post-review expect
+   assert.equal(result.affectedBusinesses, 1);
+ });
+ 
++test('runner summary uses Q1 from computed answers and the single step oracle', () => {
++  const answers = query(input.decoded, input.checkpoints).answers;
++  const result = caseOutcomeSummary(summary.steps, answers, spec);
++  assert.deepEqual(result.originalPreregisteredQ1Proxy, { matching: 4, total: 5 });
++  assert.equal(result.stepsMatchingPreregistration, 26);
++  assert.equal(result.acceptedOperations, 23);
++  assert.equal(result.rejectedAttempts.length, 3);
++  assert.equal(caseStepExpectation(spec, 'C26'), 'rejected:AS_OF_BEFORE_LATEST');
++  assert.throws(() => caseStepExpectation(spec, 'C27'), /Missing case step/);
++  assert.throws(() => caseOutcomeSummary(summary.steps.slice(1), answers, spec), /Complete case step/);
++  assert.throws(() => caseOutcomeSummary([...summary.steps, summary.steps[0]], answers, spec), /Duplicate case step/);
++  const steps = structuredClone(summary.steps); steps[0].expected = 'rejected';
++  assert.throws(() => caseOutcomeSummary(steps, answers, spec), /Step expectation C01/);
++});
++
+ test('Q2 uses the last of multiple same-date corrections', () => {
+   const events = structuredClone(input.decoded);
+   const correction = events.findIndex((e) => e.eventName === 'NAVUpdatedEvent' && e.args.asOf !== e.args.storedAt);
+diff --git a/experiments/paper85-evaluation/scripts/v3/evidence.mjs b/experiments/paper85-evaluation/scripts/v3/evidence.mjs
+index 17e8fd0..45b5613 100644
+--- a/experiments/paper85-evaluation/scripts/v3/evidence.mjs
++++ b/experiments/paper85-evaluation/scripts/v3/evidence.mjs
+@@ -1,8 +1,8 @@
+ // Run isolation, source/build binding and append-only transaction evidence.
+ // This module has no dependency on the experiment runners or replay engine.
+-import { execFileSync } from 'node:child_process';
++import { execFileSync, spawnSync } from 'node:child_process';
+ import { createHash, randomUUID } from 'node:crypto';
+-import { appendFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
++import { appendFile, mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
+ import { cpus, platform, release, totalmem } from 'node:os';
+ import { dirname, relative, resolve } from 'node:path';
+ import { fileURLToPath } from 'node:url';
+@@ -47,15 +47,38 @@ export async function sourceIdentity({ root = ROOT,
+   return { commit: git(root, 'rev-parse', 'HEAD'), governedInputsDirty: false, files };
+ }
+ 
+-// Historical evidence can be verified by a review candidate before approval to
+-// commit. Record exact bytes and disclose dirtiness; never call it a clean run.
+-export async function verificationIdentity() {
+-  const files = await sourceFiles(ROOT);
+-  checkFrozenInputs(ROOT, files, 'chapter3-artifact-v1.4.0', '4ce5d24');
+-  const dirty = Boolean(git(ROOT, 'status', '--porcelain', '--untracked-files=all', '--', ...GOVERNED_INPUTS));
+-  const baseCommit = git(ROOT, 'rev-parse', 'HEAD');
+-  return { commit: dirty ? null : baseCommit, baseCommit, governedInputsDirty: dirty,
+-    sourceSha256: digest(encode(files)), files };
++// Offline verification binds filesystem bytes without requiring Git history or
++// frozen tags. Git metadata is optional provenance, never a prerequisite. New
++// measurements still use sourceIdentity() and its strict frozen-input checks.
++export async function verificationIdentity({ root = ROOT } = {}) {
++  const files = {};
++  async function visit(path) {
++    const entries = await readdir(resolve(root, path), { withFileTypes: true });
++    for (const entry of entries) {
++      const child = `${path}/${entry.name}`;
++      if (entry.isDirectory()) await visit(child);
++      else files[child] = digest(await readFile(resolve(root, child)));
++    }
++  }
++  for (const path of GOVERNED_INPUTS) {
++    const info = await stat(resolve(root, path)).catch((error) => {
++      if (error.code !== 'ENOENT') throw error;
++      return null;
++    });
++    if (!info) files[path] = null; // Record absent optional manifests as well.
++    else if (info.isDirectory()) await visit(path);
++    else files[path] = digest(await readFile(resolve(root, path)));
++  }
++  const sortedFiles = Object.fromEntries(Object.entries(files).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0));
++  const head = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
++  const status = spawnSync('git', ['status', '--porcelain', '--untracked-files=all', '--', ...GOVERNED_INPUTS],
++    { cwd: root, encoding: 'utf8' });
++  const gitAvailable = head.status === 0 && status.status === 0;
++  const baseCommit = gitAvailable ? head.stdout.trim() : null;
++  const dirty = gitAvailable ? Boolean(status.stdout.trim()) : null;
++  return { commit: gitAvailable && !dirty ? baseCommit : null, baseCommit,
++    gitAvailable, governedInputsDirty: dirty,
++    sourceSha256: digest(encode(sortedFiles)), files: sortedFiles };
+ }
+ 
+ export async function save(path, value) {
+diff --git a/experiments/paper85-evaluation/scripts/v3/revision.test.mjs b/experiments/paper85-evaluation/scripts/v3/revision.test.mjs
+index b2b78fb..9298b70 100644
+--- a/experiments/paper85-evaluation/scripts/v3/revision.test.mjs
++++ b/experiments/paper85-evaluation/scripts/v3/revision.test.mjs
+@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
+ import { dirname, join, resolve } from 'node:path';
+ import { auditPricing, navCorrections } from './audit-pricing.mjs';
+ import { assertBuild } from './build.mjs';
+-import { ROOT, GOVERNED_INPUTS, assertRuntime, record, sourceIdentity } from './evidence.mjs';
++import { ROOT, GOVERNED_INPUTS, assertRuntime, record, sourceIdentity, verificationIdentity } from './evidence.mjs';
+ import { tryWrite, viem } from './common.mjs';
+ 
+ const nav = (asOf, storedAt = asOf) => ({ asOf: String(asOf), storedAt: String(storedAt) });
+@@ -94,6 +94,11 @@ test('governed input guard uses a temporary Git repository with real reference c
+   git('config', 'user.name', 'Paper85 fixture'); git('config', 'user.email', 'fixture@example.invalid');
+   git('config', 'commit.gpgsign', 'false'); git('config', 'core.hooksPath', '/dev/null');
+   git('add', '.'); git('commit', '--quiet', '-m', 'fixture inputs');
++  // No historical commits or tags exist in this fixture yet.
++  const offline = await verificationIdentity({ root });
++  assert.equal(offline.gitAvailable, true);
++  assert.equal(offline.commit, git('rev-parse', 'HEAD'));
++  assert.equal(offline.governedInputsDirty, false);
+   git('tag', 'chapter3-artifact-v1.4.0'); git('tag', 'fixture-preregistration');
+   const identity = () => sourceIdentity({ root, preregistrationRef: 'fixture-preregistration' });
+   assert.equal((await identity()).governedInputsDirty, false);
+diff --git a/experiments/paper85-evaluation/scripts/v3/run-baselines.mjs b/experiments/paper85-evaluation/scripts/v3/run-baselines.mjs
+index 379ff08..af71a45 100644
+--- a/experiments/paper85-evaluation/scripts/v3/run-baselines.mjs
++++ b/experiments/paper85-evaluation/scripts/v3/run-baselines.mjs
+@@ -6,10 +6,11 @@ import { readFile } from 'node:fs/promises';
+ import { resolve } from 'node:path';
+ import { assertRuntime, record, recordReceipt, save } from './evidence.mjs';
+ import {
+-  E18, EVAL_DIR, GENESIS_TIMESTAMP, RESULTS_DIR, ZERO_ADDRESS, ZERO_ROLE,
++  E18, EVAL_DIR, GENESIS_TIMESTAMP, RESULTS_DIR,
+   account, artifact, decodeLogs, deploy, gitHead, invariant, lower, mean, mustWrite, sd,
+   sha256File, startAnvil, toolVersions, tryWrite, viem, writeJson,
+ } from './common.mjs';
++import { replayComparator } from './audit-baselines.mjs';
+ import { startReplayScenario } from '../replay-chain.mjs';
+ import { applyReplayEvent, createReplayState, normalizedProjection } from '../replay-engine.mjs';
+ 
+@@ -253,34 +254,6 @@ function trajectory(kind) {
+   ];
+ }
+ 
+-// Replay a comparator event log into its recordable components.
+-function replayComparator(kind, decoded) {
+-  const state = { balances: {}, totalSupply: 0n, allowlist: kind === 'B2' ? {} : null, paused: kind === 'B2' ? false : null, operator2Issuer: kind === 'B2' ? false : null };
+-  const snapshots = [];
+-  return {
+-    apply(event) {
+-      const a = event.args;
+-      if (event.eventName === 'Transfer') {
+-        const v = BigInt(a.value);
+-        if (lower(a.from) === ZERO_ADDRESS) state.totalSupply += v; else state.balances[lower(a.from)] = (state.balances[lower(a.from)] ?? 0n) - v;
+-        if (lower(a.to) === ZERO_ADDRESS) state.totalSupply -= v; else state.balances[lower(a.to)] = (state.balances[lower(a.to)] ?? 0n) + v;
+-      } else if (event.eventName === 'AllowlistUpdated') {
+-        state.allowlist[lower(a.account)] = Boolean(a.allowed);
+-      } else if (event.eventName === 'Paused') {
+-        state.paused = true;
+-      } else if (event.eventName === 'Unpaused') {
+-        state.paused = false;
+-      } else if (event.eventName === 'RoleGranted' || event.eventName === 'RoleRevoked') {
+-        if (lower(a.role) === lower(ISSUER_ROLE) && lower(a.account) === lower(actors.operator2.address)) state.operator2Issuer = event.eventName === 'RoleGranted';
+-      }
+-    },
+-    snapshot() {
+-      snapshots.push(structuredClone(state));
+-      return snapshots.at(-1);
+-    },
+-  };
+-}
+-
+ async function runComparatorTrajectory(kind, port) {
+   const env = await startAnvil(port);
+   try {
+@@ -347,7 +320,7 @@ async function runRecoverability() {
+   const result = { productionAcceptedEvents: production.acceptedEvents, productionEventTypes: production.eventTypes, productionNavReferences: production.navReferences, comparators: {} };
+   for (const [kind, port] of [['B1', 18670], ['B2', 18671]]) {
+     const run = await runComparatorTrajectory(kind, port);
+-    const replay = replayComparator(kind, run.decoded);
++    const replay = replayComparator(kind, { issuerRole: ISSUER_ROLE, operator2: actors.operator2.address });
+     // Walk checkpoints: after each canonical operation, apply logs of that block.
+     const byBlock = new Map();
+     for (const e of run.decoded) {
+diff --git a/experiments/paper85-evaluation/scripts/v3/run-case.mjs b/experiments/paper85-evaluation/scripts/v3/run-case.mjs
+index b5f43a3..a0fcaa4 100644
+--- a/experiments/paper85-evaluation/scripts/v3/run-case.mjs
++++ b/experiments/paper85-evaluation/scripts/v3/run-case.mjs
+@@ -5,7 +5,7 @@
+ import { resolve } from 'node:path';
+ import { readFile } from 'node:fs/promises';
+ import { save } from './evidence.mjs';
+-import { actorNames, auditCase, assertCaseExpectations } from './audit-case.mjs';
++import { actorNames, auditCase, caseStepExpectation, caseOutcomeSummary } from './audit-case.mjs';
+ import {
+   E18, EVAL_DIR, GENESIS_TIMESTAMP, RESULTS_DIR, ZERO_ROLE,
+   account, artifact, decodeLogs, deploy, gitHead, invariant, lower, mustWrite, readChainProjection,
+@@ -54,7 +54,8 @@ async function main() {
+ 
+     let supply = 0n;
+     const totalSupply = async () => env.client.readContract({ address: fund.address, abi: fund.abi, functionName: 'totalSupply' });
+-    const step = async (id, label, rule, who, contract, fn, a, time, expect) => {
++    const step = async (id, label, rule, who, contract, fn, a, time) => {
++      const expect = caseStepExpectation(expectations, id);
+       const result = await tryWrite({ client: env.client, wallet: w(P[who]), contract, functionName: fn, args: a, at: time });
+       const entry = { id, label, rule, actor: who, call: fn, time, expected: expect, observed: result.status === 'accepted' ? 'accepted' : `rejected:${result.reason}` };
+       entry.match = entry.observed === expect;
+@@ -63,50 +64,50 @@ async function main() {
+       return result;
+     };
+     const fs = fund; const nr = nav;
+-    const navPost = async (id, label, rule, target, asOf, time, shares, expect = 'accepted') => {
++    const navPost = async (id, label, rule, target, asOf, time, shares) => {
+       const snap = shares ?? (supply = await totalSupply());
+       const netAssetValue = (snap * target) / E18;
+-      return step(id, label, rule, 'navAgent', nr, 'postNAV', [FUND_ID, netAssetValue, snap, BigInt(asOf), h(`${id}:valuation-pack`)], time, expect);
++      return step(id, label, rule, 'navAgent', nr, 'postNAV', [FUND_ID, netAssetValue, snap, BigInt(asOf), h(`${id}:valuation-pack`)], time);
+     };
+ 
+     // Onboarding (FATF R.10)
+-    await step('C01', 'CDD completed, investor A admitted', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.A.address, true, h('CDD-A-initial')], at(0, 9), 'accepted');
+-    await step('C02', 'CDD completed, investor B admitted', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.B.address, true, h('CDD-B-initial')], at(0, 9, 5), 'accepted');
+-    await step('C03', 'CDD completed, investor C admitted', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.C.address, true, h('CDD-C-initial')], at(0, 9, 10), 'accepted');
++    await step('C01', 'CDD completed, investor A admitted', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.A.address, true, h('CDD-A-initial')], at(0, 9));
++    await step('C02', 'CDD completed, investor B admitted', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.B.address, true, h('CDD-B-initial')], at(0, 9, 5));
++    await step('C03', 'CDD completed, investor C admitted', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.C.address, true, h('CDD-C-initial')], at(0, 9, 10));
+     // Initial offer priced at the issue NAV computed after the order (Rule 22c-1)
+-    await step('C04', 'A subscribes 1,000,000 in the initial offer', 'Rule 22c-1(a)', 'A', fs, 'requestSubscription', [units(1_000_000)], at(0, 10), 'accepted');
+-    await step('C05', 'Issue NAV 1.00 approved (asOf D0 17:00)', 'Rule 22c-1(b)', 'navAgent', nr, 'postInitialNAV', [FUND_ID, E18, BigInt(at(0, 17)), h('C05:valuation-pack')], at(0, 17), 'accepted');
+-    await step('C06', 'Registrar accepts A at the issue NAV', 'Rule 22c-1(a)', 'registrar', fs, 'acceptSubscription', [0n], at(0, 17, 30), 'accepted');
++    await step('C04', 'A subscribes 1,000,000 in the initial offer', 'Rule 22c-1(a)', 'A', fs, 'requestSubscription', [units(1_000_000)], at(0, 10));
++    await step('C05', 'Issue NAV 1.00 approved (asOf D0 17:00)', 'Rule 22c-1(b)', 'navAgent', nr, 'postInitialNAV', [FUND_ID, E18, BigInt(at(0, 17)), h('C05:valuation-pack')], at(0, 17));
++    await step('C06', 'Registrar accepts A at the issue NAV', 'Rule 22c-1(a)', 'registrar', fs, 'acceptSubscription', [0n], at(0, 17, 30));
+     // Forward-priced subscription
+-    await step('C07', 'B subscribes 500,000 (received D1 11:00)', 'Rule 22c-1(a)', 'B', fs, 'requestSubscription', [units(500_000)], at(1, 11), 'accepted');
++    await step('C07', 'B subscribes 500,000 (received D1 11:00)', 'Rule 22c-1(a)', 'B', fs, 'requestSubscription', [units(500_000)], at(1, 11));
+     await navPost('C08', 'NAV D1 = 1.01 approved', 'Rule 22c-1(b)', 1_010_000_000_000_000_000n, at(1, 17), at(1, 17));
+-    await step('C09', 'Registrar accepts B at NAV D1', 'Rule 22c-1(a)', 'registrar', fs, 'acceptSubscription', [1n], at(1, 17, 30), 'accepted');
++    await step('C09', 'Registrar accepts B at NAV D1', 'Rule 22c-1(a)', 'registrar', fs, 'acceptSubscription', [1n], at(1, 17, 30));
+     // Backward-priced exception (accepted before the next NAV is computed)
+-    await step('C10', 'C subscribes 300,000 (received D2 09:30)', 'Rule 22c-1(a)', 'C', fs, 'requestSubscription', [units(300_000)], at(2, 9, 30), 'accepted');
+-    await step('C11', 'Registrar accepts C before NAV D2 exists (backward-priced exception)', 'Rule 22c-1(a)', 'registrar', fs, 'acceptSubscription', [2n], at(2, 10), 'accepted');
++    await step('C10', 'C subscribes 300,000 (received D2 09:30)', 'Rule 22c-1(a)', 'C', fs, 'requestSubscription', [units(300_000)], at(2, 9, 30));
++    await step('C11', 'Registrar accepts C before NAV D2 exists (backward-priced exception)', 'Rule 22c-1(a)', 'registrar', fs, 'acceptSubscription', [2n], at(2, 10));
+     // Forward-priced redemption settled at an erroneous NAV
+-    await step('C12', 'A requests redemption of 100,000 shares (D2 12:00)', 'Rule 22c-1(a)', 'A', fs, 'requestRedemption', [units(100_000)], at(2, 12), 'accepted');
++    await step('C12', 'A requests redemption of 100,000 shares (D2 12:00)', 'Rule 22c-1(a)', 'A', fs, 'requestRedemption', [units(100_000)], at(2, 12));
+     supply = await totalSupply();
+     const d2Shares = supply;
+     await navPost('C13', 'NAV D2 = 1.03 approved (later found erroneous)', 'Rule 22c-1(b)', 1_030_000_000_000_000_000n, at(2, 17), at(2, 17), d2Shares);
+-    await step('C14', 'Registrar settles A at NAV D2', 'Rule 22c-1(a)', 'registrar', fs, 'settleRedemption', [0n], at(2, 17, 30), 'accepted');
++    await step('C14', 'Registrar settles A at NAV D2', 'Rule 22c-1(a)', 'registrar', fs, 'settleRedemption', [0n], at(2, 17, 30));
+     // Restricted transfer and failed periodic review
+-    await step('C15', 'A transfers 50,000 shares to eligible B', 'transfer restriction', 'A', fs, 'transfer', [P.B.address, units(50_000)], at(3, 10), 'accepted');
+-    await step('C16', 'Periodic CDD review of C fails; eligibility revoked', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.C.address, false, h('CDD-C-review-failed')], at(3, 11), 'accepted');
+-    await step('C17', 'Revoked holder C requests redemption (controlled exit attempt)', 'FATF R.10', 'C', fs, 'requestRedemption', [units(10_000)], at(3, 11, 30), 'rejected:NOT_WHITELISTED');
++    await step('C15', 'A transfers 50,000 shares to eligible B', 'transfer restriction', 'A', fs, 'transfer', [P.B.address, units(50_000)], at(3, 10));
++    await step('C16', 'Periodic CDD review of C fails; eligibility revoked', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.C.address, false, h('CDD-C-review-failed')], at(3, 11));
++    await step('C17', 'Revoked holder C requests redemption (controlled exit attempt)', 'FATF R.10', 'C', fs, 'requestRedemption', [units(10_000)], at(3, 11, 30));
+     // Suspension of dealing (UCITS Art. 84)
+-    await step('C18', 'Board suspends dealing (valuation not possible)', 'UCITS Art. 84(2)(a)', 'board', fs, 'pause', [], at(3, 14), 'accepted');
+-    await step('C19', 'B requests redemption of 100,000 shares during suspension', 'UCITS Art. 84(2)(a)', 'B', fs, 'requestRedemption', [units(100_000)], at(3, 15), 'accepted');
+-    await step('C20', 'Registrar attempts settlement during suspension', 'UCITS Art. 84(2)(a)', 'registrar', fs, 'settleRedemption', [1n], at(3, 16), 'rejected:PAUSED');
++    await step('C18', 'Board suspends dealing (valuation not possible)', 'UCITS Art. 84(2)(a)', 'board', fs, 'pause', [], at(3, 14));
++    await step('C19', 'B requests redemption of 100,000 shares during suspension', 'UCITS Art. 84(2)(a)', 'B', fs, 'requestRedemption', [units(100_000)], at(3, 15));
++    await step('C20', 'Registrar attempts settlement during suspension', 'UCITS Art. 84(2)(a)', 'registrar', fs, 'settleRedemption', [1n], at(3, 16));
+     // NAV error correction (CSSF 24/856) and resumption
+     await navPost('C21', 'Corrected NAV D2 = 1.02 (same asOf) approved', 'CSSF 24/856', 1_020_000_000_000_000_000n, at(2, 17), at(4, 9), d2Shares);
+     supply = await totalSupply();
+     await navPost('C22', 'NAV D4 = 1.025 approved', 'Rule 22c-1(b)', 1_025_000_000_000_000_000n, at(4, 17), at(4, 17));
+-    await step('C23', 'Board resumes dealing', 'UCITS Art. 84(2)(a)', 'board', fs, 'unpause', [], at(4, 17, 10), 'accepted');
+-    await step('C24', 'Registrar flags B settlement delayed (suspension backlog)', 'UCITS Art. 84(2)(a)', 'registrar', fs, 'flagSettlementDelayed', [1n, h('SUSPENSION-BACKLOG')], at(4, 17, 15), 'accepted');
+-    await step('C25', 'Registrar settles B at NAV D4', 'Rule 22c-1(a)', 'registrar', fs, 'settleRedemption', [1n], at(4, 17, 30), 'accepted');
++    await step('C23', 'Board resumes dealing', 'UCITS Art. 84(2)(a)', 'board', fs, 'unpause', [], at(4, 17, 10));
++    await step('C24', 'Registrar flags B settlement delayed (suspension backlog)', 'UCITS Art. 84(2)(a)', 'registrar', fs, 'flagSettlementDelayed', [1n, h('SUSPENSION-BACKLOG')], at(4, 17, 15));
++    await step('C25', 'Registrar settles B at NAV D4', 'Rule 22c-1(a)', 'registrar', fs, 'settleRedemption', [1n], at(4, 17, 30));
+     // Late correction probe
+-    await navPost('C26', 'Late correction of NAV D1 after NAV D4 exists', 'CSSF 24/856', 1_005_000_000_000_000_000n, at(1, 17), at(5, 9), units(1_000_000), 'rejected:AS_OF_BEFORE_LATEST');
++    await navPost('C26', 'Late correction of NAV D1 after NAV D4 exists', 'CSSF 24/856', 1_005_000_000_000_000_000n, at(1, 17), at(5, 9), units(1_000_000));
+ 
+     const accepted = log.filter((e) => e.observed === 'accepted');
+     const lastBlock = accepted.at(-1).blockNumber;
+@@ -140,23 +141,18 @@ async function main() {
+     const audit = auditCase({ genesis, events, checkpoints, pricingPolicy, names: NAME });
+     const { state, references: finalizedRefs, answers } = audit;
+     accepted.forEach((entry, index) => { entry.projectionMatches = audit.checkpointMatches[index]; });
+-    const expected = assertCaseExpectations(answers, expectations);
+-    invariant(log.every((entry) => entry.observed === expectations.steps[entry.id]), 'Case step expectations differ');
++    const outcomes = caseOutcomeSummary(log, answers, expectations);
++    const expected = outcomes.revisedAnswersMatch;
+     const summary = {
+       experiment: 'paper85-v3-part-C-case',
+       provenance: { ...(await gitHead()),
+         planSha256: await sha256File(resolve(EVAL_DIR, 'spec-v3/evaluation-plan.v3.md')),
+         expectationsSha256: await sha256File(expectationsPath), tools: toolVersions(), D0, runAt: new Date().toISOString() },
+-      steps: log,
+-      stepsMatchingPreregistration: log.filter((e) => e.match).length,
+-      acceptedOperations: accepted.length,
+-      rejectedAttempts: log.filter((e) => e.observed !== 'accepted').map((e) => ({ id: e.id, reason: e.observed })),
++      ...outcomes,
+       lifecycleEvents: events.length,
+       arc: { replayed: events.length, accepted: events.length },
+       nri: { valid: finalizedRefs.filter((r) => r.valid).length, total: finalizedRefs.length },
+       answers,
+-      revisedAnswersMatch: expected,
+-      originalPreregisteredQ1Proxy: { matching: answers.Q1.originalProxyMatching, total: q1.length },
+       finalProjectionSha256: sha256(JSON.stringify(normalizedProjection(state))),
+     };
+     invariant(log.every((e) => e.match) && Object.values(expected).every(Boolean) && finalizedRefs.every((r) => r.valid), 'Case validation failed');
+diff --git a/experiments/paper85-evaluation/scripts/v3/verify-run.mjs b/experiments/paper85-evaluation/scripts/v3/verify-run.mjs
+index 71a6743..3e788ff 100644
+--- a/experiments/paper85-evaluation/scripts/v3/verify-run.mjs
++++ b/experiments/paper85-evaluation/scripts/v3/verify-run.mjs
+@@ -7,13 +7,16 @@ import { gunzipSync } from 'node:zlib';
+ import { decodeLogs, mean, sd, rawLogBytes } from './common.mjs';
+ import { digest, ROOT, save, verificationIdentity } from './evidence.mjs';
+ import { auditPricing } from './audit-pricing.mjs';
+-import { actorNames, auditCase, assertCaseAnswers, assertCaseExpectations } from './audit-case.mjs';
++import { actorNames, auditCase, assertCaseAnswers, assertCaseExpectations, caseOutcomeSummary } from './audit-case.mjs';
++import { verifyBaselines } from './verify-baselines.mjs';
++import { TABLE_COVERAGE, verifyTableDisplays } from './table-coverage.mjs';
+ import { applyReplayEvent, createReplayState, finalizeNavReferences, normalizedProjection } from '../replay-engine.mjs';
+ 
+ const json = async (p) => JSON.parse(await readFile(p, 'utf8'));
+ const zipped = async (p) => JSON.parse(gunzipSync(await readFile(p)));
+ const plain = (v) => JSON.parse(JSON.stringify(v, (_, x) => typeof x === 'bigint' ? x.toString() : x));
+ const expectationsPath = resolve(ROOT, 'experiments/paper85-evaluation/spec-v3/case-expectations.postreview.json');
++const claimsPath = resolve(ROOT, 'docs/manuscript/paper85-v3.1/paper85-section5-claims.json');
+ 
+ export function verifyCase(input, summary, expectations) {
+   const audit = auditCase({ genesis: input.genesis, events: decodeLogs(input.rawLogs, input.contracts),
+@@ -27,9 +30,8 @@ export function verifyCase(input, summary, expectations) {
+   assert.equal(summary.lifecycleEvents, input.rawLogs.length);
+   assert.deepEqual(summary.originalPreregisteredQ1Proxy,
+     { matching: audit.answers.Q1.originalProxyMatching, total: audit.answers.Q1.total });
+-  const steps = Object.fromEntries(summary.steps.map((step) => [step.id, step.observed]));
+-  assert.equal(Object.keys(steps).length, summary.steps.length, 'Duplicate case step');
+-  assert.deepEqual(steps, expectations.steps, 'Complete case step outcomes');
++  const outcomes = caseOutcomeSummary(summary.steps, audit.answers, expectations);
++  for (const [key, value] of Object.entries(outcomes)) assert.deepEqual(summary[key], value, `Case summary ${key}`);
+   return { questions: Object.keys(audit.answers), corrections: audit.corrections,
+     affectedBusinesses: audit.answers.Q2.affected.length, answersMatchArchive: true, expectationsMatch: true };
+ }
+@@ -45,6 +47,7 @@ async function filesBelow(dir) {
+ 
+ export async function verifyRun(dir, { sealed = true } = {}) {
+   const verifier = await verificationIdentity();
++  const claimsBytes = await readFile(claimsPath);
+   const measurement = await json(resolve(dir, 'run.json'));
+   const allFiles = await filesBelow(dir);
+   if (sealed) {
+@@ -118,10 +121,8 @@ export async function verifyRun(dir, { sealed = true } = {}) {
+     }
+     streams++; events += decoded.length; references += finalized.length;
+   }
+-  const A = await json(resolve(dir, 'A-scenario-rows.json'));
+-  assert.equal(A.length, 84); assert(A.every((r) => r.match));
+-  assert.equal(A.filter((r) => r.comparator === 'B1' && r.class === 'invalid' && r.observed === 'blocked').length, 3);
+-  assert.equal(A.filter((r) => r.comparator === 'B2' && r.class === 'invalid' && r.observed === 'blocked').length, 13);
++  const baselines = await verifyBaselines(dir);
++  const displayedTables = verifyTableDisplays(JSON.parse(claimsBytes), baselines);
+   const B = await json(resolve(dir, 'B-scale-summary.json'));
+   for (const aggregate of B.aggregate) {
+     const runs = await Promise.all(B.runFiles.filter((p) => p.startsWith(`B-scale-run-${aggregate.target}-`)).map((p) => json(resolve(dir, p))));
+@@ -135,17 +136,20 @@ export async function verifyRun(dir, { sealed = true } = {}) {
+   }
+   assert(caseCoverage, 'Missing case evidence');
+   assert.equal(scaleRuns, B.runFiles.length, 'Missing scale evidence');
++  assert.equal(digest(await readFile(claimsPath)), digest(claimsBytes), 'Displayed-cell source map changed');
+   assert.deepEqual(await verificationIdentity(), verifier, 'Verifier sources changed during verification');
+-  return { schema: 2, status: 'passed', replayStreams: streams, replayedEvents: events,
+-    checkedProjections: checkpoints, validNavReferences: references, baselineRows: A.length,
++  return { schema: 3, status: 'passed', replayStreams: streams, replayedEvents: events,
++    checkedProjections: checkpoints, validNavReferences: references, baselineRows: baselines.table8.rows,
+     measurement: { commit: measurement.commit,
+       manifestSha256: sealed ? digest(await readFile(resolve(dir, 'manifest.json'))) : null,
+       sealedFilesVerified: sealed ? allFiles.length - 1 : null },
+     verifier: { ...verifier, node: process.version, expectationsSha256: digest(await readFile(expectationsPath)) },
+-    coverage: { case: caseCoverage, scaleRuns, nextNavProbe,
++    coverage: { case: caseCoverage, scaleRuns, nextNavProbe, tables: TABLE_COVERAGE,
++      displayedTables: { ...displayedTables, source: relative(ROOT, claimsPath), sourceSha256: digest(claimsBytes) },
+       scale: ['raw-log replay', 'checkpoint projections', 'NAV references', 'receipt gas totals and unit costs',
+         'storage maps', 'raw log/index contents', 'recorded timing samples and statistics'],
+-      baseline: 'Archived classification counts checked; comparator transitions not independently re-executed',
++      baselines,
++      baseline: 'Classifications from execution records and balance snapshots; recoverability from raw-log replay; gas from chain-scoped receipts. No EVM re-execution.',
+       notReexecuted: ['EVM experiments', 'timing measurements', 'compiler builds', 'revoked-holder probe'] } };
+ }
+ 
+diff --git a/experiments/paper85-evaluation/scripts/v3/audit-baselines.mjs b/experiments/paper85-evaluation/scripts/v3/audit-baselines.mjs
+new file mode 100644
+index 0000000..be0ecb8
+--- /dev/null
++++ b/experiments/paper85-evaluation/scripts/v3/audit-baselines.mjs
+@@ -0,0 +1,137 @@
++// Pure reconstruction of baseline classifications, recoverability and gas.
++import assert from 'node:assert/strict';
++import { mean, sd } from './common.mjs';
++
++const ZERO = `0x${'0'.repeat(40)}`;
++const lower = (value) => value.toLowerCase();
++
++
++export function classifyScenario(row, represented) {
++  if (!represented) {
++    assert.equal(row.status, undefined, 'Unrepresentable operation has an execution outcome');
++    return 'not_representable';
++  }
++  assert(['accepted', 'rejected'].includes(row.status), 'Missing execution status');
++  const changed = ['totalSupply', 'alice', 'bob'].some((key) => {
++    assert(Object.hasOwn(row.before, key) && Object.hasOwn(row.after, key), `Missing balance ${key}`);
++    return BigInt(row.before[key]) !== BigInt(row.after[key]);
++  });
++  assert.equal(row.ledgerChanged, changed, 'Ledger change flag');
++  if (row.status === 'rejected') {
++    assert.equal(row.stage, 'eth_call', 'Rejection must be an archived simulation');
++    assert.deepEqual(row.before, row.after, 'Rejected operation changed state');
++    return 'blocked';
++  }
++  assert.equal(row.stage, 'mined');
++  return row.class === 'valid' ? 'represented_accept'
++    : changed ? 'accepted_state_change' : 'accepted_no_state_change';
++}
++
++export function summarizeClassifications(rows) {
++  const totals = {}; const byPredicate = {};
++  for (const kind of ['B1', 'B2']) {
++    const mine = rows.filter((row) => row.comparator === kind);
++    const count = (cls, label) => mine.filter((r) => r.class === cls && r.observed === label).length;
++    totals[kind] = {
++      validRepresented: count('valid', 'represented_accept'), validNotRepresentable: count('valid', 'not_representable'),
++      validRejected: count('valid', 'blocked'), invalidBlocked: count('invalid', 'blocked'),
++      invalidAcceptedStateChange: count('invalid', 'accepted_state_change'),
++      invalidAcceptedNoStateChange: count('invalid', 'accepted_no_state_change'),
++      invalidNotRepresentable: count('invalid', 'not_representable'),
++      expectedMatches: mine.filter((r) => r.expected === r.observed).length, rows: mine.length,
++    };
++  }
++  for (const row of rows.filter((r) => r.class === 'invalid')) {
++    const group = byPredicate[row.targetPredicate] ??= { scenarios: 0, B1: {}, B2: {} };
++    if (row.comparator === 'B1') group.scenarios++;
++    group[row.comparator][row.observed] = (group[row.comparator][row.observed] ?? 0) + 1;
++  }
++  return { totals, byPredicate };
++}
++
++export function replayComparator(kind, { issuerRole, operator2 }) {
++  assert(['B1', 'B2'].includes(kind));
++  const state = { balances: {}, totalSupply: 0n, allowlist: kind === 'B2' ? {} : null,
++    paused: kind === 'B2' ? false : null, operator2Issuer: kind === 'B2' ? false : null };
++  return {
++    apply({ eventName, args: a }) {
++      if (eventName === 'Transfer') {
++        const value = BigInt(a.value); const from = lower(a.from); const to = lower(a.to);
++        if (from === ZERO) state.totalSupply += value;
++        else state.balances[from] = (state.balances[from] ?? 0n) - value;
++        if (to === ZERO) state.totalSupply -= value;
++        else state.balances[to] = (state.balances[to] ?? 0n) + value;
++      } else if (eventName === 'AllowlistUpdated') state.allowlist[lower(a.account)] = Boolean(a.allowed);
++      else if (eventName === 'Paused') state.paused = true;
++      else if (eventName === 'Unpaused') state.paused = false;
++      else if (['RoleGranted', 'RoleRevoked'].includes(eventName)) {
++        if (lower(a.role) === lower(issuerRole) && lower(a.account) === lower(operator2)) {
++          state.operator2Issuer = eventName === 'RoleGranted';
++        }
++      } else assert.equal(eventName, 'Approval', `Unsupported comparator event ${eventName}`);
++    },
++    snapshot: () => structuredClone(state),
++  };
++}
++
++// Production projections are reconstructed from raw logs by the caller. Missing
++// components remain null; an empty production value does not make them recorded.
++export function recoverComponents(kind, events, steps, production, actors) {
++  assert.equal(steps.length, production.length, 'Checkpoint count');
++  const replay = replayComparator(kind, actors); let cursor = 0;
++  const components = Object.fromEntries(['balances', 'eligibility', 'navHistory', 'operatingStatus',
++    'executionRoles', 'requestRecords', 'completeProjection', 'completeProjectionValueEquality'].map((key) => [key, []]));
++  for (const [index, step] of steps.entries()) {
++    assert.equal(step.id, `O${String(index + 1).padStart(2, '0')}`, 'Checkpoint alignment');
++    if (step.represented) {
++      while (cursor < events.length && BigInt(events[cursor].blockNumber) <= BigInt(step.blockNumber)) {
++        replay.apply(events[cursor++]);
++      }
++    }
++    const state = replay.snapshot(); const prod = production[index];
++    const balances = BigInt(prod.totalSupply) === state.totalSupply
++      && ['alice', 'bob'].every((name) => BigInt(prod.balances[actors.production[name]] ?? 0)
++        === (state.balances[actors[name]] ?? 0n));
++    const eligibility = state.allowlist === null ? null : ['alice', 'bob'].every((name) =>
++      Boolean(prod.whitelist[actors.production[name]]) === Boolean(state.allowlist[actors[name]]));
++    const operatingStatus = state.paused === null ? null : prod.paused === state.paused;
++    const executionRoles = state.operator2Issuer === null ? null
++      : Boolean(prod.roles[actors.production.roleKey]) === state.operator2Issuer;
++    const recorded = { balances, eligibility, navHistory: null, operatingStatus, executionRoles, requestRecords: null };
++    for (const [key, value] of Object.entries(recorded)) components[key].push(value);
++    components.completeProjection.push(Object.values(recorded).every((value) => value === true));
++    components.completeProjectionValueEquality.push([
++      balances, eligibility ?? Object.values(prod.whitelist).every((value) => !value), prod.navHistory.length === 0,
++      operatingStatus ?? !prod.paused, executionRoles ?? !prod.roles[actors.production.roleKey],
++      prod.subscriptions.length === 0 && prod.redemptions.length === 0,
++    ].every(Boolean));
++  }
++  assert.equal(cursor, events.length, 'Unassigned comparator events');
++  return Object.fromEntries(Object.entries(components).map(([key, values]) => [key, {
++    recorded: !values.every((value) => value === null),
++    matched: values.every((value) => value === null) ? null : values.filter((value) => value === true).length,
++    checkpoints: values.length,
++  }]));
++}
++
++export const gasStatistics = (values) => {
++  assert(values.length > 0 && values.every((v) => Number.isSafeInteger(v) && v > 0), 'Invalid gas samples');
++  return { samples: values.length, meanGas: mean(values), sdGas: sd(values), min: Math.min(...values), max: Math.max(...values) };
++};
++
++// Matches the manuscript's disclosed workflow-sum / paired-operation-mean rule.
++export function gasTable(production, comparators) {
++  const categories = [
++    ['qualification', ['O01', 'O02']], ['navSubmission', ['O03', 'O07']],
++    ['subscription', ['O04', 'O05'], true], ['redemption', ['O08', 'O10'], true],
++    ['transfer', ['O06']], ['pauseResume', ['O11', 'O12']],
++    ['roleUpdate', ['O13', 'O14']], ['settlementDelay', ['O09']],
++  ];
++  return Object.fromEntries(categories.map(([key, ids, sum]) => {
++    const value = ids.reduce((total, id) => total + production[id].meanGas, 0) / (sum ? 1 : ids.length);
++    const b1 = comparators.B1.operations[key]?.meanGas ?? null;
++    const b2 = comparators.B2.operations[key]?.meanGas ?? null;
++    return [key, { productionMeanGas: value, B1MeanGas: b1, B2MeanGas: b2,
++      ratioToB2: b2 === null ? null : value / b2, displayedRatioToB2: b2 === null ? null : (value / b2).toFixed(2) }];
++  }));
++}
+diff --git a/experiments/paper85-evaluation/scripts/v3/verify-baselines.mjs b/experiments/paper85-evaluation/scripts/v3/verify-baselines.mjs
+new file mode 100644
+index 0000000..5f3e7e2
+--- /dev/null
++++ b/experiments/paper85-evaluation/scripts/v3/verify-baselines.mjs
+@@ -0,0 +1,271 @@
++// Offline joins are scoped to one chain and, for snapshot tests, one scenario.
++import assert from 'node:assert/strict';
++import { readFile, readdir } from 'node:fs/promises';
++import { resolve } from 'node:path';
++import { gunzipSync } from 'node:zlib';
++import { account, decodeLogs, lower, viem } from './common.mjs';
++import { ROOT, digest } from './evidence.mjs';
++import { classifyScenario, summarizeClassifications, replayComparator, recoverComponents,
++  gasStatistics, gasTable } from './audit-baselines.mjs';
++import { applyReplayEvent, createReplayState, finalizeNavReferences, normalizedProjection } from '../replay-engine.mjs';
++
++const json = async (path) => JSON.parse(await readFile(path, 'utf8'));
++const zipped = async (path) => JSON.parse(gunzipSync(await readFile(path)));
++const plain = (value) => JSON.parse(JSON.stringify(value, (_, x) => typeof x === 'bigint' ? x.toString() : x));
++const contractName = (kind) => kind === 'B1' ? 'B1TokenOnly' : 'B2PermissionedAllowlist';
++const ISSUER_ROLE = viem.keccak256(viem.stringToHex('ISSUER_ROLE'));
++// These are the preserved measurement fixture's public test-account positions.
++const actors = { alice: lower(account(3).address), bob: lower(account(4).address),
++  operator2: lower(account(5).address), issuerRole: ISSUER_ROLE };
++const canonicalTypes = ['qualification', 'qualification', 'navSubmission', 'subscriptionRequest', 'subscription',
++  'transfer', 'navSubmission', 'redemptionRequest', 'settlementDelay', 'redemption',
++  'pauseResume', 'pauseResume', 'roleUpdate', 'roleUpdate'];
++const canonicalCalls = ['setAllowlisted', 'setAllowlisted', null, null, 'mint', 'transfer', null, null, null,
++  'burn', 'pause', 'unpause', 'grantRole', 'revokeRole'];
++
++async function comparatorTape(dir, port, kind) {
++  const matches = [];
++  for (const name of (await readdir(resolve(dir, 'chains'))).filter((p) => p.startsWith(`${port}-`))) {
++    const bytes = await readFile(resolve(dir, 'chains', name));
++    const records = gunzipSync(bytes).toString().trim().split('\n').map(JSON.parse);
++    if (records.some((r) => r.kind === 'transaction' && r.input.deployment === contractName(kind))) {
++      assert.equal(records[0].port, port, 'Chain port');
++      matches.push({ path: `chains/${name}`, records });
++    }
++  }
++  assert.equal(matches.length, 1, `Unique ${kind} chain at port ${port}`);
++  return matches[0];
++}
++
++export function checkTransaction(record) {
++  assert.equal(record.kind, 'transaction');
++  const { transaction: tx, receipt, input } = record;
++  assert.equal(receipt.status, 'success', 'Successful receipt');
++  assert.equal(tx.hash, receipt.transactionHash, 'Envelope/receipt hash');
++  assert.equal(BigInt(tx.blockNumber), BigInt(receipt.blockNumber), 'Envelope/receipt block');
++  if (input.data) assert.equal(tx.input, input.data, 'Envelope/call data');
++  return Number(receipt.gasUsed);
++}
++
++function logIdentity(log) {
++  return { address: lower(log.address), topics: log.topics.map(lower), data: lower(log.data),
++    blockNumber: String(BigInt(log.blockNumber)), transactionHash: lower(log.transactionHash),
++    logIndex: Number(log.logIndex) };
++}
++
++function checkReceiptLogs(rawLogs, transactions) {
++  const fromReceipts = transactions.flatMap((tx) => tx.receipt.logs);
++  assert.deepEqual(rawLogs.map(logIdentity), fromReceipts.map(logIdentity), 'Raw logs / receipt logs');
++}
++
++function scenarioSegments(records) {
++  const segments = new Map(); let current;
++  for (const record of records) {
++    if (record.kind === 'scenario') {
++      assert(!current && !segments.has(record.id), 'Duplicate or nested scenario');
++      current = { marker: record, records: [] }; segments.set(record.id, current);
++    } else if (record.kind === 'snapshot-revert') {
++      assert.equal(record.scenario, current?.marker.id, 'Snapshot boundary'); current = null;
++    } else if (current) current.records.push(record);
++  }
++  assert.equal(current, null, 'Unclosed scenario');
++  return segments;
++}
++
++function observedState(state, kind) {
++  const value = { totalSupply: String(state.totalSupply), alice: String(state.balances[actors.alice] ?? 0n),
++    bob: String(state.balances[actors.bob] ?? 0n) };
++  if (kind === 'B2') Object.assign(value, { allowAlice: Boolean(state.allowlist[actors.alice]),
++    allowBob: Boolean(state.allowlist[actors.bob]), paused: state.paused, operator2Issuer: state.operator2Issuer });
++  return value;
++}
++
++function verifyScenarioRecord(row, segment, contracts, represented) {
++  assert.equal(segment.marker.comparator, row.comparator);
++  const records = segment.records.filter((r) => ['transaction', 'simulated-rejection'].includes(r.kind));
++  const action = represented ? records.at(-1) : null;
++  const replay = replayComparator(row.comparator, actors);
++  const apply = (record) => {
++    checkTransaction(record);
++    for (const event of decodeLogs(record.receipt.logs, contracts)) replay.apply(event);
++  };
++  for (const record of represented ? records.slice(0, -1) : records) apply(record);
++  if (!represented) return;
++  assert(action, `Missing action ${row.id}`);
++  assert.deepEqual(observedState(replay.snapshot(), row.comparator), row.before, `${row.id}: before state`);
++  assert.equal(row.call.split(' by ')[0], action.input.functionName, 'Executed function');
++  assert.equal(action.input.data, viem.encodeFunctionData({ abi: contracts[0].abi,
++    functionName: action.input.functionName, args: action.input.args }), 'Encoded action');
++  if (action.kind === 'simulated-rejection') {
++    assert.equal(row.status, 'rejected'); assert.equal(row.stage, action.stage);
++    assert.equal(row.reason, action.reason); assert.equal(row.transactionHash, null);
++    assert.equal(row.logsWritten, 0);
++    assert.match(action.error.message, /execution reverted/i, 'Positive archived EVM revert');
++  } else {
++    assert.equal(row.status, 'accepted'); assert.equal(row.transactionHash, action.receipt.transactionHash);
++    assert.equal(row.logsWritten, action.receipt.logs.length); apply(action);
++  }
++  assert.deepEqual(observedState(replay.snapshot(), row.comparator), row.after, `${row.id}: after state`);
++}
++
++export async function verifyClassifications(dir, rows, summary) {
++  const specDir = resolve(ROOT, 'experiments/paper85-evaluation');
++  const mapping = await json(resolve(specDir, 'spec-v3/baseline-mapping.v3.json'));
++  const spec = await json(resolve(specDir, 'spec/scenarios.v1.json'));
++  const recomputed = []; const sources = [];
++  for (const [kind, port] of [['B1', 18645], ['B2', 18646]]) {
++    const tape = await comparatorTape(dir, port, kind); sources.push(tape.path);
++    const segments = scenarioSegments(tape.records);
++    const art = await json(resolve(dir, `build/${contractName(kind)}.artifact.json`));
++    const deployment = tape.records.find((r) => r.input?.deployment === contractName(kind));
++    const contracts = [{ name: contractName(kind), address: deployment.receipt.contractAddress, abi: art.abi }];
++    assert.equal(segments.size, mapping.scenarios.length, 'Scenario segments');
++    const mine = rows.filter((row) => row.comparator === kind);
++    assert.equal(mine.length, mapping.scenarios.length, 'Scenario rows');
++    assert.equal(new Set(mine.map((row) => row.id)).size, mine.length, 'Duplicate scenario row');
++    for (const planned of mapping.scenarios) {
++      const row = mine.find((r) => r.id === planned.id); assert(row, `Missing ${kind}:${planned.id}`);
++      const scenario = spec.scenarios.find((s) => s.id === row.id); assert(scenario, 'Unknown scenario');
++      assert.equal(row.class, row.id.startsWith('V') ? 'valid' : 'invalid');
++      assert.equal(row.targetPredicate, scenario.targetPredicate ?? null);
++      assert.equal(segments.get(row.id).marker.fixture, scenario.fixture);
++      const represented = planned[kind].action !== null;
++      verifyScenarioRecord(row, segments.get(row.id), contracts, represented);
++      const observed = classifyScenario(row, represented);
++      assert.equal(row.observed, observed, `${kind}:${row.id}: classification`);
++      assert.equal(row.expected, planned[kind].expected, 'Preserved expected classification');
++      assert.equal(row.match, observed === row.expected, 'Classification match flag');
++      assert(row.match, `Mapping mismatch ${kind}:${row.id}`);
++      recomputed.push({ ...row, observed });
++    }
++  }
++  assert.equal(rows.length, recomputed.length, 'Unknown comparator rows');
++  const result = summarizeClassifications(recomputed);
++  assert.deepEqual(result.totals, summary.totals, 'Table 8 totals');
++  assert.deepEqual(result.byPredicate, summary.byPredicate, 'Table 8 predicate breakdown');
++  assert.deepEqual(summary.preregisteredTotals, mapping.expectedTotals);
++  assert.equal(summary.allRowsMatchPreregistration, true);
++  return { ...result, rows: rows.length, executedRows: rows.filter((r) => r.status).length, sources,
++    limits: 'Capability absence uses the preserved action:null mapping; business equivalence of mapped actions is not independently established.' };
++}
++
++export async function verifyTrajectory(dir, kind, port) {
++  const path = `trajectories/${kind}-${port}.json`; const input = await json(resolve(dir, path));
++  const tape = await comparatorTape(dir, port, kind);
++  const transactions = tape.records.filter((r) => r.kind === 'transaction');
++  transactions.forEach(checkTransaction);
++  const boot = input.deployReceipts;
++  assert.deepEqual(boot, transactions.slice(0, boot.length).map((r) => r.receipt), 'Deployment receipts');
++  const calls = transactions.slice(boot.length);
++  assert.equal(input.steps.length, canonicalTypes.length, 'Canonical operation count');
++  for (const [index, step] of input.steps.entries()) {
++    assert.equal(step.id, `O${String(index + 1).padStart(2, '0')}`, 'Canonical operation order');
++    assert.equal(step.opType, canonicalTypes[index], 'Canonical operation category');
++    const expectedCall = kind === 'B1' && !['mint', 'transfer', 'burn'].includes(canonicalCalls[index])
++      ? null : canonicalCalls[index];
++    assert.equal(step.represented, expectedCall !== null, 'Canonical capability');
++    assert.equal(step.call ?? null, expectedCall, 'Canonical counterpart call');
++  }
++  assert.equal(calls.length, input.steps.filter((step) => step.represented).length, 'Trajectory calls');
++  for (const step of input.steps.filter((s) => s.represented)) {
++    const matches = calls.filter((r) => r.receipt.blockNumber === String(step.blockNumber));
++    assert.equal(matches.length, 1, 'Unique chain-scoped step receipt');
++    assert.equal(step.call, matches[0].input.functionName, 'Trajectory function');
++    assert.equal(step.gasUsed, Number(matches[0].receipt.gasUsed), 'Trajectory receipt gas');
++  }
++  checkReceiptLogs(input.rawLogs, calls);
++  const events = decodeLogs(input.rawLogs, input.contracts);
++  assert.deepEqual(plain(events), input.decoded, 'Comparator raw/decoded index');
++  return { input, events, calls, boot, sources: [path, tape.path] };
++}
++
++export async function verifyRecoverability(dir, summary) {
++  const input = await zipped(resolve(dir, 'canonical/18660.json.gz'));
++  const events = decodeLogs(input.rawLogs, input.contracts);
++  const state = createReplayState(input.genesis); const refs = []; const projections = []; let cursor = 0;
++  for (const checkpoint of input.checkpoints) {
++    while (cursor < events.length && events[cursor].blockNumber <= BigInt(checkpoint.block)) {
++      refs.push(...applyReplayEvent(state, events[cursor++]));
++    }
++    const projection = normalizedProjection(state);
++    assert.deepEqual(projection, checkpoint.view, 'Production recoverability checkpoint'); projections.push(projection);
++  }
++  assert.equal(cursor, events.length, 'Unassigned production events');
++  assert(finalizeNavReferences(state, refs).every((ref) => ref.valid));
++  const candidate = input.genesis.roles.find((role) => role.contractName === 'FundToken' && !role.enabled);
++  assert(candidate, 'Declared candidate role');
++  const names = { ...actors, production: { alice: input.genesis.actors[2], bob: input.genesis.actors[3],
++    roleKey: `FundToken:${candidate.role}:${candidate.account}` } };
++  const result = { productionAcceptedEvents: events.length,
++    productionEventTypes: {}, productionNavReferences: refs.length, comparators: {} };
++  for (const event of events) {
++    result.productionEventTypes[event.eventName] = (result.productionEventTypes[event.eventName] ?? 0) + 1;
++  }
++  const sources = ['canonical/18660.json.gz'];
++  for (const [kind, port] of [['B1', 18670], ['B2', 18671]]) {
++    const run = await verifyTrajectory(dir, kind, port); sources.push(...run.sources);
++    result.comparators[kind] = {
++      representedOperations: run.input.steps.filter((s) => s.represented).length, totalOperations: run.input.steps.length,
++      eventsWritten: run.events.length, eventTypes: [...new Set(run.events.map((e) => e.eventName))],
++      components: recoverComponents(kind, run.events, run.input.steps, projections, names),
++      navReferencesRecorded: 0, navReferencesRequired: refs.length,
++    };
++  }
++  assert.deepEqual(result, summary, 'Table 9 recoverability');
++  return { ...result, productionCheckpoints: projections.length, sources,
++    assumptions: 'Preserved fixture account positions and empty post-deployment comparator ledger; ' +
++      'candidate role correspondence is limited to issuance/subscription.' };
++}
++
++export async function verifyGas(dir, summary) {
++  const production = {}; const sources = []; let receipts = 0;
++  assert.equal(summary.productionGas.repetitions, 5);
++  assert.equal(summary.productionGas.samples.length, 5);
++  for (let index = 0; index < 5; index++) {
++    const path = `chains/canonical-${19100 + index}.jsonl.gz`; sources.push(path);
++    const tape = gunzipSync(await readFile(resolve(dir, path))).toString().trim().split('\n').map(JSON.parse);
++    const transactions = tape.filter((r) => r.kind === 'transaction'); transactions.forEach(checkTransaction);
++    const samples = summary.productionGas.samples[index]; assert.equal(samples.length, 14);
++    assert.deepEqual(transactions.filter((tx) => tx.input.label.startsWith('deploy ')).map((tx) => Number(tx.receipt.gasUsed)),
++      summary.productionGas.deploymentGas, 'Production deployment gas');
++    for (const [position, sample] of samples.entries()) {
++      assert.equal(sample.operationId, `O${String(position + 1).padStart(2, '0')}`);
++      const matches = transactions.filter((r) => r.receipt.transactionHash === sample.transactionHash);
++      assert.equal(matches.length, 1, 'Production receipt'); const tx = matches[0];
++      assert.equal(tx.input.label, sample.label); assert.equal(tx.receipt.blockNumber, sample.blockNumber);
++      const gas = Number(tx.receipt.gasUsed); assert.equal(gas, Number(sample.gasUsed), 'Production receipt gas');
++      (production[sample.operationId] ??= []).push(gas); receipts++;
++    }
++  }
++  const operations = Object.fromEntries(Object.entries(production).map(([id, values]) => {
++    const stats = gasStatistics(values); return [id, { samples: values, meanGas: stats.meanGas, sdGas: stats.sdGas }];
++  }));
++  assert.deepEqual(operations, summary.productionGas.operations, 'Production gas aggregates');
++  const comparators = {};
++  for (const kind of ['B1', 'B2']) {
++    const values = {}; const deploymentRuns = [];
++    for (let index = 0; index < 5; index++) {
++      const run = await verifyTrajectory(dir, kind, 18680 + index); sources.push(...run.sources);
++      deploymentRuns.push(run.boot.map((receipt) => Number(receipt.gasUsed)));
++      for (const step of run.input.steps.filter((s) => s.represented)) {
++        (values[step.opType] ??= []).push(step.gasUsed); receipts++;
++      }
++    }
++    const art = await json(resolve(dir, `build/${contractName(kind)}.artifact.json`));
++    comparators[kind] = { repetitions: 5, deploymentGas: deploymentRuns[0],
++      deploymentGasIdenticalAcrossRuns: deploymentRuns.every((run) => JSON.stringify(run) === JSON.stringify(deploymentRuns[0])),
++      deployedRuntimeBytes: (art.deployedBytecode.object.length - 2) / 2,
++      operations: Object.fromEntries(Object.entries(values).map(([type, gas]) => [type, gasStatistics(gas)])) };
++    assert.deepEqual(comparators[kind], summary.comparatorGas[kind], `${kind} gas aggregates`);
++  }
++  return { production: operations, comparators, table: gasTable(operations, comparators),
++    operationReceipts: receipts, freshTrajectories: 15, sources };
++}
++
++export async function verifyBaselines(dir) {
++  const summary = await json(resolve(dir, 'A-summary.json'));
++  const rowsPath = resolve(dir, 'A-scenario-rows.json'); const rows = await json(rowsPath);
++  assert.equal(summary.rowsSha256, digest(await readFile(rowsPath)), 'Scenario row checksum');
++  return { table8: await verifyClassifications(dir, rows, summary.scenarioComparison),
++    table9: await verifyRecoverability(dir, summary.recoverability), table10: await verifyGas(dir, summary) };
++}
+diff --git a/experiments/paper85-evaluation/scripts/v3/baselines.test.mjs b/experiments/paper85-evaluation/scripts/v3/baselines.test.mjs
+new file mode 100644
+index 0000000..6ada640
+--- /dev/null
++++ b/experiments/paper85-evaluation/scripts/v3/baselines.test.mjs
+@@ -0,0 +1,175 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { spawnSync } from 'node:child_process';
++import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
++import { tmpdir } from 'node:os';
++import { join, resolve } from 'node:path';
++import { gzipSync, gunzipSync } from 'node:zlib';
++import { ROOT } from './evidence.mjs';
++import { classifyScenario, gasStatistics, gasTable } from './audit-baselines.mjs';
++import { verifyClassifications, verifyRecoverability, verifyGas } from './verify-baselines.mjs';
++import { TABLE_COVERAGE, verifyTableDisplays } from './table-coverage.mjs';
++
++const parent = resolve(ROOT, 'docs/evidence/paper85/v3-revision');
++const candidates = [];
++for (const name of await readdir(parent)) {
++  if (!/^\d{4}-/.test(name)) continue;
++  const run = JSON.parse(await readFile(resolve(parent, name, 'run.json')));
++  if (run.commit === '347ea2636dce91b5381f72c084006de8aea971aa') candidates.push(resolve(parent, name));
++}
++const archive = process.env.PAPER85_TEST_EVIDENCE ?? (candidates.length === 1 ? candidates[0] : null);
++assert(archive, 'Set PAPER85_TEST_EVIDENCE to one sealed 347ea26 measurement run');
++const json = async (path) => JSON.parse(await readFile(path, 'utf8'));
++const summary = await json(resolve(archive, 'A-summary.json'));
++const rows = await json(resolve(archive, 'A-scenario-rows.json'));
++const claims = await json(resolve(ROOT, 'docs/manuscript/paper85-v3.1/paper85-section5-claims.json'));
++
++// Copy only baseline evidence into a disposable directory. Mutation fixtures
++// never open original archive files for writing or follow writable symlinks.
++async function fixture(t) {
++  const root = await mkdtemp(join(tmpdir(), 'paper85-baseline-'));
++  t.after(() => rm(root, { recursive: true, force: true }));
++  for (const folder of ['chains', 'trajectories', 'canonical', 'build']) {
++    await mkdir(resolve(root, folder), { recursive: true });
++    for (const name of await readdir(resolve(archive, folder))) {
++      const needed = folder === 'chains' ? /^(186\d\d-|canonical-1910)/.test(name)
++        : folder === 'canonical' ? name === '18660.json.gz'
++        : folder === 'build' ? /^B[12].*\.artifact\.json$/.test(name) : true;
++      if (needed) await cp(resolve(archive, folder, name), resolve(root, folder, name));
++    }
++  }
++  return root;
++}
++
++async function mutateTape(root, prefix, update) {
++  const names = (await readdir(resolve(root, 'chains'))).filter((name) => name.startsWith(prefix));
++  assert.equal(names.length, 1);
++  const path = resolve(root, 'chains', names[0]);
++  const tape = gunzipSync(await readFile(path)).toString().trim().split('\n').map(JSON.parse);
++  update(tape);
++  await writeFile(path, gzipSync(`${tape.map((entry) => JSON.stringify(entry)).join('\n')}\n`));
++}
++
++test('Table 8 derives every label, totals and predicate counts from preserved inputs', async () => {
++  const result = await verifyClassifications(archive, rows, summary.scenarioComparison);
++  assert.equal(result.rows, 84); assert.equal(result.executedRows, 50);
++  assert.equal(result.totals.B1.invalidBlocked, 3); assert.equal(result.totals.B2.invalidBlocked, 13);
++});
++
++test('Table 8 distinguishes successful zero-value writes from balance-changing writes', () => {
++  const zero = rows.find((row) => row.id === 'I18' && row.comparator === 'B1');
++  assert.equal(classifyScenario(zero, true), 'accepted_no_state_change');
++  const changed = structuredClone(zero); changed.after.bob = '1'; changed.ledgerChanged = true;
++  assert.equal(classifyScenario(changed, true), 'accepted_state_change');
++  changed.ledgerChanged = false;
++  assert.throws(() => classifyScenario(changed, true), /Ledger change flag/);
++});
++
++test('Table 8 rejects a fabricated observed label even with match=true', async () => {
++  const wrong = structuredClone(rows); wrong.find((row) => row.status === 'accepted').observed = 'blocked';
++  await assert.rejects(verifyClassifications(archive, wrong, summary.scenarioComparison), /classification/);
++});
++
++test('Table 8 cross-checks balance snapshots against fixture and action receipt logs', async () => {
++  const wrong = structuredClone(rows); wrong.find((row) => row.id === 'I06').after.alice = '1';
++  await assert.rejects(verifyClassifications(archive, wrong, summary.scenarioComparison), /after state/);
++});
++
++test('Table 8 rejects duplicate scenario IDs and false capability absence', async () => {
++  const wrong = structuredClone(rows); wrong[1] = wrong[0];
++  await assert.rejects(verifyClassifications(archive, wrong, summary.scenarioComparison), /Duplicate scenario/);
++  const unrepresented = structuredClone(rows.find((row) => row.observed === 'not_representable'));
++  unrepresented.status = 'accepted';
++  assert.throws(() => classifyScenario(unrepresented, false), /Unrepresentable operation/);
++});
++
++test('Table 8 scopes receipts to snapshot boundaries, rather than global transaction hashes', async (t) => {
++  const root = await fixture(t);
++  await mutateTape(root, '18645-', (tape) => {
++    const marker = tape.find((record) => record.kind === 'snapshot-revert'); marker.scenario = 'I24';
++  });
++  await assert.rejects(verifyClassifications(root, rows, summary.scenarioComparison), /Snapshot boundary/);
++});
++
++test('Table 9 replays both comparators and preserves unrecorded components', async () => {
++  const result = await verifyRecoverability(archive, summary.recoverability);
++  assert.equal(result.productionCheckpoints, 14);
++  for (const kind of ['B1', 'B2']) {
++    assert.equal(result.comparators[kind].components.balances.matched, 14);
++    assert.equal(result.comparators[kind].components.navHistory.recorded, false);
++    assert.equal(result.comparators[kind].components.completeProjection.matched, 0);
++  }
++  assert.equal(result.comparators.B2.components.completeProjectionValueEquality.matched, 2);
++});
++
++test('Table 9 rejects an incorrect component count', async () => {
++  const wrong = structuredClone(summary.recoverability); wrong.comparators.B2.components.balances.matched--;
++  await assert.rejects(verifyRecoverability(archive, wrong), /Table 9 recoverability/);
++});
++
++test('Table 9 binds trajectory raw logs to the originating receipts', async (t) => {
++  const root = await fixture(t); const path = resolve(root, 'trajectories/B2-18671.json');
++  const input = await json(path); input.rawLogs[0].data = `0x${'0'.repeat(64)}`;
++  await writeFile(path, JSON.stringify(input));
++  await assert.rejects(verifyRecoverability(root, summary.recoverability), /Raw logs \/ receipt logs/);
++});
++
++test('Table 10 reconstructs 130 operation receipts, statistics and displayed workflow ratios', async () => {
++  const result = await verifyGas(archive, summary);
++  assert.equal(result.operationReceipts, 130); assert.equal(result.freshTrajectories, 15);
++  assert.equal(result.table.subscription.displayedRatioToB2, '4.39');
++  assert.equal(result.table.redemption.displayedRatioToB2, '7.95');
++});
++
++test('gas statistics use sample SD and workflows sum rather than average request/effect', () => {
++  assert.deepEqual(gasStatistics([1, 2, 3]), { samples: 3, meanGas: 2, sdGas: 1, min: 1, max: 3 });
++  const result = gasTable(summary.productionGas.operations, summary.comparatorGas);
++  assert.equal(result.subscription.productionMeanGas, 147060 + 186774);
++  assert.equal(result.qualification.productionMeanGas, (50152 + 50164) / 2);
++  assert.throws(() => gasStatistics([]), /Invalid gas samples/);
++});
++
++test('Table 10 rejects a summary gas change without trusting the recalculated mean', async () => {
++  const wrong = structuredClone(summary); wrong.productionGas.operations.O01.meanGas++;
++  await assert.rejects(verifyGas(archive, wrong), /Production gas aggregates/);
++});
++
++test('Table 10 rejects a corrupted authoritative receipt', async (t) => {
++  const root = await fixture(t);
++  await mutateTape(root, 'canonical-19100', (tape) => {
++    const record = tape.find((row) => row.input?.label === 'whitelist Alice'); record.receipt.gasUsed = '1';
++  });
++  await assert.rejects(verifyGas(root, summary), /Production receipt gas/);
++});
++
++test('Table 10 validates operation categories, not just their gas totals', async (t) => {
++  const root = await fixture(t); const path = resolve(root, 'trajectories/B1-18680.json');
++  const input = await json(path); input.steps[4].opType = 'redemption';
++  await writeFile(path, JSON.stringify(input));
++  await assert.rejects(verifyGas(root, summary), /Canonical operation category/);
++});
++
++test('displayed Table 8–10 cells match recomputed values, and coverage discloses inherited evidence', async () => {
++  const tables = { table8: await verifyClassifications(archive, rows, summary.scenarioComparison),
++    table9: await verifyRecoverability(archive, summary.recoverability), table10: await verifyGas(archive, summary) };
++  assert.equal(verifyTableDisplays(claims, tables).matched, true);
++  for (const table of ['8', '9', '10']) {
++    const wrong = structuredClone(claims);
++    wrong.tables[table].displayedCells[1][table === '8' ? 3 : 1] = '999';
++    assert.throws(() => verifyTableDisplays(wrong, tables));
++  }
++  assert.equal(Object.keys(TABLE_COVERAGE).length, 11);
++  assert.equal(TABLE_COVERAGE[6].status, 'inherited-not-recomputed');
++  assert.equal(TABLE_COVERAGE[7].status, 'inherited-not-recomputed');
++  assert.match(TABLE_COVERAGE[8].limits, /Prototype column/);
++});
++
++test('complete offline verification succeeds when Git is unavailable', () => {
++  const result = spawnSync(process.execPath, [resolve(ROOT, 'experiments/paper85-evaluation/scripts/v3/verify-run.mjs'), archive],
++    { env: { ...process.env, PATH: '' }, encoding: 'utf8', maxBuffer: 4 * 1024 * 1024 });
++  assert.equal(result.status, 0, result.stderr);
++  const report = JSON.parse(result.stdout);
++  assert.equal(report.status, 'passed'); assert.equal(report.verifier.gitAvailable, false);
++  assert.equal(report.verifier.commit, null); assert.equal(report.verifier.governedInputsDirty, null);
++  assert.equal(report.measurement.sealedFilesVerified, 101);
++});
+diff --git a/experiments/paper85-evaluation/scripts/v3/table-coverage.mjs b/experiments/paper85-evaluation/scripts/v3/table-coverage.mjs
+new file mode 100644
+index 0000000..f2609e4
+--- /dev/null
++++ b/experiments/paper85-evaluation/scripts/v3/table-coverage.mjs
+@@ -0,0 +1,86 @@
++// Coverage describes implemented checks, not a claim that all evidence was rerun.
++import assert from 'node:assert/strict';
++
++export const TABLE_COVERAGE = Object.freeze({
++  3: { status: 'protocol-description', checked: 'EQ/protocol/source map only; no empirical values recomputed.' },
++  4: { status: 'partial-raw-check', checked: 'Canonical deployment receipt gas and comparator artifact runtime sizes.',
++    limits: 'Host/tool/network metadata and production artifact sizes are archived descriptions, not newly measured or fully checked here.' },
++  5: { status: 'source-description', checked: 'Implementation/model mapping is a source-review claim, not a numerical replay result.' },
++  6: { status: 'inherited-not-recomputed', checked: 'Uses frozen v2.1 functional/mechanism results.',
++    limits: 'This verifier does not rerun or reconstruct v2.1 scenario outcomes.' },
++  7: { status: 'inherited-not-recomputed', checked: 'Uses frozen v2.1 ablation results.',
++    limits: 'This verifier does not rerun or reconstruct v2.1 ablation outcomes.' },
++  8: { status: 'raw-recomputed-with-inherited-column',
++    checked: 'All 84 B1/B2 labels; 50 executed outcomes and snapshots bound to scenario-scoped receipt/rejection records; ' +
++      'totals and predicate counts; displayed B1/B2 cells.',
++    limits: 'Prototype column inherits Table 6. Unrepresentability uses the frozen action:null mapping; business equivalence of mapped actions still requires review.' },
++  9: { status: 'raw-recomputed', checked: 'Raw production and comparator logs, 14 checkpoints per mechanism, component counts, event counts/types, NAV references and displayed cells.',
++    limits: 'Fixture account positions and candidate issuance/subscription role correspondence are explicit assumptions. Missing components remain unrecorded.' },
++  10: { status: 'raw-recomputed', checked: '130 operation receipts from 15 fresh archived trajectories; sample gas, mean, sample SD, min/max, workflow sums/means, ratios and displayed numeric cells.',
++    limits: 'Archived executions are not repeated. Gas differences are not a measured decomposition of individual guard costs.' },
++  11: { status: 'raw-recomputed', checked: 'Nine scale runs: operation receipts, gas, storage maps, raw/index bytes, replay/projection/NAV results, saved timing samples and aggregate means/SD.',
++    limits: 'Timing measurements are not repeated; displayed rounding is not separately compared by this verifier.' },
++  12: { status: 'partial-raw-check', checked: '26 step outcomes compared with one post-review oracle; 23 accepted checkpoint projections replayed.',
++    limits: 'Rejected-step error labels are checked as archived observations, not re-simulated or independently decoded from the case rejection journal.' },
++  13: { status: 'raw-recomputed', checked: 'Complete Q1–Q7 answers and detail arrays, plus the next-NAV counterexample pricing audit.',
++    limits: 'Same-asOf corrections and dealing/suspension rules are disclosed case-policy assumptions. Expert validity and legal compliance are not established.' },
++});
++
++const numbers = (text) => (text.replaceAll(',', '').match(/\d+(?:\.\d+)?/g) ?? []).map(Number);
++const countCell = (counts) => ['blocked', 'accepted_state_change', 'accepted_no_state_change', 'not_representable']
++  .map((label) => counts[label] ?? 0).join(' / ');
++
++export function verifyTableDisplays(claims, { table8, table9, table10 }) {
++  const predicates = Object.entries(table8.byPredicate);
++  const rows8 = claims.tables['8'].displayedCells;
++  assert.equal(rows8.length, predicates.length + 3, 'Table 8 displayed rows');
++  predicates.forEach(([predicate, group], index) => {
++    const row = rows8[index + 1]; assert.equal(row[0], predicate);
++    assert.equal(row[1], String(group.scenarios));
++    assert.equal(row[3], countCell(group.B2)); assert.equal(row[4], countCell(group.B1));
++  });
++  assert.equal(rows8.at(-2)[1], String(predicates.reduce((sum, [, group]) => sum + group.scenarios, 0)));
++  for (const [kind, column] of [['B2', 3], ['B1', 4]]) {
++    const total = table8.totals[kind];
++    assert.deepEqual(numbers(rows8.at(-2)[column]), [total.invalidBlocked, total.invalidAcceptedStateChange,
++      total.invalidAcceptedNoStateChange, total.invalidNotRepresentable], 'Table 8 displayed totals');
++    assert.equal(rows8.at(-1)[column], String(total.validRepresented));
++  }
++  assert.equal(rows8.at(-1)[1], String(table8.totals.B1.validRepresented + table8.totals.B1.validNotRepresentable
++    + table8.totals.B1.validRejected));
++
++  const rows9 = claims.tables['9'].displayedCells;
++  assert.equal(rows9.length, 10, 'Table 9 displayed rows');
++  const keys = ['balances', 'eligibility', 'navHistory', 'operatingStatus', 'executionRoles', 'requestRecords'];
++  const componentCell = (kind, key) => {
++    const value = table9.comparators[kind].components[key];
++    return value.recorded ? `${value.matched}/${value.checkpoints}` : '未记录';
++  };
++  keys.forEach((key, index) => assert.deepEqual(rows9[index + 1].slice(1),
++    [`${table9.productionCheckpoints}/${table9.productionCheckpoints}`, componentCell('B2', key), componentCell('B1', key)],
++    `Table 9 displayed ${key}`));
++  const refs = table9.productionNavReferences;
++  assert.deepEqual(rows9[7].slice(1), [`${refs}/${refs}`, `未记录（0/${refs}）`, `未记录（0/${refs}）`]);
++  assert.deepEqual(rows9[8].slice(1), [`${table9.productionCheckpoints}/${table9.productionCheckpoints}`,
++    componentCell('B2', 'completeProjection'), componentCell('B1', 'completeProjection')]);
++  assert.deepEqual(numbers(rows9[9][1]), [table9.productionAcceptedEvents, Object.keys(table9.productionEventTypes).length]);
++  for (const [kind, column] of [['B2', 2], ['B1', 3]]) {
++    assert.deepEqual(numbers(rows9[9][column]), [table9.comparators[kind].eventsWritten, table9.comparators[kind].eventTypes.length]);
++  }
++
++  const rows10 = claims.tables['10'].displayedCells;
++  assert.equal(rows10.length, Object.keys(table10.table).length + 1, 'Table 10 displayed rows');
++  Object.entries(table10.table).forEach(([key, value], index) => {
++    const row = rows10[index + 1]; const expected = [value.productionMeanGas];
++    if (key === 'subscription') expected.push(table10.production.O04.meanGas, table10.production.O05.meanGas);
++    if (key === 'redemption') expected.push(table10.production.O08.meanGas, table10.production.O10.meanGas);
++    assert.deepEqual(numbers(row[1]), expected, `Table 10 displayed ${key}`);
++    for (const [column, gas] of [[2, value.B2MeanGas], [3, value.B1MeanGas]]) {
++      if (gas === null) assert.equal(row[column], '—');
++      else assert.deepEqual(numbers(row[column]), [gas]);
++    }
++    assert.equal(row[4], value.displayedRatioToB2 ?? '—', `Table 10 displayed ratio ${key}`);
++  });
++  return { tables: [8, 9, 10], matched: true, excluded: ['Table 8 inherited prototype column'],
++    scope: 'Displayed-cell JSON source map, not DOCX byte/layout validation' };
++}
+diff --git a/docs/evidence/paper85/v3-revision/review-tables-candidate/README.md b/docs/evidence/paper85/v3-revision/review-tables-candidate/README.md
+new file mode 100644
+index 0000000..47f3628
+--- /dev/null
++++ b/docs/evidence/paper85/v3-revision/review-tables-candidate/README.md
+@@ -0,0 +1,94 @@
++# Review candidate: case fixes and Table 8–10 verification
++
++Status: pending user approval; no commit, push or merge in this round.
++
++- Measurement code: `347ea2636dce91b5381f72c084006de8aea971aa`.
++- Verification base: `fa8e5b36d146dc948cb171d2e3b1bd042201263a`.
++- Verification code: uncommitted candidate, `verifier.commit: null`, governed inputs dirty.
++- Candidate source SHA-256: `a8fc7185749be72ea3fd546fa41f31cc85499e2da1ad5389aecaffac1d1e5a64`.
++- Source snapshot: 68 present files, plus the absent optional `apps/api/pnpm-lock.yaml` recorded as null.
++
++The [verification report](verification-candidate-a8fc7185749b.json) binds the exact candidate source
++bytes and the original sealed manifest. It is outside the sealed run. The
++[complete diff](changes.diff) includes code and documentation; generated
++verification/test output is linked separately. The [test log](regression-tests.tap)
++contains 71 passing tests, zero failures, zero skipped tests. Negative fixtures
++change temporary copies only. The original review package and formal report
++remain intact.
++
++## Repairs
++
++1. Fresh case summaries use `answers.Q1.total`, removing the undefined `q1`.
++   `caseOutcomeSummary` is exercised directly, including accepted/rejected counts.
++2. One existing post-review JSON oracle supplies all 26 step expectations.
++   Inline expectations are removed. Unknown, missing and duplicate steps fail.
++   The preserved field name `stepsMatchingPreregistration` remains for schema
++   compatibility; it does not turn post-review expectations into preregistration.
++3. Offline identity hashes files without Git tags/history. Git commit/status are
++   optional provenance; unavailable Git is disclosed as null/unknown. A complete
++   verification test passes with Git removed from PATH, and an identity test uses
++   a new temporary repository with no historical tags. New measurements retain
++   their clean-source/frozen-reference guard.
++4. Table 8 recomputes all 84 labels and every count/predicate group. Fifty
++   executed rows are joined to scenario-scoped receipts or EVM rejection records;
++   receipt logs reconstruct their before/after snapshots. The remaining 34
++   capability absences use null actions in the preserved mapping.
++5. Table 9 replays production/B1/B2 raw logs at 14 checkpoints each, recalculating
++   component recoverability, missing components, event counts/types and NAV refs.
++   Comparator logs are also checked against originating receipt logs.
++6. Table 10 recomputes 130 operation gas samples from 15 archived trajectories,
++   deployment consistency, means/sample SD, comparator min/max, workflow totals
++   and ratios. Chain identity uses port plus deployment name, not hash alone.
++7. Tables 8–10 displayed numeric cells in the preserved source-map JSON match
++   the reconstructed results (Table 8 prototype column excluded). Coverage and
++   limitations for all eleven Chapter 5 tables appear in `coverage.tables`.
++
++## Verified results
++
++| Check | Result |
++| --- | --- |
++| Original manifest-bound files | 101/101 hashes unchanged |
++| Original replay streams / events | 17 / 33,527 |
++| Original projections / valid NAV references | 199 / 4,114 |
++| Scale runs and case answers | 9 runs; complete Q1–Q7 match |
++| B1 / B2 invalid scenarios blocked | 3/24 / 13/24 |
++| Balance recovery | B1 and B2: 14/14 |
++| Complete projection recovery | B1 and B2: 0/14 |
++| Subscription / redemption gas ratio to B2 | 4.39 / 7.95 |
++| Baseline gas operation receipts | 130 from 15 trajectories |
++| Regression tests | 71 passed; 0 failed; 0 skipped |
++
++The 17-stream totals describe production/scale/case/next-NAV replay streams.
++Comparator trajectories checked for Tables 9–10 are separate. They do not add
++new study cases or measurements. All gas/latency values remain from the sealed
++measurement run; no new EVM experiments, benchmarks or compiler builds ran here.
++
++The [per-table coverage](../README.md#current-review-candidate-baseline-tables-and-verifier-portability)
++explicitly distinguishes raw reconstruction, inherited v2.1 evidence, source
++review and partial checks. In particular, Tables 6–7 are not recomputed; Table 8
++capability absence and business correspondence use declared fixture/mapping
++assumptions; Table 12 rejection labels remain archived observations. Displayed
++cell validation reads the JSON source map, not a new DOCX render.
++
++## Reproduce
++
++Install the same pinned Node/viem prerequisites described in the harness README.
++No RPC, Foundry executable, historical Git tag or compiler is needed for offline
++verification itself. The full regression suite uses local Git for disposable
++measurement-guard fixtures, but no historical repository refs.
++
++```sh
++node --test experiments/paper85-evaluation/scripts/*.test.mjs experiments/paper85-evaluation/scripts/v3/*.test.mjs
++node experiments/paper85-evaluation/scripts/v3/verify-run.mjs docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac /path/outside/sealed-run/verification-review.json
++```
++
++The output path must be new and outside the sealed directory. The source digest
++above identifies this review candidate; an approved formal commit report must
++be produced separately after approval. No new commit number is claimed here.
++
++The [integrity record](integrity.json) binds this package, the reviewed diff,
++current code snapshot and protected artifacts. Original preregistration and
++amendment, frozen production and baseline contracts, the manuscript and source
++map, and all 101 sealed files are unchanged. `delivery-manifest.json` only
++refreshes the changed documentation checksum and links this review package;
++its previous formal verification commit/report remains historical.

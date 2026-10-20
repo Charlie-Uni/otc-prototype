@@ -4,7 +4,11 @@ Run: [2026-10-20T01-15-00.607Z-f5edfdac](2026-10-20T01-15-00.607Z-f5edfdac/manif
 
 Measurement code: `347ea2636dce91b5381f72c084006de8aea971aa` (generated the sealed run)
 
-Verification code: `f0127fa538105974b7721c2289dca0ae480eb249` (approved repairs)
+Previous approved verification code: `f0127fa538105974b7721c2289dca0ae480eb249`.
+
+The [Table 8–10 review candidate](review-tables-candidate/README.md) adds raw-data
+baseline checks and table-level coverage. It is pending approval, has no new
+commit yet, and preserves the earlier formal report below.
 
 The [formal verification report](verification-f0127fa538105974b7721c2289dca0ae480eb249.json)
 records that exact code commit, clean governed inputs, all source hashes and
@@ -101,9 +105,10 @@ nine scale runs pass. Case Q1–Q7, including the complete Q2 affected set and
 Q3/Q4/Q5/Q7 details, reproduce the archived answers.
 
 The original `verification.json` and all 101 manifest-bound files remain
-unchanged. No gas or latency measurements were repeated. Baseline rows remain
-summary-consistency checks, not an independent re-execution of comparator
-transitions. The formal report is archived in a separate documentation commit;
+unchanged. No gas or latency measurements were repeated. In that historical
+report, baseline rows were summary-consistency checks. The current review
+candidate below adds reconstruction from preserved records; it still does not
+re-execute EVM transitions. The formal report is archived in a separate documentation commit;
 its `verifier.commit` identifies the code commit used for the check.
 
 The machine-readable expectation file is explicitly a post-review regression
@@ -152,3 +157,40 @@ python tools/audit-paper85-followup.py docs/evidence/paper85/v3-revision/2026-10
   non-preregistered and describe its order/NAV1/NAV2/acceptance design. The C26
   rejection is reported as a gap in historical correction support under the
   case's CSSF 24/856 grounding, not as an implementation benefit.
+
+
+## Current review candidate: baseline tables and verifier portability
+
+This follow-up fixes the undefined `q1` reference in fresh case-summary creation,
+removes duplicate inline step expectations, and makes historical Git references
+unnecessary for offline verification. New measurement runs still require clean
+source and frozen-reference checks. Both changes are verified separately.
+
+Tables 8–10 now have raw-record reconstruction and displayed source-map checks:
+84 classifications (50 executed, 34 capability absences), 14 production and
+14 checkpoints per comparator, and 130 operation receipts across 15 fresh
+archived gas trajectories. Subscription/redemption ratios remain 4.39×/7.95×.
+No gas or latency measurement has been repeated in this follow-up.
+
+The machine-readable report includes `coverage.tables` and the recomputed values
+under `coverage.baselines`, with the precise file paths used for every table.
+The displayed-cell check validates the preserved JSON source map, not DOCX
+rendering. The manuscript and source map have not been edited in this round.
+
+| Table | Current verification coverage | Limit |
+| --- | --- | --- |
+| 3 | EQ/protocol/source description | No empirical quantity to recompute |
+| 4 | Canonical deployment receipt gas and comparator runtime sizes | Environment metadata/production sizes not fully rechecked |
+| 5 | Source/model mapping description | Requires source review |
+| 6–7 | Inherited frozen v2.1 results | Not reconstructed or rerun by this verifier |
+| 8 | B1/B2 labels, snapshots, records, counts, predicate groups and displayed cells | Prototype column inherited; capability absence from frozen mapping; mapped business equivalence not proven |
+| 9 | Raw-log replay, component matches, event/NAV counts and displayed cells | Declared genesis/fixture and limited candidate-role correspondence |
+| 10 | Receipt gas, means/sample SD, workflow arithmetic, ratios and displayed cells | No new execution or attribution of individual guard costs |
+| 11 | Nine runs: gas/storage/log/index/replay/timing-sample aggregates | Saved timing samples, no new benchmark; rounding not separately checked |
+| 12 | Complete step oracle and 23 accepted checkpoint projections | Rejected-step error labels remain archived observations |
+| 13 | Complete Q1–Q7 answers and next-NAV pricing probe | Case-policy assumptions, not independent regulatory or expert validation |
+
+The original preregistration, amendment, frozen production and baseline
+contracts, and 101 manifest-bound run files remain unchanged. Candidate reports
+and tests are stored outside the sealed run. The candidate report records a
+source digest and dirty review state; approval and a new commit are still pending.

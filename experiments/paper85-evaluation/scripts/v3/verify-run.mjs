@@ -7,13 +7,16 @@ import { gunzipSync } from 'node:zlib';
 import { decodeLogs, mean, sd, rawLogBytes } from './common.mjs';
 import { digest, ROOT, save, verificationIdentity } from './evidence.mjs';
 import { auditPricing } from './audit-pricing.mjs';
-import { actorNames, auditCase, assertCaseAnswers, assertCaseExpectations } from './audit-case.mjs';
+import { actorNames, auditCase, assertCaseAnswers, assertCaseExpectations, caseOutcomeSummary } from './audit-case.mjs';
+import { verifyBaselines } from './verify-baselines.mjs';
+import { TABLE_COVERAGE, verifyTableDisplays } from './table-coverage.mjs';
 import { applyReplayEvent, createReplayState, finalizeNavReferences, normalizedProjection } from '../replay-engine.mjs';
 
 const json = async (p) => JSON.parse(await readFile(p, 'utf8'));
 const zipped = async (p) => JSON.parse(gunzipSync(await readFile(p)));
 const plain = (v) => JSON.parse(JSON.stringify(v, (_, x) => typeof x === 'bigint' ? x.toString() : x));
 const expectationsPath = resolve(ROOT, 'experiments/paper85-evaluation/spec-v3/case-expectations.postreview.json');
+const claimsPath = resolve(ROOT, 'docs/manuscript/paper85-v3.1/paper85-section5-claims.json');
 
 export function verifyCase(input, summary, expectations) {
   const audit = auditCase({ genesis: input.genesis, events: decodeLogs(input.rawLogs, input.contracts),
@@ -27,9 +30,8 @@ export function verifyCase(input, summary, expectations) {
   assert.equal(summary.lifecycleEvents, input.rawLogs.length);
   assert.deepEqual(summary.originalPreregisteredQ1Proxy,
     { matching: audit.answers.Q1.originalProxyMatching, total: audit.answers.Q1.total });
-  const steps = Object.fromEntries(summary.steps.map((step) => [step.id, step.observed]));
-  assert.equal(Object.keys(steps).length, summary.steps.length, 'Duplicate case step');
-  assert.deepEqual(steps, expectations.steps, 'Complete case step outcomes');
+  const outcomes = caseOutcomeSummary(summary.steps, audit.answers, expectations);
+  for (const [key, value] of Object.entries(outcomes)) assert.deepEqual(summary[key], value, `Case summary ${key}`);
   return { questions: Object.keys(audit.answers), corrections: audit.corrections,
     affectedBusinesses: audit.answers.Q2.affected.length, answersMatchArchive: true, expectationsMatch: true };
 }
@@ -45,6 +47,7 @@ async function filesBelow(dir) {
 
 export async function verifyRun(dir, { sealed = true } = {}) {
   const verifier = await verificationIdentity();
+  const claimsBytes = await readFile(claimsPath);
   const measurement = await json(resolve(dir, 'run.json'));
   const allFiles = await filesBelow(dir);
   if (sealed) {
@@ -118,10 +121,8 @@ export async function verifyRun(dir, { sealed = true } = {}) {
     }
     streams++; events += decoded.length; references += finalized.length;
   }
-  const A = await json(resolve(dir, 'A-scenario-rows.json'));
-  assert.equal(A.length, 84); assert(A.every((r) => r.match));
-  assert.equal(A.filter((r) => r.comparator === 'B1' && r.class === 'invalid' && r.observed === 'blocked').length, 3);
-  assert.equal(A.filter((r) => r.comparator === 'B2' && r.class === 'invalid' && r.observed === 'blocked').length, 13);
+  const baselines = await verifyBaselines(dir);
+  const displayedTables = verifyTableDisplays(JSON.parse(claimsBytes), baselines);
   const B = await json(resolve(dir, 'B-scale-summary.json'));
   for (const aggregate of B.aggregate) {
     const runs = await Promise.all(B.runFiles.filter((p) => p.startsWith(`B-scale-run-${aggregate.target}-`)).map((p) => json(resolve(dir, p))));
@@ -135,17 +136,20 @@ export async function verifyRun(dir, { sealed = true } = {}) {
   }
   assert(caseCoverage, 'Missing case evidence');
   assert.equal(scaleRuns, B.runFiles.length, 'Missing scale evidence');
+  assert.equal(digest(await readFile(claimsPath)), digest(claimsBytes), 'Displayed-cell source map changed');
   assert.deepEqual(await verificationIdentity(), verifier, 'Verifier sources changed during verification');
-  return { schema: 2, status: 'passed', replayStreams: streams, replayedEvents: events,
-    checkedProjections: checkpoints, validNavReferences: references, baselineRows: A.length,
+  return { schema: 3, status: 'passed', replayStreams: streams, replayedEvents: events,
+    checkedProjections: checkpoints, validNavReferences: references, baselineRows: baselines.table8.rows,
     measurement: { commit: measurement.commit,
       manifestSha256: sealed ? digest(await readFile(resolve(dir, 'manifest.json'))) : null,
       sealedFilesVerified: sealed ? allFiles.length - 1 : null },
     verifier: { ...verifier, node: process.version, expectationsSha256: digest(await readFile(expectationsPath)) },
-    coverage: { case: caseCoverage, scaleRuns, nextNavProbe,
+    coverage: { case: caseCoverage, scaleRuns, nextNavProbe, tables: TABLE_COVERAGE,
+      displayedTables: { ...displayedTables, source: relative(ROOT, claimsPath), sourceSha256: digest(claimsBytes) },
       scale: ['raw-log replay', 'checkpoint projections', 'NAV references', 'receipt gas totals and unit costs',
         'storage maps', 'raw log/index contents', 'recorded timing samples and statistics'],
-      baseline: 'Archived classification counts checked; comparator transitions not independently re-executed',
+      baselines,
+      baseline: 'Classifications from execution records and balance snapshots; recoverability from raw-log replay; gas from chain-scoped receipts. No EVM re-execution.',
       notReexecuted: ['EVM experiments', 'timing measurements', 'compiler builds', 'revoked-holder probe'] } };
 }
 

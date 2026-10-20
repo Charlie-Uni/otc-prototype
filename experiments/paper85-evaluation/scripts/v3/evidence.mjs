@@ -1,8 +1,8 @@
 // Run isolation, source/build binding and append-only transaction evidence.
 // This module has no dependency on the experiment runners or replay engine.
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
-import { appendFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { appendFile, mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import { cpus, platform, release, totalmem } from 'node:os';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -47,15 +47,38 @@ export async function sourceIdentity({ root = ROOT,
   return { commit: git(root, 'rev-parse', 'HEAD'), governedInputsDirty: false, files };
 }
 
-// Historical evidence can be verified by a review candidate before approval to
-// commit. Record exact bytes and disclose dirtiness; never call it a clean run.
-export async function verificationIdentity() {
-  const files = await sourceFiles(ROOT);
-  checkFrozenInputs(ROOT, files, 'chapter3-artifact-v1.4.0', '4ce5d24');
-  const dirty = Boolean(git(ROOT, 'status', '--porcelain', '--untracked-files=all', '--', ...GOVERNED_INPUTS));
-  const baseCommit = git(ROOT, 'rev-parse', 'HEAD');
-  return { commit: dirty ? null : baseCommit, baseCommit, governedInputsDirty: dirty,
-    sourceSha256: digest(encode(files)), files };
+// Offline verification binds filesystem bytes without requiring Git history or
+// frozen tags. Git metadata is optional provenance, never a prerequisite. New
+// measurements still use sourceIdentity() and its strict frozen-input checks.
+export async function verificationIdentity({ root = ROOT } = {}) {
+  const files = {};
+  async function visit(path) {
+    const entries = await readdir(resolve(root, path), { withFileTypes: true });
+    for (const entry of entries) {
+      const child = `${path}/${entry.name}`;
+      if (entry.isDirectory()) await visit(child);
+      else files[child] = digest(await readFile(resolve(root, child)));
+    }
+  }
+  for (const path of GOVERNED_INPUTS) {
+    const info = await stat(resolve(root, path)).catch((error) => {
+      if (error.code !== 'ENOENT') throw error;
+      return null;
+    });
+    if (!info) files[path] = null; // Record absent optional manifests as well.
+    else if (info.isDirectory()) await visit(path);
+    else files[path] = digest(await readFile(resolve(root, path)));
+  }
+  const sortedFiles = Object.fromEntries(Object.entries(files).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0));
+  const head = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
+  const status = spawnSync('git', ['status', '--porcelain', '--untracked-files=all', '--', ...GOVERNED_INPUTS],
+    { cwd: root, encoding: 'utf8' });
+  const gitAvailable = head.status === 0 && status.status === 0;
+  const baseCommit = gitAvailable ? head.stdout.trim() : null;
+  const dirty = gitAvailable ? Boolean(status.stdout.trim()) : null;
+  return { commit: gitAvailable && !dirty ? baseCommit : null, baseCommit,
+    gitAvailable, governedInputsDirty: dirty,
+    sourceSha256: digest(encode(sortedFiles)), files: sortedFiles };
 }
 
 export async function save(path, value) {

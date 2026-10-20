@@ -1,0 +1,365 @@
+TAP version 13
+# Subtest: aggregates transaction and multi-transaction lifecycle gas without mixing units
+ok 1 - aggregates transaction and multi-transaction lifecycle gas without mixing units
+  ---
+  duration_ms: 498.59375
+  ...
+# Subtest: rejects a run with a missing operation checkpoint
+ok 2 - rejects a run with a missing operation checkpoint
+  ---
+  duration_ms: 3.344709
+  ...
+# Subtest: rejects a changed transcription of sealed state assertion prose
+ok 3 - rejects a changed transcription of sealed state assertion prose
+  ---
+  duration_ms: 1456.047167
+  ...
+# Subtest: rejects an assertion specification with a missing targeted scenario
+ok 4 - rejects an assertion specification with a missing targeted scenario
+  ---
+  duration_ms: 496.035375
+  ...
+# Subtest: rejects type-invalid state comparisons before Solidity generation
+ok 5 - rejects type-invalid state comparisons before Solidity generation
+  ---
+  duration_ms: 506.784042
+  ...
+# Subtest: reconstructs mint, transfer, and burn from canonical Transfer events
+ok 6 - reconstructs mint, transfer, and burn from canonical Transfer events
+  ---
+  duration_ms: 164.561541
+  ...
+# Subtest: checks NAV references against the latest preceding replayed NAV event
+ok 7 - checks NAV references against the latest preceding replayed NAV event
+  ---
+  duration_ms: 9.822458
+  ...
+# Subtest: marks a stale NAV reference invalid after a later NAV version is replayed
+ok 8 - marks a stale NAV reference invalid after a later NAV version is replayed
+  ---
+  duration_ms: 59.095417
+  ...
+# Subtest: retains a historical NAV reference after later versions are appended
+ok 9 - retains a historical NAV reference after later versions are appended
+  ---
+  duration_ms: 179.031416
+  ...
+# Subtest: fails closed on an event outside the declared replay vocabulary
+ok 10 - fails closed on an event outside the declared replay vocabulary
+  ---
+  duration_ms: 236.817709
+  ...
+# Subtest: preserves explicit false roles from the frozen genesis configuration
+ok 11 - preserves explicit false roles from the frozen genesis configuration
+  ---
+  duration_ms: 3.16175
+  ...
+# Subtest: projection comparison detects a modified reconstructed balance
+ok 12 - projection comparison detects a modified reconstructed balance
+  ---
+  duration_ms: 3.800083
+  ...
+# Subtest: accepts a run summary conforming to the sealed schema
+ok 13 - accepts a run summary conforming to the sealed schema
+  ---
+  duration_ms: 3.302
+  ...
+# Subtest: rejects unregistered evidence fields at the summary root
+ok 14 - rejects unregistered evidence fields at the summary root
+  ---
+  duration_ms: 6.055417
+  ...
+# Subtest: rejects a different source artifact anchor
+ok 15 - rejects a different source artifact anchor
+  ---
+  duration_ms: 0.796791
+  ...
+# Subtest: all seven case queries reproduce the sealed answers and post-review expectations
+ok 16 - all seven case queries reproduce the sealed answers and post-review expectations
+  ---
+  duration_ms: 216.5315
+  ...
+# Subtest: runner summary uses Q1 from computed answers and the single step oracle
+ok 17 - runner summary uses Q1 from computed answers and the single step oracle
+  ---
+  duration_ms: 13.865
+  ...
+# Subtest: Q2 uses the last of multiple same-date corrections
+ok 18 - Q2 uses the last of multiple same-date corrections
+  ---
+  duration_ms: 2.493292
+  ...
+# Subtest: Q2 derives an empty affected set when no NAV is corrected
+ok 19 - Q2 derives an empty affected set when no NAV is corrected
+  ---
+  duration_ms: 6.067333
+  ...
+# Subtest: Q3 checks eligibility at each movement, rather than using final eligibility
+ok 20 - Q3 checks eligibility at each movement, rather than using final eligibility
+  ---
+  duration_ms: 3.170834
+  ...
+# Subtest: Q4 counts only events inside actual pause/resume boundaries
+ok 21 - Q4 counts only events inside actual pause/resume boundaries
+  ---
+  duration_ms: 2.599417
+  ...
+# Subtest: Q5 detects a missing evidence payload
+ok 22 - Q5 detects a missing evidence payload
+  ---
+  duration_ms: 5.13925
+  ...
+# Subtest: Q6 recomputes projection matches against independently supplied checkpoints
+ok 23 - Q6 recomputes projection matches against independently supplied checkpoints
+  ---
+  duration_ms: 5.720583
+  ...
+# Subtest: Q7 derives the delay reason and exact duration from events
+ok 24 - Q7 derives the delay reason and exact duration from events
+  ---
+  duration_ms: 8.007959
+  ...
+# Subtest: verifier rejects an incorrect Q2 answer even when other summaries agree
+ok 25 - verifier rejects an incorrect Q2 answer even when other summaries agree
+  ---
+  duration_ms: 24.410667
+  ...
+# Subtest: verifier rejects an incorrect Q3 answer even when other summaries agree
+ok 26 - verifier rejects an incorrect Q3 answer even when other summaries agree
+  ---
+  duration_ms: 21.338209
+  ...
+# Subtest: verifier rejects an incorrect Q4 answer even when other summaries agree
+ok 27 - verifier rejects an incorrect Q4 answer even when other summaries agree
+  ---
+  duration_ms: 14.088833
+  ...
+# Subtest: verifier rejects an incorrect Q5 answer even when other summaries agree
+ok 28 - verifier rejects an incorrect Q5 answer even when other summaries agree
+  ---
+  duration_ms: 16.624375
+  ...
+# Subtest: verifier rejects an incorrect Q6 answer even when other summaries agree
+ok 29 - verifier rejects an incorrect Q6 answer even when other summaries agree
+  ---
+  duration_ms: 21.25425
+  ...
+# Subtest: verifier rejects an incorrect Q7 answer even when other summaries agree
+ok 30 - verifier rejects an incorrect Q7 answer even when other summaries agree
+  ---
+  duration_ms: 29.775125
+  ...
+# Subtest: machine-readable expectations are enforced independently of archived answers
+ok 31 - machine-readable expectations are enforced independently of archived answers
+  ---
+  duration_ms: 4.333917
+  ...
+# Subtest: verification CLI refuses to place a report inside its input directory
+ok 32 - verification CLI refuses to place a report inside its input directory
+  ---
+  duration_ms: 1659.538708
+  ...
+# Subtest: Table 8 derives every label, totals and predicate counts from preserved inputs
+ok 33 - Table 8 derives every label, totals and predicate counts from preserved inputs
+  ---
+  duration_ms: 254.11275
+  ...
+# Subtest: Table 8 distinguishes successful zero-value writes from balance-changing writes
+ok 34 - Table 8 distinguishes successful zero-value writes from balance-changing writes
+  ---
+  duration_ms: 2.517959
+  ...
+# Subtest: Table 8 rejects a fabricated observed label even with match=true
+ok 35 - Table 8 rejects a fabricated observed label even with match=true
+  ---
+  duration_ms: 19.837125
+  ...
+# Subtest: Table 8 cross-checks balance snapshots against fixture and action receipt logs
+ok 36 - Table 8 cross-checks balance snapshots against fixture and action receipt logs
+  ---
+  duration_ms: 13.072709
+  ...
+# Subtest: Table 8 rejects duplicate scenario IDs and false capability absence
+ok 37 - Table 8 rejects duplicate scenario IDs and false capability absence
+  ---
+  duration_ms: 25.196625
+  ...
+# Subtest: Table 8 scopes receipts to snapshot boundaries, rather than global transaction hashes
+ok 38 - Table 8 scopes receipts to snapshot boundaries, rather than global transaction hashes
+  ---
+  duration_ms: 1331.454333
+  ...
+# Subtest: Table 9 replays both comparators and preserves unrecorded components
+ok 39 - Table 9 replays both comparators and preserves unrecorded components
+  ---
+  duration_ms: 194.040167
+  ...
+# Subtest: Table 9 rejects an incorrect component count
+ok 40 - Table 9 rejects an incorrect component count
+  ---
+  duration_ms: 120.052709
+  ...
+# Subtest: Table 9 binds trajectory raw logs to the originating receipts
+ok 41 - Table 9 binds trajectory raw logs to the originating receipts
+  ---
+  duration_ms: 602.539334
+  ...
+# Subtest: Table 10 reconstructs 130 operation receipts, statistics and displayed workflow ratios
+ok 42 - Table 10 reconstructs 130 operation receipts, statistics and displayed workflow ratios
+  ---
+  duration_ms: 224.561042
+  ...
+# Subtest: gas statistics use sample SD and workflows sum rather than average request/effect
+ok 43 - gas statistics use sample SD and workflows sum rather than average request/effect
+  ---
+  duration_ms: 2.125084
+  ...
+# Subtest: Table 10 rejects a summary gas change without trusting the recalculated mean
+ok 44 - Table 10 rejects a summary gas change without trusting the recalculated mean
+  ---
+  duration_ms: 29.785208
+  ...
+# Subtest: Table 10 rejects a corrupted authoritative receipt
+ok 45 - Table 10 rejects a corrupted authoritative receipt
+  ---
+  duration_ms: 401.550333
+  ...
+# Subtest: Table 10 validates operation categories, not just their gas totals
+ok 46 - Table 10 validates operation categories, not just their gas totals
+  ---
+  duration_ms: 539.126334
+  ...
+# Subtest: displayed Table 8–10 cells match recomputed values, and coverage discloses inherited evidence
+ok 47 - displayed Table 8–10 cells match recomputed values, and coverage discloses inherited evidence
+  ---
+  duration_ms: 442.281208
+  ...
+# Subtest: complete offline verification succeeds when Git is unavailable
+ok 48 - complete offline verification succeeds when Git is unavailable
+  ---
+  duration_ms: 28485.902416
+  ...
+# Subtest: next NAV audit rejects skipping a NAV even when the original proxy passes
+ok 49 - next NAV audit rejects skipping a NAV even when the original proxy passes
+  ---
+  duration_ms: 17.276542
+  ...
+# Subtest: approval/computation time, historical corrections and explicit suspension policy are distinct
+ok 50 - approval/computation time, historical corrections and explicit suspension policy are distinct
+  ---
+  duration_ms: 4.86125
+  ...
+# Subtest: corrections are derived by date and repeated corrections resolve to the last version
+ok 51 - corrections are derived by date and repeated corrections resolve to the last version
+  ---
+  duration_ms: 2.832917
+  ...
+# Subtest: transport, timeout and non-revert RPC failures abort instead of becoming blocked observations
+ok 52 - transport, timeout and non-revert RPC failures abort instead of becoming blocked observations
+  ---
+  duration_ms: 31.128917
+  ...
+# Subtest: positive EVM execution-reverted signal counts only as a simulated rejection
+ok 53 - positive EVM execution-reverted signal counts only as a simulated rejection
+  ---
+  duration_ms: 3.697
+  ...
+# Subtest: missing evidence path fails closed, including simulated rejection records
+ok 54 - missing evidence path fails closed, including simulated rejection records
+  ---
+  duration_ms: 3.931792
+  ...
+# Subtest: evidence records append to an explicit temporary journal
+ok 55 - evidence records append to an explicit temporary journal
+  ---
+  duration_ms: 112.1745
+  ...
+# Subtest: build binding detects stale creation/runtime bytecode and runtime tampering
+ok 56 - build binding detects stale creation/runtime bytecode and runtime tampering
+  ---
+  duration_ms: 2.294667
+  ...
+# Subtest: governed input guard uses a temporary Git repository with real reference checks
+ok 57 - governed input guard uses a temporary Git repository with real reference checks
+  ---
+  duration_ms: 7358.613583
+  ...
+# Subtest: preregistered manifest has 18 valid and 24 exact-rejection scenarios
+ok 58 - preregistered manifest has 18 valid and 24 exact-rejection scenarios
+  ---
+  duration_ms: 70.682334
+  ...
+# Subtest: duplicate scenario ids invalidate preregistration
+ok 59 - duplicate scenario ids invalidate preregistration
+  ---
+  duration_ms: 21.814291
+  ...
+# Subtest: invalid baseline must assert a specific error code
+ok 60 - invalid baseline must assert a specific error code
+  ---
+  duration_ms: 9.823334
+  ...
+# Subtest: ablation variant must match the targeted predicate
+ok 61 - ablation variant must match the targeted predicate
+  ---
+  duration_ms: 34.505041
+  ...
+# Subtest: a residual rejection must preregister its exact error
+ok 62 - a residual rejection must preregister its exact error
+  ---
+  duration_ms: 16.610334
+  ...
+# Subtest: runtime field actual cannot contaminate the preregistered manifest
+ok 63 - runtime field actual cannot contaminate the preregistered manifest
+  ---
+  duration_ms: 8.373667
+  ...
+# Subtest: runtime field verdict cannot contaminate the preregistered manifest
+ok 64 - runtime field verdict cannot contaminate the preregistered manifest
+  ---
+  duration_ms: 13.415334
+  ...
+# Subtest: runtime field result cannot contaminate the preregistered manifest
+ok 65 - runtime field result cannot contaminate the preregistered manifest
+  ---
+  duration_ms: 26.944042
+  ...
+# Subtest: error kind is restricted to the preregistered enum
+ok 66 - error kind is restricted to the preregistered enum
+  ---
+  duration_ms: 30.69575
+  ...
+# Subtest: fixture times must be strictly increasing across inheritance
+ok 67 - fixture times must be strictly increasing across inheritance
+  ---
+  duration_ms: 23.14625
+  ...
+# Subtest: structured calls reject undeclared arguments
+ok 68 - structured calls reject undeclared arguments
+  ---
+  duration_ms: 9.407709
+  ...
+# Subtest: constant references must resolve inside the manifest
+ok 69 - constant references must resolve inside the manifest
+  ---
+  duration_ms: 132.144834
+  ...
+# Subtest: structured actor arguments must resolve to fixed actor labels
+ok 70 - structured actor arguments must resolve to fixed actor labels
+  ---
+  duration_ms: 50.488291
+  ...
+# Subtest: I05 preregisters unauthorized role mutation for M1
+ok 71 - I05 preregisters unauthorized role mutation for M1
+  ---
+  duration_ms: 28.044042
+  ...
+1..71
+# tests 71
+# suites 0
+# pass 71
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 36355.207083

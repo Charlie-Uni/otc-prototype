@@ -5,7 +5,7 @@
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { save } from './evidence.mjs';
-import { actorNames, auditCase, assertCaseExpectations } from './audit-case.mjs';
+import { actorNames, auditCase, caseStepExpectation, caseOutcomeSummary } from './audit-case.mjs';
 import {
   E18, EVAL_DIR, GENESIS_TIMESTAMP, RESULTS_DIR, ZERO_ROLE,
   account, artifact, decodeLogs, deploy, gitHead, invariant, lower, mustWrite, readChainProjection,
@@ -54,7 +54,8 @@ async function main() {
 
     let supply = 0n;
     const totalSupply = async () => env.client.readContract({ address: fund.address, abi: fund.abi, functionName: 'totalSupply' });
-    const step = async (id, label, rule, who, contract, fn, a, time, expect) => {
+    const step = async (id, label, rule, who, contract, fn, a, time) => {
+      const expect = caseStepExpectation(expectations, id);
       const result = await tryWrite({ client: env.client, wallet: w(P[who]), contract, functionName: fn, args: a, at: time });
       const entry = { id, label, rule, actor: who, call: fn, time, expected: expect, observed: result.status === 'accepted' ? 'accepted' : `rejected:${result.reason}` };
       entry.match = entry.observed === expect;
@@ -63,50 +64,50 @@ async function main() {
       return result;
     };
     const fs = fund; const nr = nav;
-    const navPost = async (id, label, rule, target, asOf, time, shares, expect = 'accepted') => {
+    const navPost = async (id, label, rule, target, asOf, time, shares) => {
       const snap = shares ?? (supply = await totalSupply());
       const netAssetValue = (snap * target) / E18;
-      return step(id, label, rule, 'navAgent', nr, 'postNAV', [FUND_ID, netAssetValue, snap, BigInt(asOf), h(`${id}:valuation-pack`)], time, expect);
+      return step(id, label, rule, 'navAgent', nr, 'postNAV', [FUND_ID, netAssetValue, snap, BigInt(asOf), h(`${id}:valuation-pack`)], time);
     };
 
     // Onboarding (FATF R.10)
-    await step('C01', 'CDD completed, investor A admitted', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.A.address, true, h('CDD-A-initial')], at(0, 9), 'accepted');
-    await step('C02', 'CDD completed, investor B admitted', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.B.address, true, h('CDD-B-initial')], at(0, 9, 5), 'accepted');
-    await step('C03', 'CDD completed, investor C admitted', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.C.address, true, h('CDD-C-initial')], at(0, 9, 10), 'accepted');
+    await step('C01', 'CDD completed, investor A admitted', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.A.address, true, h('CDD-A-initial')], at(0, 9));
+    await step('C02', 'CDD completed, investor B admitted', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.B.address, true, h('CDD-B-initial')], at(0, 9, 5));
+    await step('C03', 'CDD completed, investor C admitted', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.C.address, true, h('CDD-C-initial')], at(0, 9, 10));
     // Initial offer priced at the issue NAV computed after the order (Rule 22c-1)
-    await step('C04', 'A subscribes 1,000,000 in the initial offer', 'Rule 22c-1(a)', 'A', fs, 'requestSubscription', [units(1_000_000)], at(0, 10), 'accepted');
-    await step('C05', 'Issue NAV 1.00 approved (asOf D0 17:00)', 'Rule 22c-1(b)', 'navAgent', nr, 'postInitialNAV', [FUND_ID, E18, BigInt(at(0, 17)), h('C05:valuation-pack')], at(0, 17), 'accepted');
-    await step('C06', 'Registrar accepts A at the issue NAV', 'Rule 22c-1(a)', 'registrar', fs, 'acceptSubscription', [0n], at(0, 17, 30), 'accepted');
+    await step('C04', 'A subscribes 1,000,000 in the initial offer', 'Rule 22c-1(a)', 'A', fs, 'requestSubscription', [units(1_000_000)], at(0, 10));
+    await step('C05', 'Issue NAV 1.00 approved (asOf D0 17:00)', 'Rule 22c-1(b)', 'navAgent', nr, 'postInitialNAV', [FUND_ID, E18, BigInt(at(0, 17)), h('C05:valuation-pack')], at(0, 17));
+    await step('C06', 'Registrar accepts A at the issue NAV', 'Rule 22c-1(a)', 'registrar', fs, 'acceptSubscription', [0n], at(0, 17, 30));
     // Forward-priced subscription
-    await step('C07', 'B subscribes 500,000 (received D1 11:00)', 'Rule 22c-1(a)', 'B', fs, 'requestSubscription', [units(500_000)], at(1, 11), 'accepted');
+    await step('C07', 'B subscribes 500,000 (received D1 11:00)', 'Rule 22c-1(a)', 'B', fs, 'requestSubscription', [units(500_000)], at(1, 11));
     await navPost('C08', 'NAV D1 = 1.01 approved', 'Rule 22c-1(b)', 1_010_000_000_000_000_000n, at(1, 17), at(1, 17));
-    await step('C09', 'Registrar accepts B at NAV D1', 'Rule 22c-1(a)', 'registrar', fs, 'acceptSubscription', [1n], at(1, 17, 30), 'accepted');
+    await step('C09', 'Registrar accepts B at NAV D1', 'Rule 22c-1(a)', 'registrar', fs, 'acceptSubscription', [1n], at(1, 17, 30));
     // Backward-priced exception (accepted before the next NAV is computed)
-    await step('C10', 'C subscribes 300,000 (received D2 09:30)', 'Rule 22c-1(a)', 'C', fs, 'requestSubscription', [units(300_000)], at(2, 9, 30), 'accepted');
-    await step('C11', 'Registrar accepts C before NAV D2 exists (backward-priced exception)', 'Rule 22c-1(a)', 'registrar', fs, 'acceptSubscription', [2n], at(2, 10), 'accepted');
+    await step('C10', 'C subscribes 300,000 (received D2 09:30)', 'Rule 22c-1(a)', 'C', fs, 'requestSubscription', [units(300_000)], at(2, 9, 30));
+    await step('C11', 'Registrar accepts C before NAV D2 exists (backward-priced exception)', 'Rule 22c-1(a)', 'registrar', fs, 'acceptSubscription', [2n], at(2, 10));
     // Forward-priced redemption settled at an erroneous NAV
-    await step('C12', 'A requests redemption of 100,000 shares (D2 12:00)', 'Rule 22c-1(a)', 'A', fs, 'requestRedemption', [units(100_000)], at(2, 12), 'accepted');
+    await step('C12', 'A requests redemption of 100,000 shares (D2 12:00)', 'Rule 22c-1(a)', 'A', fs, 'requestRedemption', [units(100_000)], at(2, 12));
     supply = await totalSupply();
     const d2Shares = supply;
     await navPost('C13', 'NAV D2 = 1.03 approved (later found erroneous)', 'Rule 22c-1(b)', 1_030_000_000_000_000_000n, at(2, 17), at(2, 17), d2Shares);
-    await step('C14', 'Registrar settles A at NAV D2', 'Rule 22c-1(a)', 'registrar', fs, 'settleRedemption', [0n], at(2, 17, 30), 'accepted');
+    await step('C14', 'Registrar settles A at NAV D2', 'Rule 22c-1(a)', 'registrar', fs, 'settleRedemption', [0n], at(2, 17, 30));
     // Restricted transfer and failed periodic review
-    await step('C15', 'A transfers 50,000 shares to eligible B', 'transfer restriction', 'A', fs, 'transfer', [P.B.address, units(50_000)], at(3, 10), 'accepted');
-    await step('C16', 'Periodic CDD review of C fails; eligibility revoked', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.C.address, false, h('CDD-C-review-failed')], at(3, 11), 'accepted');
-    await step('C17', 'Revoked holder C requests redemption (controlled exit attempt)', 'FATF R.10', 'C', fs, 'requestRedemption', [units(10_000)], at(3, 11, 30), 'rejected:NOT_WHITELISTED');
+    await step('C15', 'A transfers 50,000 shares to eligible B', 'transfer restriction', 'A', fs, 'transfer', [P.B.address, units(50_000)], at(3, 10));
+    await step('C16', 'Periodic CDD review of C fails; eligibility revoked', 'FATF R.10', 'admin', fs, 'setWhitelisted', [P.C.address, false, h('CDD-C-review-failed')], at(3, 11));
+    await step('C17', 'Revoked holder C requests redemption (controlled exit attempt)', 'FATF R.10', 'C', fs, 'requestRedemption', [units(10_000)], at(3, 11, 30));
     // Suspension of dealing (UCITS Art. 84)
-    await step('C18', 'Board suspends dealing (valuation not possible)', 'UCITS Art. 84(2)(a)', 'board', fs, 'pause', [], at(3, 14), 'accepted');
-    await step('C19', 'B requests redemption of 100,000 shares during suspension', 'UCITS Art. 84(2)(a)', 'B', fs, 'requestRedemption', [units(100_000)], at(3, 15), 'accepted');
-    await step('C20', 'Registrar attempts settlement during suspension', 'UCITS Art. 84(2)(a)', 'registrar', fs, 'settleRedemption', [1n], at(3, 16), 'rejected:PAUSED');
+    await step('C18', 'Board suspends dealing (valuation not possible)', 'UCITS Art. 84(2)(a)', 'board', fs, 'pause', [], at(3, 14));
+    await step('C19', 'B requests redemption of 100,000 shares during suspension', 'UCITS Art. 84(2)(a)', 'B', fs, 'requestRedemption', [units(100_000)], at(3, 15));
+    await step('C20', 'Registrar attempts settlement during suspension', 'UCITS Art. 84(2)(a)', 'registrar', fs, 'settleRedemption', [1n], at(3, 16));
     // NAV error correction (CSSF 24/856) and resumption
     await navPost('C21', 'Corrected NAV D2 = 1.02 (same asOf) approved', 'CSSF 24/856', 1_020_000_000_000_000_000n, at(2, 17), at(4, 9), d2Shares);
     supply = await totalSupply();
     await navPost('C22', 'NAV D4 = 1.025 approved', 'Rule 22c-1(b)', 1_025_000_000_000_000_000n, at(4, 17), at(4, 17));
-    await step('C23', 'Board resumes dealing', 'UCITS Art. 84(2)(a)', 'board', fs, 'unpause', [], at(4, 17, 10), 'accepted');
-    await step('C24', 'Registrar flags B settlement delayed (suspension backlog)', 'UCITS Art. 84(2)(a)', 'registrar', fs, 'flagSettlementDelayed', [1n, h('SUSPENSION-BACKLOG')], at(4, 17, 15), 'accepted');
-    await step('C25', 'Registrar settles B at NAV D4', 'Rule 22c-1(a)', 'registrar', fs, 'settleRedemption', [1n], at(4, 17, 30), 'accepted');
+    await step('C23', 'Board resumes dealing', 'UCITS Art. 84(2)(a)', 'board', fs, 'unpause', [], at(4, 17, 10));
+    await step('C24', 'Registrar flags B settlement delayed (suspension backlog)', 'UCITS Art. 84(2)(a)', 'registrar', fs, 'flagSettlementDelayed', [1n, h('SUSPENSION-BACKLOG')], at(4, 17, 15));
+    await step('C25', 'Registrar settles B at NAV D4', 'Rule 22c-1(a)', 'registrar', fs, 'settleRedemption', [1n], at(4, 17, 30));
     // Late correction probe
-    await navPost('C26', 'Late correction of NAV D1 after NAV D4 exists', 'CSSF 24/856', 1_005_000_000_000_000_000n, at(1, 17), at(5, 9), units(1_000_000), 'rejected:AS_OF_BEFORE_LATEST');
+    await navPost('C26', 'Late correction of NAV D1 after NAV D4 exists', 'CSSF 24/856', 1_005_000_000_000_000_000n, at(1, 17), at(5, 9), units(1_000_000));
 
     const accepted = log.filter((e) => e.observed === 'accepted');
     const lastBlock = accepted.at(-1).blockNumber;
@@ -140,23 +141,18 @@ async function main() {
     const audit = auditCase({ genesis, events, checkpoints, pricingPolicy, names: NAME });
     const { state, references: finalizedRefs, answers } = audit;
     accepted.forEach((entry, index) => { entry.projectionMatches = audit.checkpointMatches[index]; });
-    const expected = assertCaseExpectations(answers, expectations);
-    invariant(log.every((entry) => entry.observed === expectations.steps[entry.id]), 'Case step expectations differ');
+    const outcomes = caseOutcomeSummary(log, answers, expectations);
+    const expected = outcomes.revisedAnswersMatch;
     const summary = {
       experiment: 'paper85-v3-part-C-case',
       provenance: { ...(await gitHead()),
         planSha256: await sha256File(resolve(EVAL_DIR, 'spec-v3/evaluation-plan.v3.md')),
         expectationsSha256: await sha256File(expectationsPath), tools: toolVersions(), D0, runAt: new Date().toISOString() },
-      steps: log,
-      stepsMatchingPreregistration: log.filter((e) => e.match).length,
-      acceptedOperations: accepted.length,
-      rejectedAttempts: log.filter((e) => e.observed !== 'accepted').map((e) => ({ id: e.id, reason: e.observed })),
+      ...outcomes,
       lifecycleEvents: events.length,
       arc: { replayed: events.length, accepted: events.length },
       nri: { valid: finalizedRefs.filter((r) => r.valid).length, total: finalizedRefs.length },
       answers,
-      revisedAnswersMatch: expected,
-      originalPreregisteredQ1Proxy: { matching: answers.Q1.originalProxyMatching, total: q1.length },
       finalProjectionSha256: sha256(JSON.stringify(normalizedProjection(state))),
     };
     invariant(log.every((e) => e.match) && Object.values(expected).every(Boolean) && finalizedRefs.every((r) => r.valid), 'Case validation failed');

@@ -99,3 +99,28 @@ export function assertCaseAnswers(recomputed, archived) {
     assert.deepEqual(recomputed[question], archived[question], `Archived case answer ${question}`);
   }
 }
+
+// Step outcomes and summary fields have one oracle, shared by runner and verifier.
+export function caseStepExpectation(spec, id) {
+  assert(Object.hasOwn(spec.steps, id), `Missing case step expectation ${id}`);
+  return spec.steps[id];
+}
+
+export function caseOutcomeSummary(steps, answers, spec) {
+  const observed = Object.fromEntries(steps.map((step) => [step.id, step.observed]));
+  assert.equal(Object.keys(observed).length, steps.length, 'Duplicate case step');
+  assert.deepEqual(observed, spec.steps, 'Complete case step outcomes');
+  for (const step of steps) {
+    assert.equal(step.expected, caseStepExpectation(spec, step.id), `Step expectation ${step.id}`);
+    assert.equal(step.match, step.observed === step.expected, `Step match ${step.id}`);
+  }
+  return {
+    steps,
+    stepsMatchingPreregistration: steps.filter((step) => step.match).length,
+    acceptedOperations: steps.filter((step) => step.observed === 'accepted').length,
+    rejectedAttempts: steps.filter((step) => step.observed !== 'accepted')
+      .map((step) => ({ id: step.id, reason: step.observed })),
+    revisedAnswersMatch: assertCaseExpectations(answers, spec),
+    originalPreregisteredQ1Proxy: { matching: answers.Q1.originalProxyMatching, total: answers.Q1.total },
+  };
+}

@@ -5,7 +5,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { gunzipSync } from 'node:zlib';
-import { actorNames, auditCase, assertCaseExpectations } from './audit-case.mjs';
+import { actorNames, auditCase, assertCaseExpectations, caseOutcomeSummary, caseStepExpectation } from './audit-case.mjs';
 import { ROOT } from './evidence.mjs';
 import { verifyCase } from './verify-run.mjs';
 
@@ -21,6 +21,21 @@ test('all seven case queries reproduce the sealed answers and post-review expect
   const result = verifyCase(input, summary, spec);
   assert.deepEqual(result.questions, ['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7']);
   assert.equal(result.affectedBusinesses, 1);
+});
+
+test('runner summary uses Q1 from computed answers and the single step oracle', () => {
+  const answers = query(input.decoded, input.checkpoints).answers;
+  const result = caseOutcomeSummary(summary.steps, answers, spec);
+  assert.deepEqual(result.originalPreregisteredQ1Proxy, { matching: 4, total: 5 });
+  assert.equal(result.stepsMatchingPreregistration, 26);
+  assert.equal(result.acceptedOperations, 23);
+  assert.equal(result.rejectedAttempts.length, 3);
+  assert.equal(caseStepExpectation(spec, 'C26'), 'rejected:AS_OF_BEFORE_LATEST');
+  assert.throws(() => caseStepExpectation(spec, 'C27'), /Missing case step/);
+  assert.throws(() => caseOutcomeSummary(summary.steps.slice(1), answers, spec), /Complete case step/);
+  assert.throws(() => caseOutcomeSummary([...summary.steps, summary.steps[0]], answers, spec), /Duplicate case step/);
+  const steps = structuredClone(summary.steps); steps[0].expected = 'rejected';
+  assert.throws(() => caseOutcomeSummary(steps, answers, spec), /Step expectation C01/);
 });
 
 test('Q2 uses the last of multiple same-date corrections', () => {
