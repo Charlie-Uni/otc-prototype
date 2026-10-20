@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: next NAV audit rejects skipping a NAV even when the original proxy passes
+ok 1 - next NAV audit rejects skipping a NAV even when the original proxy passes
+  ---
+  duration_ms: 1.336709
+  ...
+# Subtest: approval/computation time, historical corrections and explicit suspension policy are distinct
+ok 2 - approval/computation time, historical corrections and explicit suspension policy are distinct
+  ---
+  duration_ms: 0.166041
+  ...
+# Subtest: transport, timeout and non-revert RPC failures abort instead of becoming blocked observations
+ok 3 - transport, timeout and non-revert RPC failures abort instead of becoming blocked observations
+  ---
+  duration_ms: 4.939
+  ...
+# Subtest: positive EVM execution-reverted signal counts only as a simulated rejection
+ok 4 - positive EVM execution-reverted signal counts only as a simulated rejection
+  ---
+  duration_ms: 1.338583
+  ...
+# Subtest: build binding detects stale creation/runtime bytecode and runtime tampering
+ok 5 - build binding detects stale creation/runtime bytecode and runtime tampering
+  ---
+  duration_ms: 2.833542
+  ...
+# Subtest: governed input guard covers runner, compiler config and dependency lock
+ok 6 - governed input guard covers runner, compiler config and dependency lock
+  ---
+  duration_ms: 626.645459
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1137.522833

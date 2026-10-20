@@ -1,0 +1,1840 @@
+[
+  {
+    "comparator": "B1",
+    "id": "V01",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "V02",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "V03",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "V04",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "V05",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "V06",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "V07",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "V08",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "represented_accept",
+    "observed": "represented_accept",
+    "match": true,
+    "call": "mint by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x7155d06d18da356b29bb586d0390466f21fa95dba39ed21e42c9f51f70998cd9",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "V09",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "represented_accept",
+    "observed": "represented_accept",
+    "match": true,
+    "call": "transfer by bob",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x97d057f0625d6996076be19de8e1534240f518747d834ea78fb6849228809d4e",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "20000000000000000000"
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "85000000000000000000",
+      "bob": "15000000000000000000"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "V10",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "V11",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "V12",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "V13",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "represented_accept",
+    "observed": "represented_accept",
+    "match": true,
+    "call": "burn by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x0396c96309622f5e62f10101bc3ed5821ce44c2603149695e7fcd77f1300fa3a",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "80000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "V14",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "V15",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "V16",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "V17",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "V18",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "I01",
+    "class": "invalid",
+    "targetPredicate": "Authorized",
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "I02",
+    "class": "invalid",
+    "targetPredicate": "Authorized",
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "I03",
+    "class": "invalid",
+    "targetPredicate": "Authorized",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "mint by stranger",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "OwnableUnauthorizedAccount",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I04",
+    "class": "invalid",
+    "targetPredicate": "Authorized",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "burn by stranger",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "OwnableUnauthorizedAccount",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I05",
+    "class": "invalid",
+    "targetPredicate": "Authorized",
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "I06",
+    "class": "invalid",
+    "targetPredicate": "ComplianceValid",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "mint by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x2deb70f76262656f7c127a78e919da54e4e2a111a6eed3777baa4c97af239cf1",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I07",
+    "class": "invalid",
+    "targetPredicate": "ComplianceValid",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "mint by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0xe1cc9218541545b3845bfaf0e0dd4a0e890d09f53efa24a3e3ee3f7de79ad46f",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I08",
+    "class": "invalid",
+    "targetPredicate": "ComplianceValid",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "transfer by alice",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x4bcdb4696b207cc03bc147235edaef117c2a0693aa9d6fb5330fea5121873f32",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "20000000000000000000"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I09",
+    "class": "invalid",
+    "targetPredicate": "ComplianceValid",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "burn by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x11fa41c2192d7be88af07e578e887cec3d7743033ae9a8394d22ea10af2be393",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "80000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I10",
+    "class": "invalid",
+    "targetPredicate": "NAVValid",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "mint by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x18a6b0950890f0138ae6b3e7652563d5460a613fc2c60f56429bc38201a74f4a",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I11",
+    "class": "invalid",
+    "targetPredicate": "NAVValid",
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "I12",
+    "class": "invalid",
+    "targetPredicate": "NAVValid",
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "I13",
+    "class": "invalid",
+    "targetPredicate": "NAVValid",
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B1",
+    "id": "I14",
+    "class": "invalid",
+    "targetPredicate": "LifecycleValid",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "transfer by alice",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x701b3b01a06211bbd997661643cf589a325c8909facab55123f55236eeb55e52",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "20000000000000000000"
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "75000000000000000000",
+      "bob": "25000000000000000000"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I15",
+    "class": "invalid",
+    "targetPredicate": "LifecycleValid",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "mint by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x096b632b45732b64fc6f190612892efbcb80be3bdc4a60eaefec143889c6b636",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I16",
+    "class": "invalid",
+    "targetPredicate": "LifecycleValid",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "burn by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x774b1d176cc44605189535514df4ee76b22c6d3f12050bf614e1a9da59f87b1d",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "80000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I17",
+    "class": "invalid",
+    "targetPredicate": "LifecycleValid",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "transferFrom by transferOperator",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x7d82ff2339ea9bb897753a2524f14e7be10f8589034686d1ad1f4b61e4635980",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "20000000000000000000"
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "75000000000000000000",
+      "bob": "25000000000000000000"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I18",
+    "class": "invalid",
+    "targetPredicate": "ParamConsistent",
+    "expected": "accepted_no_state_change",
+    "observed": "accepted_no_state_change",
+    "match": true,
+    "call": "mint by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x98de0c60503ee567fb309a0edcd70ad2f0ae7255a69e01971b7095c32b0315d1",
+    "ledgerChanged": false,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I19",
+    "class": "invalid",
+    "targetPredicate": "ParamConsistent",
+    "expected": "accepted_no_state_change",
+    "observed": "accepted_no_state_change",
+    "match": true,
+    "call": "mint by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0xa4c0f9c47d2ec0ded15afc1ef053410aced2295e170ab442fc534150e44e0cb3",
+    "ledgerChanged": false,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I20",
+    "class": "invalid",
+    "targetPredicate": "ParamConsistent",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "mint by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x916f83a721c95e469305c0c61e5fbe9735fdba85b82c4014d75a24e1ef1282b1",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "200000000000000000000",
+      "alice": "200000000000000000000",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I21",
+    "class": "invalid",
+    "targetPredicate": "ParamConsistent",
+    "expected": "accepted_no_state_change",
+    "observed": "accepted_no_state_change",
+    "match": true,
+    "call": "burn by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x713eb7a7a8c6b0cc3f128b5e3b7042d4cf2775d36612a5c2a5b64d90c2d1747e",
+    "ledgerChanged": false,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I22",
+    "class": "invalid",
+    "targetPredicate": "ParamConsistent",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "burn by admin",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "ERC20InsufficientBalance",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I23",
+    "class": "invalid",
+    "targetPredicate": "ParamConsistent",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "transfer by alice",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x487dfd9fabe55359e958358b1007a6abd953cf8cd1e7b23544638446c4b056da",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "79999999999999999999",
+      "bob": "20000000000000000001"
+    }
+  },
+  {
+    "comparator": "B1",
+    "id": "I24",
+    "class": "invalid",
+    "targetPredicate": "ParamConsistent",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "burn by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x3cb31c5024ee2471b8e16ff76a32780dee47a59e46ab9845fdc96b01f4c27606",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "80000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "0"
+    },
+    "after": {
+      "totalSupply": "60000000000000000000",
+      "alice": "60000000000000000000",
+      "bob": "0"
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "V01",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "represented_accept",
+    "observed": "represented_accept",
+    "match": true,
+    "call": "setAllowlisted by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x279c4695b37f3bcd515175eac700ec74173a68e31750ebb322ef38c44ae518c9",
+    "ledgerChanged": false,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "V02",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "represented_accept",
+    "observed": "represented_accept",
+    "match": true,
+    "call": "setAllowlisted by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0xb720483da685663c15290c56494c90fca9c20f8702dbaeb405dba537acd3c879",
+    "ledgerChanged": false,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "V03",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B2",
+    "id": "V04",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B2",
+    "id": "V05",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B2",
+    "id": "V06",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B2",
+    "id": "V07",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B2",
+    "id": "V08",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "represented_accept",
+    "observed": "represented_accept",
+    "match": true,
+    "call": "mint by issuer",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x07edab4b8cbcd820f6369cfaa7d22bc22aceba4be5d759cb4af80c19169e8a79",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "V09",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "represented_accept",
+    "observed": "represented_accept",
+    "match": true,
+    "call": "transfer by bob",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x01db57205d0c26fcef7fec73bc6869858d81775f6b7c06f5e92746367090bfe0",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "20000000000000000000",
+      "allowAlice": true,
+      "allowBob": true,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "85000000000000000000",
+      "bob": "15000000000000000000",
+      "allowAlice": true,
+      "allowBob": true,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "V10",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B2",
+    "id": "V11",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B2",
+    "id": "V12",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B2",
+    "id": "V13",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "represented_accept",
+    "observed": "represented_accept",
+    "match": true,
+    "call": "burn by issuer",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0xe61345e25039b1f2c727a2d5f4e43517bdbed23a45dc2425a068fb8b5f922f75",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "80000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "V14",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "represented_accept",
+    "observed": "represented_accept",
+    "match": true,
+    "call": "pause by pauser",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x405dea3f6dc796838968318f296a96673226872af1714ebac107a3cd33c8f8e9",
+    "ledgerChanged": false,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": true,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "V15",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "represented_accept",
+    "observed": "represented_accept",
+    "match": true,
+    "call": "unpause by pauser",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0xf00439b8fb980ed9c0efba46616e2d03558876d6b9c3e3a95c77a2246585aef6",
+    "ledgerChanged": false,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "20000000000000000000",
+      "allowAlice": true,
+      "allowBob": true,
+      "paused": true,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "20000000000000000000",
+      "allowAlice": true,
+      "allowBob": true,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "V16",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "represented_accept",
+    "observed": "represented_accept",
+    "match": true,
+    "call": "grantRole by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x207edc20fbd40ce23cd7e454477f64fe122e45509705d7ceb3eb7aab453e0040",
+    "ledgerChanged": false,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": true
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "V17",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "represented_accept",
+    "observed": "represented_accept",
+    "match": true,
+    "call": "revokeRole by admin",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x8d66b3b974dbbb181266da9265eb5bd771c6cf45593e1001ef78dbd7a4896395",
+    "ledgerChanged": false,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": true
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "V18",
+    "class": "valid",
+    "targetPredicate": null,
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B2",
+    "id": "I01",
+    "class": "invalid",
+    "targetPredicate": "Authorized",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "setAllowlisted by stranger",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "AccessControlUnauthorizedAccount",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I02",
+    "class": "invalid",
+    "targetPredicate": "Authorized",
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B2",
+    "id": "I03",
+    "class": "invalid",
+    "targetPredicate": "Authorized",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "mint by stranger",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "AccessControlUnauthorizedAccount",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I04",
+    "class": "invalid",
+    "targetPredicate": "Authorized",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "burn by stranger",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "AccessControlUnauthorizedAccount",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I05",
+    "class": "invalid",
+    "targetPredicate": "Authorized",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "grantRole by stranger",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "AccessControlUnauthorizedAccount",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I06",
+    "class": "invalid",
+    "targetPredicate": "ComplianceValid",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "mint by issuer",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "AccountNotAllowlisted",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I07",
+    "class": "invalid",
+    "targetPredicate": "ComplianceValid",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "mint by issuer",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "AccountNotAllowlisted",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I08",
+    "class": "invalid",
+    "targetPredicate": "ComplianceValid",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "transfer by alice",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "AccountNotAllowlisted",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I09",
+    "class": "invalid",
+    "targetPredicate": "ComplianceValid",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "burn by issuer",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "AccountNotAllowlisted",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": false,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I10",
+    "class": "invalid",
+    "targetPredicate": "NAVValid",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "mint by issuer",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x6802596f769106428ef238c34fb78ec10c86321de9ee210e65b778bb61047716",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I11",
+    "class": "invalid",
+    "targetPredicate": "NAVValid",
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B2",
+    "id": "I12",
+    "class": "invalid",
+    "targetPredicate": "NAVValid",
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B2",
+    "id": "I13",
+    "class": "invalid",
+    "targetPredicate": "NAVValid",
+    "expected": "not_representable",
+    "observed": "not_representable",
+    "match": true
+  },
+  {
+    "comparator": "B2",
+    "id": "I14",
+    "class": "invalid",
+    "targetPredicate": "LifecycleValid",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "transfer by alice",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "EnforcedPause",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "20000000000000000000",
+      "allowAlice": true,
+      "allowBob": true,
+      "paused": true,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "20000000000000000000",
+      "allowAlice": true,
+      "allowBob": true,
+      "paused": true,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I15",
+    "class": "invalid",
+    "targetPredicate": "LifecycleValid",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "mint by issuer",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "EnforcedPause",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": true,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": true,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I16",
+    "class": "invalid",
+    "targetPredicate": "LifecycleValid",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "burn by issuer",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "EnforcedPause",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": true,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": true,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I17",
+    "class": "invalid",
+    "targetPredicate": "LifecycleValid",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "transferFrom by transferOperator",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "EnforcedPause",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "20000000000000000000",
+      "allowAlice": true,
+      "allowBob": true,
+      "paused": true,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "20000000000000000000",
+      "allowAlice": true,
+      "allowBob": true,
+      "paused": true,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I18",
+    "class": "invalid",
+    "targetPredicate": "ParamConsistent",
+    "expected": "accepted_no_state_change",
+    "observed": "accepted_no_state_change",
+    "match": true,
+    "call": "mint by issuer",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0xe2beab0ebad10df3ed506b685921cafba4755d9e22fa9a2b2f651a13cb09cc30",
+    "ledgerChanged": false,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I19",
+    "class": "invalid",
+    "targetPredicate": "ParamConsistent",
+    "expected": "accepted_no_state_change",
+    "observed": "accepted_no_state_change",
+    "match": true,
+    "call": "mint by issuer",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0xd8889d1becf73360172b28ee38d1fa77a2d64c22938bd0dc06769ec6cf38b3c7",
+    "ledgerChanged": false,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "0",
+      "alice": "0",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I20",
+    "class": "invalid",
+    "targetPredicate": "ParamConsistent",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "mint by issuer",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x9e62f9eca258890a0695b1d6752887feb59331acc105eece860dde7a60a83fff",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "200000000000000000000",
+      "alice": "200000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I21",
+    "class": "invalid",
+    "targetPredicate": "ParamConsistent",
+    "expected": "accepted_no_state_change",
+    "observed": "accepted_no_state_change",
+    "match": true,
+    "call": "burn by issuer",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0xe1e307e2061b308aaf1a44043308d0d57cb7fa5143e5c7d09a814b1b248dc409",
+    "ledgerChanged": false,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I22",
+    "class": "invalid",
+    "targetPredicate": "ParamConsistent",
+    "expected": "blocked",
+    "observed": "blocked",
+    "match": true,
+    "call": "burn by issuer",
+    "status": "rejected",
+    "stage": "eth_call",
+    "reason": "ERC20InsufficientBalance",
+    "transactionHash": null,
+    "ledgerChanged": false,
+    "logsWritten": 0,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I23",
+    "class": "invalid",
+    "targetPredicate": "ParamConsistent",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "transfer by alice",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x92b47ae604862d349437b088d7a342c9e9b98375ad0aafbdb75bc0fdd3c34b35",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "100000000000000000000",
+      "alice": "100000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": true,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "100000000000000000000",
+      "alice": "79999999999999999999",
+      "bob": "20000000000000000001",
+      "allowAlice": true,
+      "allowBob": true,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  },
+  {
+    "comparator": "B2",
+    "id": "I24",
+    "class": "invalid",
+    "targetPredicate": "ParamConsistent",
+    "expected": "accepted_state_change",
+    "observed": "accepted_state_change",
+    "match": true,
+    "call": "burn by issuer",
+    "status": "accepted",
+    "stage": "mined",
+    "reason": null,
+    "transactionHash": "0x996cd963a871b9043157034bbbe5b8c44d8d29e6780d09d299d2d098592039b6",
+    "ledgerChanged": true,
+    "logsWritten": 1,
+    "before": {
+      "totalSupply": "80000000000000000000",
+      "alice": "80000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    },
+    "after": {
+      "totalSupply": "60000000000000000000",
+      "alice": "60000000000000000000",
+      "bob": "0",
+      "allowAlice": true,
+      "allowBob": false,
+      "paused": false,
+      "operator2Issuer": false
+    }
+  }
+]

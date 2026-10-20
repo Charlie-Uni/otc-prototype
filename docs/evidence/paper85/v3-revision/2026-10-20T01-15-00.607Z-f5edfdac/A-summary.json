@@ -1,0 +1,1077 @@
+{
+  "experiment": "paper85-v3-part-A-comparators",
+  "provenance": {
+    "commit": "347ea2636dce91b5381f72c084006de8aea971aa",
+    "governedInputsDirty": false,
+    "mappingSha256": "3276991c9664bab856b7501cae9a52b58d30953c21bfa78d64408d08b506b0b7",
+    "planSha256": "6a886b38e3286daf2665e8826a41c8c971c364606966845522c988f0251479ff",
+    "sealedManifestSha256": "97eabdaab3de5cc4d3cb41bbce1b82e445edfa7c8ea060618dc7b51fa5be4c69",
+    "b1SourceSha256": "b851326e132dae2fba391b7b01430bd282e104282fb9af3e05563579de404344",
+    "b2SourceSha256": "b54ee14d1021cb9f468b607ed71a1095549ad2598577facc7ec3a30d02729e13",
+    "tools": {
+      "node": "v22.14.0",
+      "forge": "forge Version: 1.7.1",
+      "anvil": "anvil Version: 1.7.1",
+      "viem": "2.55.10"
+    },
+    "genesisTimestamp": 1710000000,
+    "runAt": "2026-10-20T01:15:06.689Z"
+  },
+  "scenarioComparison": {
+    "totals": {
+      "B1": {
+        "validRepresented": 3,
+        "validNotRepresentable": 15,
+        "validRejected": 0,
+        "invalidBlocked": 3,
+        "invalidAcceptedStateChange": 12,
+        "invalidAcceptedNoStateChange": 3,
+        "invalidNotRepresentable": 6,
+        "expectedMatches": 42,
+        "rows": 42
+      },
+      "B2": {
+        "validRepresented": 9,
+        "validNotRepresentable": 9,
+        "validRejected": 0,
+        "invalidBlocked": 13,
+        "invalidAcceptedStateChange": 4,
+        "invalidAcceptedNoStateChange": 3,
+        "invalidNotRepresentable": 4,
+        "expectedMatches": 42,
+        "rows": 42
+      }
+    },
+    "preregisteredTotals": {
+      "B1": {
+        "validRepresented": 3,
+        "validNotRepresentable": 15,
+        "invalidBlocked": 3,
+        "invalidAcceptedStateChange": 12,
+        "invalidAcceptedNoStateChange": 3,
+        "invalidNotRepresentable": 6
+      },
+      "B2": {
+        "validRepresented": 9,
+        "validNotRepresentable": 9,
+        "invalidBlocked": 13,
+        "invalidAcceptedStateChange": 4,
+        "invalidAcceptedNoStateChange": 3,
+        "invalidNotRepresentable": 4
+      },
+      "proposedReference": "Sealed v2.1 evidence: 18/18 valid accepted, 24/24 invalid rejected (STCR 42/42)."
+    },
+    "byPredicate": {
+      "Authorized": {
+        "scenarios": 5,
+        "B1": {
+          "not_representable": 3,
+          "blocked": 2
+        },
+        "B2": {
+          "blocked": 4,
+          "not_representable": 1
+        }
+      },
+      "ComplianceValid": {
+        "scenarios": 4,
+        "B1": {
+          "accepted_state_change": 4
+        },
+        "B2": {
+          "blocked": 4
+        }
+      },
+      "NAVValid": {
+        "scenarios": 4,
+        "B1": {
+          "accepted_state_change": 1,
+          "not_representable": 3
+        },
+        "B2": {
+          "accepted_state_change": 1,
+          "not_representable": 3
+        }
+      },
+      "LifecycleValid": {
+        "scenarios": 4,
+        "B1": {
+          "accepted_state_change": 4
+        },
+        "B2": {
+          "blocked": 4
+        }
+      },
+      "ParamConsistent": {
+        "scenarios": 7,
+        "B1": {
+          "accepted_no_state_change": 3,
+          "accepted_state_change": 3,
+          "blocked": 1
+        },
+        "B2": {
+          "accepted_no_state_change": 3,
+          "accepted_state_change": 3,
+          "blocked": 1
+        }
+      }
+    },
+    "allRowsMatchPreregistration": true
+  },
+  "recoverability": {
+    "productionAcceptedEvents": 22,
+    "productionEventTypes": {
+      "InvestorWhitelisted": 2,
+      "NAVUpdatedEvent": 2,
+      "SubscriptionRequested": 1,
+      "SubscriptionAccepted": 1,
+      "Transfer": 3,
+      "ShareBalanceUpdated": 4,
+      "RedemptionRequested": 1,
+      "RedemptionQueueUpdated": 2,
+      "SettlementDelayed": 1,
+      "RedemptionSettled": 1,
+      "Paused": 1,
+      "Unpaused": 1,
+      "RoleGranted": 1,
+      "RoleRevoked": 1
+    },
+    "productionNavReferences": 2,
+    "comparators": {
+      "B1": {
+        "representedOperations": 3,
+        "totalOperations": 14,
+        "eventsWritten": 3,
+        "eventTypes": [
+          "Transfer"
+        ],
+        "components": {
+          "balances": {
+            "recorded": true,
+            "matched": 14,
+            "checkpoints": 14
+          },
+          "eligibility": {
+            "recorded": false,
+            "matched": null,
+            "checkpoints": 14
+          },
+          "navHistory": {
+            "recorded": false,
+            "matched": null,
+            "checkpoints": 14
+          },
+          "operatingStatus": {
+            "recorded": false,
+            "matched": null,
+            "checkpoints": 14
+          },
+          "executionRoles": {
+            "recorded": false,
+            "matched": null,
+            "checkpoints": 14
+          },
+          "requestRecords": {
+            "recorded": false,
+            "matched": null,
+            "checkpoints": 14
+          },
+          "completeProjection": {
+            "recorded": true,
+            "matched": 0,
+            "checkpoints": 14
+          },
+          "completeProjectionValueEquality": {
+            "recorded": true,
+            "matched": 0,
+            "checkpoints": 14
+          }
+        },
+        "navReferencesRecorded": 0,
+        "navReferencesRequired": 2
+      },
+      "B2": {
+        "representedOperations": 9,
+        "totalOperations": 14,
+        "eventsWritten": 9,
+        "eventTypes": [
+          "AllowlistUpdated",
+          "Transfer",
+          "Paused",
+          "Unpaused",
+          "RoleGranted",
+          "RoleRevoked"
+        ],
+        "components": {
+          "balances": {
+            "recorded": true,
+            "matched": 14,
+            "checkpoints": 14
+          },
+          "eligibility": {
+            "recorded": true,
+            "matched": 14,
+            "checkpoints": 14
+          },
+          "navHistory": {
+            "recorded": false,
+            "matched": null,
+            "checkpoints": 14
+          },
+          "operatingStatus": {
+            "recorded": true,
+            "matched": 14,
+            "checkpoints": 14
+          },
+          "executionRoles": {
+            "recorded": true,
+            "matched": 14,
+            "checkpoints": 14
+          },
+          "requestRecords": {
+            "recorded": false,
+            "matched": null,
+            "checkpoints": 14
+          },
+          "completeProjection": {
+            "recorded": true,
+            "matched": 0,
+            "checkpoints": 14
+          },
+          "completeProjectionValueEquality": {
+            "recorded": true,
+            "matched": 2,
+            "checkpoints": 14
+          }
+        },
+        "navReferencesRecorded": 0,
+        "navReferencesRequired": 2
+      }
+    }
+  },
+  "comparatorGas": {
+    "B1": {
+      "repetitions": 5,
+      "deploymentGas": [
+        1132724
+      ],
+      "deploymentGasIdenticalAcrossRuns": true,
+      "deployedRuntimeBytes": 4584,
+      "operations": {
+        "subscription": {
+          "samples": 5,
+          "meanGas": 71263,
+          "sdGas": 0,
+          "min": 71263,
+          "max": 71263
+        },
+        "transfer": {
+          "samples": 5,
+          "meanGas": 52167,
+          "sdGas": 0,
+          "min": 52167,
+          "max": 52167
+        },
+        "redemption": {
+          "samples": 5,
+          "meanGas": 36940,
+          "sdGas": 0,
+          "min": 36940,
+          "max": 36940
+        }
+      }
+    },
+    "B2": {
+      "repetitions": 5,
+      "deploymentGas": [
+        1763501,
+        52068,
+        52068,
+        52056
+      ],
+      "deploymentGasIdenticalAcrossRuns": true,
+      "deployedRuntimeBytes": 7506,
+      "operations": {
+        "qualification": {
+          "samples": 10,
+          "meanGas": 48543,
+          "sdGas": 0,
+          "min": 48543,
+          "max": 48543
+        },
+        "subscription": {
+          "samples": 5,
+          "meanGas": 76118,
+          "sdGas": 0,
+          "min": 76118,
+          "max": 76118
+        },
+        "transfer": {
+          "samples": 5,
+          "meanGas": 59001,
+          "sdGas": 0,
+          "min": 59001,
+          "max": 59001
+        },
+        "redemption": {
+          "samples": 5,
+          "meanGas": 41796,
+          "sdGas": 0,
+          "min": 41796,
+          "max": 41796
+        },
+        "pauseResume": {
+          "samples": 10,
+          "meanGas": 36485,
+          "sdGas": 11544.421644721364,
+          "min": 25533,
+          "max": 47437
+        },
+        "roleUpdate": {
+          "samples": 10,
+          "meanGas": 41107,
+          "sdGas": 11553.908477701869,
+          "min": 30146,
+          "max": 52068
+        }
+      }
+    }
+  },
+  "productionGas": {
+    "repetitions": 5,
+    "deploymentGas": [
+      2330636,
+      4855363,
+      4579664
+    ],
+    "samples": [
+      [
+        {
+          "index": 0,
+          "operationId": "O01",
+          "label": "whitelist Alice",
+          "blockNumber": "8",
+          "transactionHash": "0x3f8183c9e58a1a8cb888e164462f48a58cbfcff76edf54769272f898794314f4",
+          "gasUsed": "50152"
+        },
+        {
+          "index": 1,
+          "operationId": "O02",
+          "label": "whitelist Bob",
+          "blockNumber": "9",
+          "transactionHash": "0xdda6deb973faa980b28357433e8deff160b73a7cfef945d77484cdbd809b7713",
+          "gasUsed": "50164"
+        },
+        {
+          "index": 2,
+          "operationId": "O03",
+          "label": "post initial NAV",
+          "blockNumber": "10",
+          "transactionHash": "0x5a08778e3134185a9f1935e0d74a7a615116a85bda635517a82c5472dd366d6e",
+          "gasUsed": "149233"
+        },
+        {
+          "index": 3,
+          "operationId": "O04",
+          "label": "request subscription",
+          "blockNumber": "11",
+          "transactionHash": "0xfa544cfbbdab7fe71575e9e677976b690efe3ff30557994c398fed3c76be5c99",
+          "gasUsed": "147060"
+        },
+        {
+          "index": 4,
+          "operationId": "O05",
+          "label": "accept subscription",
+          "blockNumber": "12",
+          "transactionHash": "0xe02cc30d46803f5644ed6c01c8e0a213eb0452bbe54aee7b9df1608a6e6c7426",
+          "gasUsed": "186774"
+        },
+        {
+          "index": 5,
+          "operationId": "O06",
+          "label": "restricted transfer",
+          "blockNumber": "13",
+          "transactionHash": "0x7b4e45258eb0b5c05e2af4546e76b7d181cd8140ab555babe9aed6c13454c5f5",
+          "gasUsed": "67074"
+        },
+        {
+          "index": 6,
+          "operationId": "O07",
+          "label": "post formula NAV",
+          "blockNumber": "14",
+          "transactionHash": "0xbf819cbca36f20bc7a3849fef372e2d6ed36f842b03268acdb70746b921198b1",
+          "gasUsed": "178387"
+        },
+        {
+          "index": 7,
+          "operationId": "O08",
+          "label": "request redemption",
+          "blockNumber": "15",
+          "transactionHash": "0xc4c3d252245a41c96945aee9c035f9265acb844236e5d03e2de89297e2a1a25c",
+          "gasUsed": "188103"
+        },
+        {
+          "index": 8,
+          "operationId": "O09",
+          "label": "flag settlement delayed",
+          "blockNumber": "16",
+          "transactionHash": "0x9b0cbd483e00fdd3d7f2f2715af6471bb598ad21aec48f756361a5165cba949e",
+          "gasUsed": "83006"
+        },
+        {
+          "index": 9,
+          "operationId": "O10",
+          "label": "settle redemption",
+          "blockNumber": "17",
+          "transactionHash": "0x96591c292b2e3dcfe6862c7981116dd0bc99f1a3c328f661153b50e74f1e8a4a",
+          "gasUsed": "144150"
+        },
+        {
+          "index": 10,
+          "operationId": "O11",
+          "label": "pause lifecycle",
+          "blockNumber": "18",
+          "transactionHash": "0x945d4bd86f5db9bbd4284f1105cb2ce093f06154d041b4def91455811d4b9acb",
+          "gasUsed": "47394"
+        },
+        {
+          "index": 11,
+          "operationId": "O12",
+          "label": "resume lifecycle",
+          "blockNumber": "19",
+          "transactionHash": "0x895cd85e6634af344a51afadc21a145b97d58767c1de0d6279d6af0de70eb160",
+          "gasUsed": "25534"
+        },
+        {
+          "index": 12,
+          "operationId": "O13",
+          "label": "grant subscription role",
+          "blockNumber": "20",
+          "transactionHash": "0x8ebb1c63ade1a36fe52b5b5323c278b7644d9ac569b1eae09bcdfee6c4ecab5f",
+          "gasUsed": "52112"
+        },
+        {
+          "index": 13,
+          "operationId": "O14",
+          "label": "revoke subscription role",
+          "blockNumber": "21",
+          "transactionHash": "0xcc036cbc65d7da25c5b6b2c353383a3a2c0accf94e70d4707c5b647d487e6417",
+          "gasUsed": "30147"
+        }
+      ],
+      [
+        {
+          "index": 0,
+          "operationId": "O01",
+          "label": "whitelist Alice",
+          "blockNumber": "8",
+          "transactionHash": "0x3f8183c9e58a1a8cb888e164462f48a58cbfcff76edf54769272f898794314f4",
+          "gasUsed": "50152"
+        },
+        {
+          "index": 1,
+          "operationId": "O02",
+          "label": "whitelist Bob",
+          "blockNumber": "9",
+          "transactionHash": "0xdda6deb973faa980b28357433e8deff160b73a7cfef945d77484cdbd809b7713",
+          "gasUsed": "50164"
+        },
+        {
+          "index": 2,
+          "operationId": "O03",
+          "label": "post initial NAV",
+          "blockNumber": "10",
+          "transactionHash": "0x5a08778e3134185a9f1935e0d74a7a615116a85bda635517a82c5472dd366d6e",
+          "gasUsed": "149233"
+        },
+        {
+          "index": 3,
+          "operationId": "O04",
+          "label": "request subscription",
+          "blockNumber": "11",
+          "transactionHash": "0xfa544cfbbdab7fe71575e9e677976b690efe3ff30557994c398fed3c76be5c99",
+          "gasUsed": "147060"
+        },
+        {
+          "index": 4,
+          "operationId": "O05",
+          "label": "accept subscription",
+          "blockNumber": "12",
+          "transactionHash": "0xe02cc30d46803f5644ed6c01c8e0a213eb0452bbe54aee7b9df1608a6e6c7426",
+          "gasUsed": "186774"
+        },
+        {
+          "index": 5,
+          "operationId": "O06",
+          "label": "restricted transfer",
+          "blockNumber": "13",
+          "transactionHash": "0x7b4e45258eb0b5c05e2af4546e76b7d181cd8140ab555babe9aed6c13454c5f5",
+          "gasUsed": "67074"
+        },
+        {
+          "index": 6,
+          "operationId": "O07",
+          "label": "post formula NAV",
+          "blockNumber": "14",
+          "transactionHash": "0xbf819cbca36f20bc7a3849fef372e2d6ed36f842b03268acdb70746b921198b1",
+          "gasUsed": "178387"
+        },
+        {
+          "index": 7,
+          "operationId": "O08",
+          "label": "request redemption",
+          "blockNumber": "15",
+          "transactionHash": "0xc4c3d252245a41c96945aee9c035f9265acb844236e5d03e2de89297e2a1a25c",
+          "gasUsed": "188103"
+        },
+        {
+          "index": 8,
+          "operationId": "O09",
+          "label": "flag settlement delayed",
+          "blockNumber": "16",
+          "transactionHash": "0x9b0cbd483e00fdd3d7f2f2715af6471bb598ad21aec48f756361a5165cba949e",
+          "gasUsed": "83006"
+        },
+        {
+          "index": 9,
+          "operationId": "O10",
+          "label": "settle redemption",
+          "blockNumber": "17",
+          "transactionHash": "0x96591c292b2e3dcfe6862c7981116dd0bc99f1a3c328f661153b50e74f1e8a4a",
+          "gasUsed": "144150"
+        },
+        {
+          "index": 10,
+          "operationId": "O11",
+          "label": "pause lifecycle",
+          "blockNumber": "18",
+          "transactionHash": "0x945d4bd86f5db9bbd4284f1105cb2ce093f06154d041b4def91455811d4b9acb",
+          "gasUsed": "47394"
+        },
+        {
+          "index": 11,
+          "operationId": "O12",
+          "label": "resume lifecycle",
+          "blockNumber": "19",
+          "transactionHash": "0x895cd85e6634af344a51afadc21a145b97d58767c1de0d6279d6af0de70eb160",
+          "gasUsed": "25534"
+        },
+        {
+          "index": 12,
+          "operationId": "O13",
+          "label": "grant subscription role",
+          "blockNumber": "20",
+          "transactionHash": "0x8ebb1c63ade1a36fe52b5b5323c278b7644d9ac569b1eae09bcdfee6c4ecab5f",
+          "gasUsed": "52112"
+        },
+        {
+          "index": 13,
+          "operationId": "O14",
+          "label": "revoke subscription role",
+          "blockNumber": "21",
+          "transactionHash": "0xcc036cbc65d7da25c5b6b2c353383a3a2c0accf94e70d4707c5b647d487e6417",
+          "gasUsed": "30147"
+        }
+      ],
+      [
+        {
+          "index": 0,
+          "operationId": "O01",
+          "label": "whitelist Alice",
+          "blockNumber": "8",
+          "transactionHash": "0x3f8183c9e58a1a8cb888e164462f48a58cbfcff76edf54769272f898794314f4",
+          "gasUsed": "50152"
+        },
+        {
+          "index": 1,
+          "operationId": "O02",
+          "label": "whitelist Bob",
+          "blockNumber": "9",
+          "transactionHash": "0xdda6deb973faa980b28357433e8deff160b73a7cfef945d77484cdbd809b7713",
+          "gasUsed": "50164"
+        },
+        {
+          "index": 2,
+          "operationId": "O03",
+          "label": "post initial NAV",
+          "blockNumber": "10",
+          "transactionHash": "0x5a08778e3134185a9f1935e0d74a7a615116a85bda635517a82c5472dd366d6e",
+          "gasUsed": "149233"
+        },
+        {
+          "index": 3,
+          "operationId": "O04",
+          "label": "request subscription",
+          "blockNumber": "11",
+          "transactionHash": "0xfa544cfbbdab7fe71575e9e677976b690efe3ff30557994c398fed3c76be5c99",
+          "gasUsed": "147060"
+        },
+        {
+          "index": 4,
+          "operationId": "O05",
+          "label": "accept subscription",
+          "blockNumber": "12",
+          "transactionHash": "0xe02cc30d46803f5644ed6c01c8e0a213eb0452bbe54aee7b9df1608a6e6c7426",
+          "gasUsed": "186774"
+        },
+        {
+          "index": 5,
+          "operationId": "O06",
+          "label": "restricted transfer",
+          "blockNumber": "13",
+          "transactionHash": "0x7b4e45258eb0b5c05e2af4546e76b7d181cd8140ab555babe9aed6c13454c5f5",
+          "gasUsed": "67074"
+        },
+        {
+          "index": 6,
+          "operationId": "O07",
+          "label": "post formula NAV",
+          "blockNumber": "14",
+          "transactionHash": "0xbf819cbca36f20bc7a3849fef372e2d6ed36f842b03268acdb70746b921198b1",
+          "gasUsed": "178387"
+        },
+        {
+          "index": 7,
+          "operationId": "O08",
+          "label": "request redemption",
+          "blockNumber": "15",
+          "transactionHash": "0xc4c3d252245a41c96945aee9c035f9265acb844236e5d03e2de89297e2a1a25c",
+          "gasUsed": "188103"
+        },
+        {
+          "index": 8,
+          "operationId": "O09",
+          "label": "flag settlement delayed",
+          "blockNumber": "16",
+          "transactionHash": "0x9b0cbd483e00fdd3d7f2f2715af6471bb598ad21aec48f756361a5165cba949e",
+          "gasUsed": "83006"
+        },
+        {
+          "index": 9,
+          "operationId": "O10",
+          "label": "settle redemption",
+          "blockNumber": "17",
+          "transactionHash": "0x96591c292b2e3dcfe6862c7981116dd0bc99f1a3c328f661153b50e74f1e8a4a",
+          "gasUsed": "144150"
+        },
+        {
+          "index": 10,
+          "operationId": "O11",
+          "label": "pause lifecycle",
+          "blockNumber": "18",
+          "transactionHash": "0x945d4bd86f5db9bbd4284f1105cb2ce093f06154d041b4def91455811d4b9acb",
+          "gasUsed": "47394"
+        },
+        {
+          "index": 11,
+          "operationId": "O12",
+          "label": "resume lifecycle",
+          "blockNumber": "19",
+          "transactionHash": "0x895cd85e6634af344a51afadc21a145b97d58767c1de0d6279d6af0de70eb160",
+          "gasUsed": "25534"
+        },
+        {
+          "index": 12,
+          "operationId": "O13",
+          "label": "grant subscription role",
+          "blockNumber": "20",
+          "transactionHash": "0x8ebb1c63ade1a36fe52b5b5323c278b7644d9ac569b1eae09bcdfee6c4ecab5f",
+          "gasUsed": "52112"
+        },
+        {
+          "index": 13,
+          "operationId": "O14",
+          "label": "revoke subscription role",
+          "blockNumber": "21",
+          "transactionHash": "0xcc036cbc65d7da25c5b6b2c353383a3a2c0accf94e70d4707c5b647d487e6417",
+          "gasUsed": "30147"
+        }
+      ],
+      [
+        {
+          "index": 0,
+          "operationId": "O01",
+          "label": "whitelist Alice",
+          "blockNumber": "8",
+          "transactionHash": "0x3f8183c9e58a1a8cb888e164462f48a58cbfcff76edf54769272f898794314f4",
+          "gasUsed": "50152"
+        },
+        {
+          "index": 1,
+          "operationId": "O02",
+          "label": "whitelist Bob",
+          "blockNumber": "9",
+          "transactionHash": "0xdda6deb973faa980b28357433e8deff160b73a7cfef945d77484cdbd809b7713",
+          "gasUsed": "50164"
+        },
+        {
+          "index": 2,
+          "operationId": "O03",
+          "label": "post initial NAV",
+          "blockNumber": "10",
+          "transactionHash": "0x5a08778e3134185a9f1935e0d74a7a615116a85bda635517a82c5472dd366d6e",
+          "gasUsed": "149233"
+        },
+        {
+          "index": 3,
+          "operationId": "O04",
+          "label": "request subscription",
+          "blockNumber": "11",
+          "transactionHash": "0xfa544cfbbdab7fe71575e9e677976b690efe3ff30557994c398fed3c76be5c99",
+          "gasUsed": "147060"
+        },
+        {
+          "index": 4,
+          "operationId": "O05",
+          "label": "accept subscription",
+          "blockNumber": "12",
+          "transactionHash": "0xe02cc30d46803f5644ed6c01c8e0a213eb0452bbe54aee7b9df1608a6e6c7426",
+          "gasUsed": "186774"
+        },
+        {
+          "index": 5,
+          "operationId": "O06",
+          "label": "restricted transfer",
+          "blockNumber": "13",
+          "transactionHash": "0x7b4e45258eb0b5c05e2af4546e76b7d181cd8140ab555babe9aed6c13454c5f5",
+          "gasUsed": "67074"
+        },
+        {
+          "index": 6,
+          "operationId": "O07",
+          "label": "post formula NAV",
+          "blockNumber": "14",
+          "transactionHash": "0xbf819cbca36f20bc7a3849fef372e2d6ed36f842b03268acdb70746b921198b1",
+          "gasUsed": "178387"
+        },
+        {
+          "index": 7,
+          "operationId": "O08",
+          "label": "request redemption",
+          "blockNumber": "15",
+          "transactionHash": "0xc4c3d252245a41c96945aee9c035f9265acb844236e5d03e2de89297e2a1a25c",
+          "gasUsed": "188103"
+        },
+        {
+          "index": 8,
+          "operationId": "O09",
+          "label": "flag settlement delayed",
+          "blockNumber": "16",
+          "transactionHash": "0x9b0cbd483e00fdd3d7f2f2715af6471bb598ad21aec48f756361a5165cba949e",
+          "gasUsed": "83006"
+        },
+        {
+          "index": 9,
+          "operationId": "O10",
+          "label": "settle redemption",
+          "blockNumber": "17",
+          "transactionHash": "0x96591c292b2e3dcfe6862c7981116dd0bc99f1a3c328f661153b50e74f1e8a4a",
+          "gasUsed": "144150"
+        },
+        {
+          "index": 10,
+          "operationId": "O11",
+          "label": "pause lifecycle",
+          "blockNumber": "18",
+          "transactionHash": "0x945d4bd86f5db9bbd4284f1105cb2ce093f06154d041b4def91455811d4b9acb",
+          "gasUsed": "47394"
+        },
+        {
+          "index": 11,
+          "operationId": "O12",
+          "label": "resume lifecycle",
+          "blockNumber": "19",
+          "transactionHash": "0x895cd85e6634af344a51afadc21a145b97d58767c1de0d6279d6af0de70eb160",
+          "gasUsed": "25534"
+        },
+        {
+          "index": 12,
+          "operationId": "O13",
+          "label": "grant subscription role",
+          "blockNumber": "20",
+          "transactionHash": "0x8ebb1c63ade1a36fe52b5b5323c278b7644d9ac569b1eae09bcdfee6c4ecab5f",
+          "gasUsed": "52112"
+        },
+        {
+          "index": 13,
+          "operationId": "O14",
+          "label": "revoke subscription role",
+          "blockNumber": "21",
+          "transactionHash": "0xcc036cbc65d7da25c5b6b2c353383a3a2c0accf94e70d4707c5b647d487e6417",
+          "gasUsed": "30147"
+        }
+      ],
+      [
+        {
+          "index": 0,
+          "operationId": "O01",
+          "label": "whitelist Alice",
+          "blockNumber": "8",
+          "transactionHash": "0x3f8183c9e58a1a8cb888e164462f48a58cbfcff76edf54769272f898794314f4",
+          "gasUsed": "50152"
+        },
+        {
+          "index": 1,
+          "operationId": "O02",
+          "label": "whitelist Bob",
+          "blockNumber": "9",
+          "transactionHash": "0xdda6deb973faa980b28357433e8deff160b73a7cfef945d77484cdbd809b7713",
+          "gasUsed": "50164"
+        },
+        {
+          "index": 2,
+          "operationId": "O03",
+          "label": "post initial NAV",
+          "blockNumber": "10",
+          "transactionHash": "0x5a08778e3134185a9f1935e0d74a7a615116a85bda635517a82c5472dd366d6e",
+          "gasUsed": "149233"
+        },
+        {
+          "index": 3,
+          "operationId": "O04",
+          "label": "request subscription",
+          "blockNumber": "11",
+          "transactionHash": "0xfa544cfbbdab7fe71575e9e677976b690efe3ff30557994c398fed3c76be5c99",
+          "gasUsed": "147060"
+        },
+        {
+          "index": 4,
+          "operationId": "O05",
+          "label": "accept subscription",
+          "blockNumber": "12",
+          "transactionHash": "0xe02cc30d46803f5644ed6c01c8e0a213eb0452bbe54aee7b9df1608a6e6c7426",
+          "gasUsed": "186774"
+        },
+        {
+          "index": 5,
+          "operationId": "O06",
+          "label": "restricted transfer",
+          "blockNumber": "13",
+          "transactionHash": "0x7b4e45258eb0b5c05e2af4546e76b7d181cd8140ab555babe9aed6c13454c5f5",
+          "gasUsed": "67074"
+        },
+        {
+          "index": 6,
+          "operationId": "O07",
+          "label": "post formula NAV",
+          "blockNumber": "14",
+          "transactionHash": "0xbf819cbca36f20bc7a3849fef372e2d6ed36f842b03268acdb70746b921198b1",
+          "gasUsed": "178387"
+        },
+        {
+          "index": 7,
+          "operationId": "O08",
+          "label": "request redemption",
+          "blockNumber": "15",
+          "transactionHash": "0xc4c3d252245a41c96945aee9c035f9265acb844236e5d03e2de89297e2a1a25c",
+          "gasUsed": "188103"
+        },
+        {
+          "index": 8,
+          "operationId": "O09",
+          "label": "flag settlement delayed",
+          "blockNumber": "16",
+          "transactionHash": "0x9b0cbd483e00fdd3d7f2f2715af6471bb598ad21aec48f756361a5165cba949e",
+          "gasUsed": "83006"
+        },
+        {
+          "index": 9,
+          "operationId": "O10",
+          "label": "settle redemption",
+          "blockNumber": "17",
+          "transactionHash": "0x96591c292b2e3dcfe6862c7981116dd0bc99f1a3c328f661153b50e74f1e8a4a",
+          "gasUsed": "144150"
+        },
+        {
+          "index": 10,
+          "operationId": "O11",
+          "label": "pause lifecycle",
+          "blockNumber": "18",
+          "transactionHash": "0x945d4bd86f5db9bbd4284f1105cb2ce093f06154d041b4def91455811d4b9acb",
+          "gasUsed": "47394"
+        },
+        {
+          "index": 11,
+          "operationId": "O12",
+          "label": "resume lifecycle",
+          "blockNumber": "19",
+          "transactionHash": "0x895cd85e6634af344a51afadc21a145b97d58767c1de0d6279d6af0de70eb160",
+          "gasUsed": "25534"
+        },
+        {
+          "index": 12,
+          "operationId": "O13",
+          "label": "grant subscription role",
+          "blockNumber": "20",
+          "transactionHash": "0x8ebb1c63ade1a36fe52b5b5323c278b7644d9ac569b1eae09bcdfee6c4ecab5f",
+          "gasUsed": "52112"
+        },
+        {
+          "index": 13,
+          "operationId": "O14",
+          "label": "revoke subscription role",
+          "blockNumber": "21",
+          "transactionHash": "0xcc036cbc65d7da25c5b6b2c353383a3a2c0accf94e70d4707c5b647d487e6417",
+          "gasUsed": "30147"
+        }
+      ]
+    ],
+    "operations": {
+      "O01": {
+        "samples": [
+          50152,
+          50152,
+          50152,
+          50152,
+          50152
+        ],
+        "meanGas": 50152,
+        "sdGas": 0
+      },
+      "O02": {
+        "samples": [
+          50164,
+          50164,
+          50164,
+          50164,
+          50164
+        ],
+        "meanGas": 50164,
+        "sdGas": 0
+      },
+      "O03": {
+        "samples": [
+          149233,
+          149233,
+          149233,
+          149233,
+          149233
+        ],
+        "meanGas": 149233,
+        "sdGas": 0
+      },
+      "O04": {
+        "samples": [
+          147060,
+          147060,
+          147060,
+          147060,
+          147060
+        ],
+        "meanGas": 147060,
+        "sdGas": 0
+      },
+      "O05": {
+        "samples": [
+          186774,
+          186774,
+          186774,
+          186774,
+          186774
+        ],
+        "meanGas": 186774,
+        "sdGas": 0
+      },
+      "O06": {
+        "samples": [
+          67074,
+          67074,
+          67074,
+          67074,
+          67074
+        ],
+        "meanGas": 67074,
+        "sdGas": 0
+      },
+      "O07": {
+        "samples": [
+          178387,
+          178387,
+          178387,
+          178387,
+          178387
+        ],
+        "meanGas": 178387,
+        "sdGas": 0
+      },
+      "O08": {
+        "samples": [
+          188103,
+          188103,
+          188103,
+          188103,
+          188103
+        ],
+        "meanGas": 188103,
+        "sdGas": 0
+      },
+      "O09": {
+        "samples": [
+          83006,
+          83006,
+          83006,
+          83006,
+          83006
+        ],
+        "meanGas": 83006,
+        "sdGas": 0
+      },
+      "O10": {
+        "samples": [
+          144150,
+          144150,
+          144150,
+          144150,
+          144150
+        ],
+        "meanGas": 144150,
+        "sdGas": 0
+      },
+      "O11": {
+        "samples": [
+          47394,
+          47394,
+          47394,
+          47394,
+          47394
+        ],
+        "meanGas": 47394,
+        "sdGas": 0
+      },
+      "O12": {
+        "samples": [
+          25534,
+          25534,
+          25534,
+          25534,
+          25534
+        ],
+        "meanGas": 25534,
+        "sdGas": 0
+      },
+      "O13": {
+        "samples": [
+          52112,
+          52112,
+          52112,
+          52112,
+          52112
+        ],
+        "meanGas": 52112,
+        "sdGas": 0
+      },
+      "O14": {
+        "samples": [
+          30147,
+          30147,
+          30147,
+          30147,
+          30147
+        ],
+        "meanGas": 30147,
+        "sdGas": 0
+      }
+    }
+  },
+  "rowsSha256": "eadb1812b3cb294dd91b7f2f80cac6c424779424124c5cb88178a82193b08ba7"
+}

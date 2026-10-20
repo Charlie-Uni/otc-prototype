@@ -1,0 +1,639 @@
+{
+  "experiment": "paper85-v3-part-C-case",
+  "provenance": {
+    "commit": "347ea2636dce91b5381f72c084006de8aea971aa",
+    "governedInputsDirty": false,
+    "planSha256": "6a886b38e3286daf2665e8826a41c8c971c364606966845522c988f0251479ff",
+    "tools": {
+      "node": "v22.14.0",
+      "forge": "forge Version: 1.7.1",
+      "anvil": "anvil Version: 1.7.1",
+      "viem": "2.55.10"
+    },
+    "D0": 1710028800,
+    "runAt": "2026-10-20T01:15:30.863Z"
+  },
+  "steps": [
+    {
+      "id": "C01",
+      "label": "CDD completed, investor A admitted",
+      "rule": "FATF R.10",
+      "actor": "admin",
+      "call": "setWhitelisted",
+      "time": 1710061200,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "9",
+      "gasUsed": 50164,
+      "projectionMatches": true
+    },
+    {
+      "id": "C02",
+      "label": "CDD completed, investor B admitted",
+      "rule": "FATF R.10",
+      "actor": "admin",
+      "call": "setWhitelisted",
+      "time": 1710061500,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "10",
+      "gasUsed": 50164,
+      "projectionMatches": true
+    },
+    {
+      "id": "C03",
+      "label": "CDD completed, investor C admitted",
+      "rule": "FATF R.10",
+      "actor": "admin",
+      "call": "setWhitelisted",
+      "time": 1710061800,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "11",
+      "gasUsed": 50164,
+      "projectionMatches": true
+    },
+    {
+      "id": "C04",
+      "label": "A subscribes 1,000,000 in the initial offer",
+      "rule": "Rule 22c-1(a)",
+      "actor": "A",
+      "call": "requestSubscription",
+      "time": 1710064800,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "12",
+      "gasUsed": 147060,
+      "projectionMatches": true
+    },
+    {
+      "id": "C05",
+      "label": "Issue NAV 1.00 approved (asOf D0 17:00)",
+      "rule": "Rule 22c-1(b)",
+      "actor": "navAgent",
+      "call": "postInitialNAV",
+      "time": 1710090000,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "13",
+      "gasUsed": 149233,
+      "projectionMatches": true
+    },
+    {
+      "id": "C06",
+      "label": "Registrar accepts A at the issue NAV",
+      "rule": "Rule 22c-1(a)",
+      "actor": "registrar",
+      "call": "acceptSubscription",
+      "time": 1710091800,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "14",
+      "gasUsed": 186774,
+      "projectionMatches": true
+    },
+    {
+      "id": "C07",
+      "label": "B subscribes 500,000 (received D1 11:00)",
+      "rule": "Rule 22c-1(a)",
+      "actor": "B",
+      "call": "requestSubscription",
+      "time": 1710154800,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "15",
+      "gasUsed": 129972,
+      "projectionMatches": true
+    },
+    {
+      "id": "C08",
+      "label": "NAV D1 = 1.01 approved",
+      "rule": "Rule 22c-1(b)",
+      "actor": "navAgent",
+      "call": "postNAV",
+      "time": 1710176400,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "16",
+      "gasUsed": 178399,
+      "projectionMatches": true
+    },
+    {
+      "id": "C09",
+      "label": "Registrar accepts B at NAV D1",
+      "rule": "Rule 22c-1(a)",
+      "actor": "registrar",
+      "call": "acceptSubscription",
+      "time": 1710178200,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "17",
+      "gasUsed": 169686,
+      "projectionMatches": true
+    },
+    {
+      "id": "C10",
+      "label": "C subscribes 300,000 (received D2 09:30)",
+      "rule": "Rule 22c-1(a)",
+      "actor": "C",
+      "call": "requestSubscription",
+      "time": 1710235800,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "18",
+      "gasUsed": 129972,
+      "projectionMatches": true
+    },
+    {
+      "id": "C11",
+      "label": "Registrar accepts C before NAV D2 exists (backward-priced exception)",
+      "rule": "Rule 22c-1(a)",
+      "actor": "registrar",
+      "call": "acceptSubscription",
+      "time": 1710237600,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "19",
+      "gasUsed": 169686,
+      "projectionMatches": true
+    },
+    {
+      "id": "C12",
+      "label": "A requests redemption of 100,000 shares (D2 12:00)",
+      "rule": "Rule 22c-1(a)",
+      "actor": "A",
+      "call": "requestRedemption",
+      "time": 1710244800,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "20",
+      "gasUsed": 188127,
+      "projectionMatches": true
+    },
+    {
+      "id": "C13",
+      "label": "NAV D2 = 1.03 approved (later found erroneous)",
+      "rule": "Rule 22c-1(b)",
+      "actor": "navAgent",
+      "call": "postNAV",
+      "time": 1710262800,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "21",
+      "gasUsed": 178483,
+      "projectionMatches": true
+    },
+    {
+      "id": "C14",
+      "label": "Registrar settles A at NAV D2",
+      "rule": "Rule 22c-1(a)",
+      "actor": "registrar",
+      "call": "settleRedemption",
+      "time": 1710264600,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "22",
+      "gasUsed": 161250,
+      "projectionMatches": true
+    },
+    {
+      "id": "C15",
+      "label": "A transfers 50,000 shares to eligible B",
+      "rule": "transfer restriction",
+      "actor": "A",
+      "call": "transfer",
+      "time": 1710324000,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "23",
+      "gasUsed": 49986,
+      "projectionMatches": true
+    },
+    {
+      "id": "C16",
+      "label": "Periodic CDD review of C fails; eligibility revoked",
+      "rule": "FATF R.10",
+      "actor": "admin",
+      "call": "setWhitelisted",
+      "time": 1710327600,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "24",
+      "gasUsed": 28234,
+      "projectionMatches": true
+    },
+    {
+      "id": "C17",
+      "label": "Revoked holder C requests redemption (controlled exit attempt)",
+      "rule": "FATF R.10",
+      "actor": "C",
+      "call": "requestRedemption",
+      "time": 1710329400,
+      "expected": "rejected:NOT_WHITELISTED",
+      "observed": "rejected:NOT_WHITELISTED",
+      "match": true
+    },
+    {
+      "id": "C18",
+      "label": "Board suspends dealing (valuation not possible)",
+      "rule": "UCITS Art. 84(2)(a)",
+      "actor": "board",
+      "call": "pause",
+      "time": 1710338400,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "25",
+      "gasUsed": 47394,
+      "projectionMatches": true
+    },
+    {
+      "id": "C19",
+      "label": "B requests redemption of 100,000 shares during suspension",
+      "rule": "UCITS Art. 84(2)(a)",
+      "actor": "B",
+      "call": "requestRedemption",
+      "time": 1710342000,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "26",
+      "gasUsed": 171027,
+      "projectionMatches": true
+    },
+    {
+      "id": "C20",
+      "label": "Registrar attempts settlement during suspension",
+      "rule": "UCITS Art. 84(2)(a)",
+      "actor": "registrar",
+      "call": "settleRedemption",
+      "time": 1710345600,
+      "expected": "rejected:PAUSED",
+      "observed": "rejected:PAUSED",
+      "match": true
+    },
+    {
+      "id": "C21",
+      "label": "Corrected NAV D2 = 1.02 (same asOf) approved",
+      "rule": "CSSF 24/856",
+      "actor": "navAgent",
+      "call": "postNAV",
+      "time": 1710406800,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "27",
+      "gasUsed": 178596,
+      "projectionMatches": true
+    },
+    {
+      "id": "C22",
+      "label": "NAV D4 = 1.025 approved",
+      "rule": "Rule 22c-1(b)",
+      "actor": "navAgent",
+      "call": "postNAV",
+      "time": 1710435600,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "28",
+      "gasUsed": 178483,
+      "projectionMatches": true
+    },
+    {
+      "id": "C23",
+      "label": "Board resumes dealing",
+      "rule": "UCITS Art. 84(2)(a)",
+      "actor": "board",
+      "call": "unpause",
+      "time": 1710436200,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "29",
+      "gasUsed": 25534,
+      "projectionMatches": true
+    },
+    {
+      "id": "C24",
+      "label": "Registrar flags B settlement delayed (suspension backlog)",
+      "rule": "UCITS Art. 84(2)(a)",
+      "actor": "registrar",
+      "call": "flagSettlementDelayed",
+      "time": 1710436500,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "30",
+      "gasUsed": 83018,
+      "projectionMatches": true
+    },
+    {
+      "id": "C25",
+      "label": "Registrar settles B at NAV D4",
+      "rule": "Rule 22c-1(a)",
+      "actor": "registrar",
+      "call": "settleRedemption",
+      "time": 1710437400,
+      "expected": "accepted",
+      "observed": "accepted",
+      "match": true,
+      "blockNumber": "31",
+      "gasUsed": 144162,
+      "projectionMatches": true
+    },
+    {
+      "id": "C26",
+      "label": "Late correction of NAV D1 after NAV D4 exists",
+      "rule": "CSSF 24/856",
+      "actor": "navAgent",
+      "call": "postNAV",
+      "time": 1710493200,
+      "expected": "rejected:AS_OF_BEFORE_LATEST",
+      "observed": "rejected:AS_OF_BEFORE_LATEST",
+      "match": true
+    }
+  ],
+  "stepsMatchingPreregistration": 26,
+  "acceptedOperations": 23,
+  "rejectedAttempts": [
+    {
+      "id": "C17",
+      "reason": "rejected:NOT_WHITELISTED"
+    },
+    {
+      "id": "C20",
+      "reason": "rejected:PAUSED"
+    },
+    {
+      "id": "C26",
+      "reason": "rejected:AS_OF_BEFORE_LATEST"
+    }
+  ],
+  "lifecycleEvents": 39,
+  "arc": {
+    "replayed": 39,
+    "accepted": 39
+  },
+  "nri": {
+    "valid": 5,
+    "total": 5
+  },
+  "answers": {
+    "Q1": {
+      "matchingCasePolicy": 4,
+      "total": 5,
+      "exceptions": [
+        {
+          "type": "subscription",
+          "requestId": 2,
+          "investor": "C",
+          "requestedAt": 1710235800,
+          "processedAt": 1710237600,
+          "navAsOf": 1710176400,
+          "observedNavIndex": 1,
+          "nextApplicableNavIndex": 2,
+          "nextComputedAt": 1710262800,
+          "originalAsOfProxy": false,
+          "nextApplicableNavMatches": false,
+          "reason": "priced-before-next-NAV"
+        }
+      ],
+      "originalProxyMatching": 4,
+      "detail": [
+        {
+          "type": "subscription",
+          "requestId": 0,
+          "investor": "A",
+          "requestedAt": 1710064800,
+          "processedAt": 1710091800,
+          "navAsOf": 1710090000,
+          "observedNavIndex": 0,
+          "nextApplicableNavIndex": 0,
+          "nextComputedAt": 1710090000,
+          "originalAsOfProxy": true,
+          "nextApplicableNavMatches": true,
+          "reason": "next-applicable-NAV"
+        },
+        {
+          "type": "subscription",
+          "requestId": 1,
+          "investor": "B",
+          "requestedAt": 1710154800,
+          "processedAt": 1710178200,
+          "navAsOf": 1710176400,
+          "observedNavIndex": 1,
+          "nextApplicableNavIndex": 1,
+          "nextComputedAt": 1710176400,
+          "originalAsOfProxy": true,
+          "nextApplicableNavMatches": true,
+          "reason": "next-applicable-NAV"
+        },
+        {
+          "type": "subscription",
+          "requestId": 2,
+          "investor": "C",
+          "requestedAt": 1710235800,
+          "processedAt": 1710237600,
+          "navAsOf": 1710176400,
+          "observedNavIndex": 1,
+          "nextApplicableNavIndex": 2,
+          "nextComputedAt": 1710262800,
+          "originalAsOfProxy": false,
+          "nextApplicableNavMatches": false,
+          "reason": "priced-before-next-NAV"
+        },
+        {
+          "type": "redemption",
+          "requestId": 0,
+          "investor": "A",
+          "requestedAt": 1710244800,
+          "processedAt": 1710264600,
+          "navAsOf": 1710262800,
+          "observedNavIndex": 2,
+          "nextApplicableNavIndex": 2,
+          "nextComputedAt": 1710262800,
+          "originalAsOfProxy": true,
+          "nextApplicableNavMatches": true,
+          "reason": "next-applicable-NAV"
+        },
+        {
+          "type": "redemption",
+          "requestId": 1,
+          "investor": "B",
+          "requestedAt": 1710342000,
+          "processedAt": 1710437400,
+          "navAsOf": 1710435600,
+          "observedNavIndex": 4,
+          "nextApplicableNavIndex": 4,
+          "nextComputedAt": 1710435600,
+          "originalAsOfProxy": true,
+          "nextApplicableNavMatches": true,
+          "reason": "next-applicable-NAV"
+        }
+      ]
+    },
+    "Q2": {
+      "affected": [
+        {
+          "event": "RedemptionSettled",
+          "requestId": "0",
+          "navIndex": 2,
+          "nav": "1029999999999999999",
+          "investor": "A",
+          "paidAmount": "102999999999999999900000",
+          "amountAtCorrectedNav": "101999999999999999900000",
+          "overpayment": "1000000000000000000000"
+        }
+      ]
+    },
+    "Q3": {
+      "movements": 6,
+      "eligibleAtTime": 6,
+      "detail": [
+        {
+          "kind": "mint",
+          "parties": [
+            "A"
+          ],
+          "eligible": true
+        },
+        {
+          "kind": "mint",
+          "parties": [
+            "B"
+          ],
+          "eligible": true
+        },
+        {
+          "kind": "mint",
+          "parties": [
+            "C"
+          ],
+          "eligible": true
+        },
+        {
+          "kind": "burn",
+          "parties": [
+            "A"
+          ],
+          "eligible": true
+        },
+        {
+          "kind": "transfer",
+          "parties": [
+            "A",
+            "B"
+          ],
+          "eligible": true
+        },
+        {
+          "kind": "burn",
+          "parties": [
+            "B"
+          ],
+          "eligible": true
+        }
+      ]
+    },
+    "Q4": {
+      "shareMovements": 0,
+      "redemptionRequests": 1,
+      "subscriptionRequests": 0,
+      "navVersions": 2
+    },
+    "Q5": {
+      "versions": 5,
+      "corrections": 1,
+      "allWithSubmitterAndPayload": true,
+      "detail": [
+        {
+          "index": 0,
+          "nav": "1000000000000000000",
+          "asOf": "1710090000",
+          "by": "navAgent",
+          "payloadHash": "0x28d056bcaf94ea17df60754c1af4037452c462e03fe079fa6aab975e70ecf1d6",
+          "correctionOf": null
+        },
+        {
+          "index": 1,
+          "nav": "1010000000000000000",
+          "asOf": "1710176400",
+          "by": "navAgent",
+          "payloadHash": "0xa0f9762aa97c20f39756074011994b3a22ff771307da3e23c4943686694af8c8",
+          "correctionOf": null
+        },
+        {
+          "index": 2,
+          "nav": "1029999999999999999",
+          "asOf": "1710262800",
+          "by": "navAgent",
+          "payloadHash": "0x4bd1c447b9f76c841cb6766649e2554b1e083b4d85273af0be9427813243a623",
+          "correctionOf": null
+        },
+        {
+          "index": 3,
+          "nav": "1019999999999999999",
+          "asOf": "1710262800",
+          "by": "navAgent",
+          "payloadHash": "0xf3c9617ce9cf3a514763e5b78db54a972de67ff8373baeaa605618825fad4d65",
+          "correctionOf": 2
+        },
+        {
+          "index": 4,
+          "nav": "1025000000000000000",
+          "asOf": "1710435600",
+          "by": "navAgent",
+          "payloadHash": "0x370b6a61f082302ae14f7fcad142ace9718945c7d8e2709dafe8858d61b654b7",
+          "correctionOf": null
+        }
+      ]
+    },
+    "Q6": {
+      "matched": 23,
+      "checkpoints": 23
+    },
+    "Q7": {
+      "delayed": [
+        {
+          "requestId": "1",
+          "investor": "B",
+          "reasonHash": "0x89f64f775bb17ea9ac7b046fedda29189d13237bcdd2b5daad64c485ae1d3fbb",
+          "requestedAt": 1710342000,
+          "delayedAt": 1710436500,
+          "settlementLagSec": 95400
+        }
+      ]
+    }
+  },
+  "revisedAnswersMatch": {
+    "Q1": true,
+    "Q2": true,
+    "Q3": true,
+    "Q4": true,
+    "Q5": true,
+    "Q6": true,
+    "Q7": true
+  },
+  "originalPreregisteredQ1Proxy": {
+    "matching": 4,
+    "total": 5
+  },
+  "finalProjectionSha256": "40dd2c9c67d1c188372ce7f934a239e07b6983fa8637bb910356b49a3310bd5b"
+}

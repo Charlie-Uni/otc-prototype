@@ -1,0 +1,178 @@
+{
+  "target": 1000,
+  "seed": 1,
+  "investors": 24,
+  "evidence": "scale/1000-s1/replay.json.gz",
+  "transactions": 503,
+  "acceptedEvents": 1003,
+  "eventsByType": {
+    "NAVUpdatedEvent": 56,
+    "InvestorWhitelisted": 55,
+    "Paused": 24,
+    "Unpaused": 24,
+    "SubscriptionRequested": 68,
+    "SubscriptionAccepted": 66,
+    "Transfer": 193,
+    "ShareBalanceUpdated": 263,
+    "RedemptionRequested": 57,
+    "RedemptionQueueUpdated": 114,
+    "RedemptionSettled": 57,
+    "RoleGranted": 10,
+    "RoleRevoked": 10,
+    "SettlementDelayed": 6
+  },
+  "operationsByType": {
+    "navSubmission": 56,
+    "qualificationUpdate": 55,
+    "pauseResume": 48,
+    "subscriptionRequest": 68,
+    "subscriptionAcceptance": 66,
+    "redemptionRequest": 57,
+    "redemptionSettlement": 57,
+    "roleUpdate": 20,
+    "settlementDelay": 6,
+    "transfer": 70
+  },
+  "gas": {
+    "total": 56704765,
+    "perTransaction": 112733.13121272366,
+    "perEvent": 56535.15952143569,
+    "byType": {
+      "navSubmission": {
+        "n": 56,
+        "mean": 178001.125,
+        "sd": 3914.65117481169,
+        "min": 149233,
+        "max": 178596
+      },
+      "qualificationUpdate": {
+        "n": 55,
+        "mean": 38835.38181818182,
+        "sd": 10068.213044382337,
+        "min": 28234,
+        "max": 50164
+      },
+      "pauseResume": {
+        "n": 48,
+        "mean": 36464,
+        "sd": 11045.664596708462,
+        "min": 25534,
+        "max": 47394
+      },
+      "subscriptionRequest": {
+        "n": 68,
+        "mean": 131905.41176470587,
+        "sd": 2389.884829769213,
+        "min": 129960,
+        "max": 147072
+      },
+      "subscriptionAcceptance": {
+        "n": 66,
+        "mean": 154917.63636363635,
+        "sd": 6629.628702067163,
+        "min": 152586,
+        "max": 186774
+      },
+      "redemptionRequest": {
+        "n": 57,
+        "mean": 164344.63157894736,
+        "sd": 11120.79146501141,
+        "min": 136815,
+        "max": 191208
+      },
+      "redemptionSettlement": {
+        "n": 57,
+        "mean": 161903.8947368421,
+        "sd": 6280.716660894368,
+        "min": 144162,
+        "max": 170862
+      },
+      "roleUpdate": {
+        "n": 20,
+        "mean": 41117.5,
+        "sd": 11267.807251775204,
+        "min": 30135,
+        "max": 52100
+      },
+      "settlementDelay": {
+        "n": 6,
+        "mean": 83016,
+        "sd": 4.898979485566356,
+        "min": 83006,
+        "max": 83018
+      },
+      "transfer": {
+        "n": 70,
+        "mean": 53424.857142857145,
+        "sd": 6887.23297393569,
+        "min": 49986,
+        "max": 67110
+      }
+    }
+  },
+  "deploymentGas": {
+    "NAVRegistry": 2330636,
+    "FundToken": 4855351,
+    "RiskRegistry": 4579664
+  },
+  "storage": {
+    "nonZeroSlots": {
+      "FundToken": 870,
+      "NAVRegistry": 338,
+      "RiskRegistry": 10
+    },
+    "totalNonZeroSlots": 1218
+  },
+  "eventIndex": {
+    "logs": 1003,
+    "rawPayloadBytes": 192000,
+    "normalizedJsonlBytes": 907295
+  },
+  "latencyMs": {
+    "getLogs": {
+      "samples": [
+        12.883165999999619,
+        7.927083999999013,
+        10.210708000002342,
+        11.085542000000714,
+        6.926083999998809
+      ],
+      "repetitions": 5,
+      "mean": 9.8065168000001,
+      "sd": 2.4028216253655175
+    },
+    "replay": {
+      "samples": [
+        1.2989589999997406,
+        1.2797500000015134,
+        1.3179999999993015,
+        1.2744999999995343,
+        1.869791000000987,
+        1.9961659999971744,
+        1.7108330000010028,
+        7.193125000001601,
+        3.063125000000582,
+        2.8465419999993173
+      ],
+      "repetitions": 10,
+      "mean": 2.3850791000000755,
+      "sd": 1.808462689375458
+    }
+  },
+  "correctness": {
+    "arc": {
+      "replayed": 1003,
+      "accepted": 1003
+    },
+    "nri": {
+      "valid": 123,
+      "total": 123
+    },
+    "pcr": {
+      "matched": 10,
+      "checkpoints": 10
+    },
+    "finalProjectionSha256": "0b5f95a3866e6412338cb2ddc92f0938dd3c9de85313b356044413888c85080f"
+  },
+  "wallClockSec": 10.620879666
+}

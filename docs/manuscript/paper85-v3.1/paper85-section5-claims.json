@@ -1,0 +1,934 @@
+{
+  "sourceSha256": "1515cd7f87995759b4a2f047aa314e23aae9cd378e25ae80b5790a446fca252e",
+  "run": "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac",
+  "manifestSha256": "913cd2aef3cbd861b97f761bc2cabc64027fce15ce9b10c63f1ff1cfef5d1f31",
+  "executionCommit": "347ea2636dce91b5381f72c084006de8aea971aa",
+  "generatorSha256": "c36c3acb1431a12564cd0bcd0d8bf9cc067215681248b224ef554340ebc7178e",
+  "sourceResolution": "Run-relative paths first; spec-v3 and scripts are relative to experiments/paper85-evaluation; contracts and experiments paths are repository-relative. Wildcards select all matching archived evidence.",
+  "blocks": {
+    "99": {
+      "sources": [
+        "spec-v3/evaluation-plan.v3.md",
+        "spec-v3/review-amendment.v3.1.md"
+      ],
+      "text": "本节围绕五个评价问题（evaluation question，EQ）组织原型评价（表3）。EQ1采用功能与机制验证，EQ2结合消融与两类自建比较基线，EQ3采用闭合输入回放及检查点比对，EQ4测量执行成本与顺序负载下的规模增长，EQ5采用公开规则驱动的案例验证。原始场景与v3评价方案保持冻结；审查后修正的NAV审计判据、拒绝分类、证据归档、构建校验和负载时钟另列为v3.1补充方案，明确属于事后修订。本文区分确定性实现检查、描述性性能测量和案例相关性证据，不将其等同于生产验证。"
+    },
+    "103": {
+      "sources": [
+        "run.json#/files",
+        "build/*.input.json.gz",
+        "build/*.output.json.gz",
+        "build/*.artifact.json",
+        "chains/*.jsonl.gz"
+      ],
+      "text": "原型由三份Solidity合约构成。FundToken维护份额、资格、申购赎回请求、待赎回锁定份额及运营状态；NAVRegistry维护追加式NAV序列；RiskRegistry提供赎回控制接口，本评价仅配置该依赖，不提交风险指标或触发风险控制。实现采用OpenZeppelin的ERC-20、AccessControl与Pausable组件。生产源码与chapter3-artifact-v1.4.0逐字节一致。本次运行先核对冻结源码与原预注册，再重建并以归档的字面源码和设置独立编译，比较创建及运行时字节码；部署后再次核对代码（构造器不可变值位置单独保留）。表4报告本次实际环境和构建结果。"
+    },
+    "106": {
+      "sources": [
+        "contracts/src/FundToken.sol",
+        "contracts/src/NAVRegistry.sol"
+      ],
+      "text": "原型对第3节模型采用窄化实现，结论限于表5覆盖的语义。资格采用布尔白名单，未实现冻结、复核和受控退出；请求没有显式NAV版本参数，受理与结算使用当时最新登记版本，适用性不在链上判断；转让只检查接收方资格。请求记录与待赎回锁定份额是两阶段实现的辅助状态，属于抽象模型到实现的细化；本评价检查具体实现投影，不证明原型完整实现抽象模型。"
+    },
+    "109": {
+      "sources": [
+        "run.json",
+        "manifest.json",
+        "verification.json",
+        "../../v2.1/m0-run-summary.local.json",
+        "../../v2.1/ablation-run-summary.local.json"
+      ],
+      "text": "42场景与单谓词消融沿用v2.1冻结证据（运行实现d27d990）；原v3预注册提交4ce5d24及其结果完整保留。本次修订运行2026-10-20T01-15-00.607Z-f5edfdac，执行代码提交347ea26，新增结果均取自该独立目录。运行清单绑定源码、构建、调用、回执、原始日志、检查点视图和时延样本；离线验证不连接RPC。逐表来源、JSON路径与显示值见随稿证据映射paper85-section5-claims.json。哈希用于内部溯源和完整性校验，不提供独立机构背书。"
+    },
+    "114": {
+      "sources": [
+        "../../v2.1/m0-run-summary.local.json#/counts",
+        "../../v2.1/m0-run-summary.ci.json#/counts"
+      ],
+      "text": "18个有效场景被接受，24个无效场景按预期错误码拒绝且状态投影不变，STCR = 42/42 = 1.00；全约束实验变体与生产合约在42个场景上差分等价（表6）。冻结证据还包含本地与CI的语义一致性检查。确定性实现通过确定性测试是预期结果，STCR本身不构成强经验证据。结果支持原型在所选条件下符合具体转换语义，其覆盖范围受场景集和表5中的模型差距限制。"
+    },
+    "116": {
+      "sources": [
+        "../../v2.1/ablation-run-summary.local.json#/counts"
+      ],
+      "text": "EQ2保留五类单谓词消融，每次只移除一个谓词检查，其余逻辑不变，运行全部42个场景。移除guard后放行相应操作具有同义反复，因此消融用于检查剩余约束能否在这些场景中阻止同类无效转换，不证明一般必要性。表7中24个目标场景有22个被接受；I10在M3下仍因无NAV记录回退，M5中另有一个场景触发算术下溢。全部210项分类与预期一致，24个目标场景的62项字段断言通过。两类独立实现的比较基线进一步检验原型相对常规代币账本所增加的约束范围。"
+    },
+    "122": {
+      "sources": [
+        "A-scenario-rows.json",
+        "chains/*.jsonl.gz"
+      ],
+      "text": "注：每格依次为“拒绝 / 接受且改变余额 / 接受但不改变余额 / 无法在链上表达”的场景数。B1/B2的拒绝由eth_call预检确认EVM回退，接受项读取已上链交易的回执及前后投影；编码、网络、超时及其他RPC故障中止运行，不计为拦截。零数量铸造或销毁可成功写入零值Transfer记录。完整机制结果沿用表6。"
+    },
+    "125": {
+      "sources": [
+        "canonical/18660.json.gz",
+        "A-summary.json#/recoverability",
+        "verification.json"
+      ],
+      "text": "EQ3检查事件能否独立于合约视图恢复创世配置预先声明的账户与角色范围内的实现投影。标准轨迹包含14个操作、22个生命周期事件，覆盖资格、NAV、请求、份额变动、延迟、暂停恢复与角色变化。纯回放仅输入创世配置和有序原始日志，合约历史视图另行保存作为比对结果。本次ARC = 22/22、NRI = 2/2、PCR = 14/14；NRI仅表示引用绑定执行时最新登记版本且随后可恢复，不表示该版本在业务或监管上适用。基线恢复结果见表9；原始日志、ABI、创世配置和各检查点均归档。"
+    },
+    "126": {
+      "sources": [
+        "A-summary.json#/recoverability"
+      ],
+      "text": "为说明这一结果并非任何链上账本都具备，将同一业务轨迹在B1和B2上执行，并在每个检查点按组件比较其事件回放结果与完整机制的投影（表9）。两类基线都能由Transfer事件恢复余额与总份额。B2还能恢复资格、运营状态和执行角色分配，但两类基线都没有记录NAV版本历史和请求记录，两项NAV引用也都没有链上记录。组件不被记录时，即使其真实取值恰好为空也不计为可恢复，因此两类基线的完整投影一致数均为0/14。若改为按取值相等计算，B2在首个NAV记录产生之前的2个检查点上可视为一致，结论不变。 B2的执行角色项只比较候选发行人权限与原型申购执行权的对应，不代表完整机构权限模型。"
+    },
+    "129": {
+      "sources": [
+        "B-scale-summary.json#/aggregate",
+        "C-case-summary.json",
+        "scale/*/replay.json.gz"
+      ],
+      "text": "全部9次规模运行的ARC均为1.00，NRI合计4,095/4,095（10,000事件目标下3,695/3,695），PCR合计92/92。案例的ARC = 39/39、NRI = 5/5、PCR = 23/23。这些结果依赖可信创世配置、完整有序日志及无链重组。规模检查点的视图与回放输入分开保存，回放不消费视图。模拟拒绝不产生生命周期事件，需要另存调用及EVM错误；本实验不将其称为失败交易。受理与结算执行者仍需交易信封补充，案例政策也属于审计的外部假设。"
+    },
+    "131": {
+      "sources": [
+        "A-summary.json#/productionGas",
+        "A-summary.json#/comparatorGas",
+        "chains/*.jsonl.gz"
+      ],
+      "text": "EQ4先比较标准轨迹上的交易gas（表10）。生产合约与两类比较基线各执行5次全新部署；生产各操作gas在重复运行中一致。所有值从本次保存的交易回执归集，完整机制的申购和赎回包含请求与生效两笔交易，基线只执行一次铸造或销毁。"
+    },
+    "136": {
+      "sources": [
+        "B-scale-summary.json#/provenance",
+        "scale/*/replay.json.gz"
+      ],
+      "text": "第二部分为单节点顺序规模增长实验。24名投资者的混合负载由固定种子生成，只在当前可执行操作中按原方案权重抽样。各权重为：申购请求14、接受14、转让18、赎回请求12、结算12、延迟2、NAV提交10、资格更新8、暂停恢复对4、角色变更对2。一次操作一个区块，时间推进60秒；NAV估值时间与其提交区块时间相同并逐项断言。事件数达到100、1,000或10,000时在操作边界停止，因此允许超过目标。各目标使用3个种子，表11报告种子间均值与样本标准差。该设计不测并发饱和、节点竞争或故障恢复。"
+    },
+    "137": {
+      "sources": [],
+      "text": "表11 顺序规模增长结果（3个种子，均值 ± 样本标准差）"
+    },
+    "139": {
+      "sources": [
+        "B-scale-summary.json#/aggregate",
+        "scale/*/replay.json.gz#/timingSamplesMs",
+        "chains/*.jsonl.gz"
+      ],
+      "text": "注：样本标准差采用n−1分母，时延表项先求每次运行的样本均值，再对3个种子求均值与标准差。原始载荷为每个topic 32字节加data字节；KiB = 1,024字节。事件索引为归档的未压缩JSONL字符串。获取日志按2,000区块分页、重复5次；纯回放预热1次、计时10次，不含获取、解码、最终引用检查或证据写入，各次时延样本全部保存。存储指标为三份合约运行末的非零槽总数，包含初始化状态；槽数/交易数不是净新增槽数/操作，不代表磁盘字节数。"
+    },
+    "140": {
+      "sources": [
+        "spec-v3/review-amendment.v3.1.md",
+        "run.json#/timingScope",
+        "manifest.json"
+      ],
+      "text": "原v3执行存在三项方案偏离：检查点改为累计事件首次达到各十分之一及最终操作，并实时读取视图；首次运行出现历史状态落盘问题，旧稿采用关闭落盘后重跑的时延；原代码的NAV asOf实际早于提交区块60秒，旧稿未披露。v3.1保留前两项历史说明，并纠正第三项后完整重跑9次；旧结果不覆盖、不混用。当前套件顺序运行并记录实际硬件，未保证主机独占，也不选择性替换时延。源码、构建和文件清单校验未完成的运行不得进入正文。"
+    },
+    "141": {
+      "sources": [
+        "B-scale-summary.json#/aggregate/2"
+      ],
+      "text": "在本混合负载的三个规模点上，槽数与索引随事件数增加；单位事件平均gas见表11，这不足以证明每类单项操作的成本不随历史长度变化。10,000事件目标的纯回放为14.79 ± 3.72 ms，日志获取为94.36 ± 6.42 ms。后者在本机均值上更高，但两项不等同于端到端审计时延，仍需解码、校验与业务规则分析。结果来自单基金、本地节点和未持久化历史状态的顺序负载，不能推断生产吞吐量、网络共识性能或普遍优于集中式系统。"
+    },
+    "143": {
+      "sources": [
+        "C-case-summary.json#/steps",
+        "spec-v3/review-amendment.v3.1.md#/Source grounding"
+      ],
+      "text": "EQ5采用基于公开规则的案例验证（case-based validation），尚无独立专家评审或生产部署。该程式化开放式基金综合FATF建议10的持续尽调要求、美国Rule 22c-1(a)的下一次NAV定价及(b)/(d)的计算时点安排、UCITS第84条关于特殊情形下暂停及通知的规定，以及CSSF 24/856关于重大NAV错误及其后果处理的要求。不同法域规则用于提取运营关注点，不构成某一真实基金的完整适法性评估。案例包含管理公司、登记代理、估值代理、董事会和三名投资者；表12保留原26步。其链上结果与审计判断分别报告，数值从本次运行生成。"
+    },
+    "146": {
+      "sources": [
+        "C-case-summary.json",
+        "case/replay.json.gz#/pricingPolicy",
+        "spec-v3/review-amendment.v3.1.md"
+      ],
+      "text": "原26步全部与脚本固定的预期结果一致，其中23笔被接受、3次eth_call预检拒绝，产生39个生命周期事件。Q1修订为下一适用NAV匹配检查：storedAt作为本案例中计算与批准时点的代理，历史更正不作为新的常规定价批次，暂停期收到的指令使用D4 17:00的恢复估值，份额执行在17:10恢复。这些是公开的案例政策输入，无法由事件自身证明。表13同时报告原日期代理判据与修订结果；Q2–Q7保留原问题。本次答案符合补充方案，Q1不得称为原判据未改动的预注册验证。"
+    },
+    "147": {
+      "sources": [],
+      "text": "表13 案例审计查询结果（事件回放及已披露案例政策）"
+    },
+    "149": {
+      "sources": [
+        "C-case-summary.json",
+        "D-posthoc-revoked-transfer.json",
+        "E-next-nav-counterexample.json",
+        "chains/*.jsonl.gz"
+      ],
+      "text": "案例支持对资格、暂停、请求和版本引用之间关系的分析，也暴露实现缺口。提前使用旧NAV和跳过下一NAV均可被冻结合约接受，事后审计必须结合明确政策；链上授权写入不能证明实际估值计算或业务批准。资格撤销后无法新申请赎回，受控退出尚未实现；补充探测仍观察到撤销资格的持有人可以向合格接收方转让，构成不符合模型双边资格条件的退出路径。更晚估值日登记后，C26的历史更正被拒绝，限制了历史错误登记。补偿、现金交割与监管通知仍在链下；本案例仅计算差额并定位受影响业务，不测试完整补救规则。模拟拒绝不进入事件流，其调用及错误另行归档。"
+    },
+    "151": {
+      "sources": [
+        "A-summary.json",
+        "B-scale-summary.json",
+        "C-case-summary.json"
+      ],
+      "text": "上述证据分别回答五个评价问题：所选场景下的具体实现一致性（EQ1）；相对于自建余额及许可型代币基线的约束增量（EQ2）；在声明的输入假设下独立恢复实现投影（EQ3）；本地顺序负载的描述性gas、存储和回放成本（EQ4）；所选公开规则下的业务映射及其缺口（EQ5）。案例不能证明领域完整性，混合负载平均值不能证明每类操作的历史无关性。专家评价、集中式工作流比较、受控退出、显式适用版本选择及历史更正机制仍需后续工作。"
+    }
+  },
+  "tables": {
+    "3": {
+      "sources": [
+        "spec-v3/evaluation-plan.v3.md",
+        "spec-v3/review-amendment.v3.1.md"
+      ],
+      "displayedCells": [
+        [
+          "评价问题",
+          "问题表述",
+          "主要证据",
+          "小节"
+        ],
+        [
+          "EQ1",
+          "原型能否在代表性有效与无效条件下执行生命周期有效性",
+          "42个预注册场景的功能与机制验证；全约束实验变体与生产合约的差分等价",
+          "5.2"
+        ],
+        [
+          "EQ2",
+          "哪些约束对阻止无效生命周期状态是必要的",
+          "五类单谓词消融（M1–M5）；B1、B2两类比较基线",
+          "5.3"
+        ],
+        [
+          "EQ3",
+          "语义事件模型能否支持独立的过程级重构",
+          "闭合输入回放（ARC、NRI、PCR）；比较基线组件可恢复性；规模化与案例回放",
+          "5.4"
+        ],
+        [
+          "EQ4",
+          "生命周期感知控制带来多少执行与存储开销",
+          "交易回执gas与比较基线；100、1,000、10,000事件顺序规模增长实验",
+          "5.5"
+        ],
+        [
+          "EQ5",
+          "所选公开规则下的设计目标与生命周期映射是否相关，暴露哪些完整性缺口",
+          "基于公开运营与监管规则的案例验证",
+          "5.6"
+        ]
+      ]
+    },
+    "4": {
+      "sources": [
+        "run.json",
+        "build/*.artifact.json",
+        "build/*-forge.json",
+        "A-summary.json#/productionGas",
+        "A-summary.json#/comparatorGas"
+      ],
+      "displayedCells": [
+        [
+          "项目",
+          "配置"
+        ],
+        [
+          "合约语言与编译器",
+          "Solidity；solc 0.8.30+commit.73712a01；Osaka；optimizer=false、runs=200；IPFS元数据；完整设置、源码及编译输出随结果归档"
+        ],
+        [
+          "开发与测试框架",
+          "Foundry 1.7.1（forge）；OpenZeppelin Contracts 5.4.0；forge-std 1.10.0"
+        ],
+        [
+          "EVM实现与网络配置",
+          "Anvil 1.7.1，Osaka硬分叉，chainId 31337，固定创世时间戳，自动出块，每个操作独占一个区块，逐操作设定区块时间"
+        ],
+        [
+          "链下回放",
+          "Node.js 22.14.0，viem 2.55.10；纯回放只读取创世配置和日志，合约视图独立保存用于结果比对；规模检查点视图在负载生成时采集，回放不读取视图"
+        ],
+        [
+          "硬件",
+          "Apple M3，8个逻辑CPU，24 GiB内存，darwin / Darwin 25.5.0；套件顺序执行，未保证主机独占；时延为本机描述性观测"
+        ],
+        [
+          "账户与角色",
+          "标准轨迹5个活动账户；规模27个活动账户（24名投资者，链预资助28个账户）；案例7个活动账户（预资助8个）。FundToken含管理员、申购、赎回、暂停角色；NAVRegistry含估值管理角色"
+        ],
+        [
+          "运行时字节码规模",
+          "FundToken 21,671 B；NAVRegistry 10,302 B；RiskRegistry 19,601 B；B1TokenOnly 4,584 B；B2PermissionedAllowlist 7,506 B"
+        ],
+        [
+          "部署gas",
+          "NAVRegistry 2,330,636；FundToken 4,855,363；RiskRegistry 4,579,664；B1 1,132,724；B2 1,763,501；B2另有3笔角色授予。采用本次重建的实测值，不以源码不变推定部署gas等于历史值"
+        ],
+        [
+          "重复与gas采集",
+          "读取成功交易回执gasUsed；生产、B1、B2各5次全新标准轨迹；规模为3个种子×3个目标；获取日志5次，纯回放1次预热后10次计时。拒绝项为eth_call模拟，不是已上链的失败交易"
+        ]
+      ]
+    },
+    "5": {
+      "sources": [
+        "contracts/src/FundToken.sol",
+        "contracts/src/NAVRegistry.sol"
+      ],
+      "displayedCells": [
+        [
+          "谓词",
+          "原型实现",
+          "与模型的差异"
+        ],
+        [
+          "Authorized",
+          "AccessControl角色检查：资格更新与角色变更需DEFAULT_ADMIN，NAV提交需MANAGER，申购接受需SUBSCRIPTION，赎回结算与延迟标记需REDEMPTION，暂停与恢复需PAUSER",
+          "与模型一致；操作与角色的对应关系在部署时固定"
+        ],
+        [
+          "ComplianceValid",
+          "白名单布尔值及资格凭证承诺哈希；申购请求、申购接受和赎回请求检查投资者资格，转让检查受让方资格",
+          "处置状态仅实现正常持仓；资格撤销后既有持仓无法发起赎回；转让方资格未检查；已受理的赎回请求在资格撤销后仍可结算"
+        ],
+        [
+          "NAVValid",
+          "NAV经授权写入后追加为新版本；估值日期asOf不得晚于区块时间、不得回退，允许同一估值日期的更正；接受与结算时绑定最新版本并记录navUsed与navAsOf",
+          "请求不携带显式版本标识；适用性规则（如远期定价）不在链上判断，只能事后核对"
+        ],
+        [
+          "LifecycleValid",
+          "Pausable；暂停期间拦截份额铸造、销毁与转让",
+          "暂停期间仍可受理申购与赎回请求，恢复后再处理"
+        ],
+        [
+          "ParamConsistent",
+          "金额与份额为正；可用份额（余额减去待赎回锁定份额）充足；请求不得重复处理；取整后份额或金额非零",
+          "与模型一致；另以请求状态防止重复接受与重复结算"
+        ]
+      ]
+    },
+    "6": {
+      "sources": [
+        "../../v2.1/m0-run-summary.local.json#/counts",
+        "experiments/paper85-evaluation/spec/scenarios.v1.json"
+      ],
+      "displayedCells": [
+        [
+          "场景类别",
+          "覆盖内容",
+          "场景数",
+          "预期结果",
+          "一致数"
+        ],
+        [
+          "有效（V01–V18）",
+          "资格更新2、NAV提交3、申购4、转让1、赎回4、暂停1、恢复1、角色更新2",
+          "18",
+          "接受并产生规定的状态变化",
+          "18"
+        ],
+        [
+          "无效：Authorized（I01–I05）",
+          "非授权主体更新资格、提交NAV、接受申购、结算赎回、授予角色",
+          "5",
+          "以指定错误码拒绝，状态不变",
+          "5"
+        ],
+        [
+          "无效：ComplianceValid（I06–I09）",
+          "不合格投资者申购、资格撤销后接受申购、向不合格方转让、资格撤销后赎回",
+          "4",
+          "同上",
+          "4"
+        ],
+        [
+          "无效：NAVValid（I10–I13）",
+          "无NAV时接受申购、初始NAV前提交公式NAV、重复初始NAV、估值日期回退",
+          "4",
+          "同上",
+          "4"
+        ],
+        [
+          "无效：LifecycleValid（I14–I17）",
+          "暂停期间转让、接受申购、结算赎回、代理转让",
+          "4",
+          "同上",
+          "4"
+        ],
+        [
+          "无效：ParamConsistent（I18–I24）",
+          "零金额申购、取整为零份额、重复接受、零份额赎回、超额赎回、占用待赎回份额的转让、重复结算",
+          "7",
+          "同上",
+          "7"
+        ],
+        [
+          "合计",
+          "",
+          "42",
+          "",
+          "42"
+        ]
+      ]
+    },
+    "7": {
+      "sources": [
+        "../../v2.1/ablation-run-summary.local.json#/counts"
+      ],
+      "displayedCells": [
+        [
+          "变体",
+          "移除的谓词",
+          "预期一致数",
+          "目标场景",
+          "无效转换被接受",
+          "残余检查拒绝",
+          "运行时回退"
+        ],
+        [
+          "M1",
+          "Authorized",
+          "42/42",
+          "5",
+          "5",
+          "0",
+          "0"
+        ],
+        [
+          "M2",
+          "ComplianceValid",
+          "42/42",
+          "4",
+          "4",
+          "0",
+          "0"
+        ],
+        [
+          "M3",
+          "NAVValid",
+          "42/42",
+          "4",
+          "3",
+          "1",
+          "0"
+        ],
+        [
+          "M4",
+          "LifecycleValid",
+          "42/42",
+          "4",
+          "4",
+          "0",
+          "0"
+        ],
+        [
+          "M5",
+          "ParamConsistent",
+          "42/42",
+          "7",
+          "6",
+          "0",
+          "1"
+        ],
+        [
+          "合计",
+          "五个谓词",
+          "210/210",
+          "24",
+          "22",
+          "1",
+          "1"
+        ]
+      ]
+    },
+    "8": {
+      "sources": [
+        "A-summary.json#/scenarioComparison/byPredicate",
+        "A-scenario-rows.json"
+      ],
+      "displayedCells": [
+        [
+          "目标谓词",
+          "场景数",
+          "原型（表5范围）",
+          "B2 许可型代币+白名单",
+          "B1 仅余额代币"
+        ],
+        [
+          "Authorized",
+          "5",
+          "5 / 0 / 0 / 0",
+          "4 / 0 / 0 / 1",
+          "2 / 0 / 0 / 3"
+        ],
+        [
+          "ComplianceValid",
+          "4",
+          "4 / 0 / 0 / 0",
+          "4 / 0 / 0 / 0",
+          "0 / 4 / 0 / 0"
+        ],
+        [
+          "NAVValid",
+          "4",
+          "4 / 0 / 0 / 0",
+          "0 / 1 / 0 / 3",
+          "0 / 1 / 0 / 3"
+        ],
+        [
+          "LifecycleValid",
+          "4",
+          "4 / 0 / 0 / 0",
+          "4 / 0 / 0 / 0",
+          "0 / 4 / 0 / 0"
+        ],
+        [
+          "ParamConsistent",
+          "7",
+          "7 / 0 / 0 / 0",
+          "1 / 3 / 3 / 0",
+          "1 / 3 / 3 / 0"
+        ],
+        [
+          "合计（无效）",
+          "24",
+          "24 / 0 / 0 / 0",
+          "13 / 4 / 3 / 4",
+          "3 / 12 / 3 / 6"
+        ],
+        [
+          "有效场景可表达数",
+          "18",
+          "18",
+          "9",
+          "3"
+        ]
+      ]
+    },
+    "9": {
+      "sources": [
+        "A-summary.json#/recoverability"
+      ],
+      "displayedCells": [
+        [
+          "投影组件",
+          "完整机制",
+          "B2",
+          "B1"
+        ],
+        [
+          "余额与总份额",
+          "14/14",
+          "14/14",
+          "14/14"
+        ],
+        [
+          "投资者资格",
+          "14/14",
+          "14/14",
+          "未记录"
+        ],
+        [
+          "NAV版本历史",
+          "14/14",
+          "未记录",
+          "未记录"
+        ],
+        [
+          "运营状态",
+          "14/14",
+          "14/14",
+          "未记录"
+        ],
+        [
+          "执行角色分配",
+          "14/14",
+          "14/14",
+          "未记录"
+        ],
+        [
+          "申购赎回请求记录",
+          "14/14",
+          "未记录",
+          "未记录"
+        ],
+        [
+          "NAV引用（NRI）",
+          "2/2",
+          "未记录（0/2）",
+          "未记录（0/2）"
+        ],
+        [
+          "完整投影（PCR）",
+          "14/14",
+          "0/14",
+          "0/14"
+        ],
+        [
+          "链上事件数与类型",
+          "22个，14类",
+          "9个，6类",
+          "3个，1类"
+        ]
+      ]
+    },
+    "10": {
+      "sources": [
+        "A-summary.json#/productionGas/operations",
+        "A-summary.json#/comparatorGas"
+      ],
+      "displayedCells": [
+        [
+          "业务操作",
+          "完整机制",
+          "B2",
+          "B1",
+          "完整机制/B2"
+        ],
+        [
+          "资格更新",
+          "50,158",
+          "48,543",
+          "—",
+          "1.03"
+        ],
+        [
+          "NAV提交",
+          "163,810",
+          "—",
+          "—",
+          "—"
+        ],
+        [
+          "申购",
+          "333,834（请求147,060＋接受186,774）",
+          "76,118",
+          "71,263",
+          "4.39"
+        ],
+        [
+          "赎回",
+          "332,253（请求188,103＋结算144,150）",
+          "41,796",
+          "36,940",
+          "7.95"
+        ],
+        [
+          "受限转让",
+          "67,074",
+          "59,001",
+          "52,167",
+          "1.14"
+        ],
+        [
+          "暂停/恢复",
+          "36,464",
+          "36,485",
+          "—",
+          "1.00"
+        ],
+        [
+          "角色更新",
+          "41,129.5",
+          "41,107",
+          "—",
+          "1.00"
+        ],
+        [
+          "结算延迟标记",
+          "83,006",
+          "—",
+          "—",
+          "—"
+        ]
+      ],
+      "formula": "Mean over five fresh trajectories; paired workflows sum request and effect, other paired categories average the two operation means; ratio divides by B2 mean."
+    },
+    "11": {
+      "sources": [
+        "B-scale-summary.json#/aggregate"
+      ],
+      "displayedCells": [
+        [
+          "指标",
+          "100事件",
+          "1,000事件",
+          "10,000事件"
+        ],
+        [
+          "交易数",
+          "54 ± 2",
+          "486 ± 15",
+          "4,737 ± 44"
+        ],
+        [
+          "被接受生命周期事件数",
+          "103 ± 6",
+          "1,002 ± 2",
+          "10,010 ± 16"
+        ],
+        [
+          "每笔交易gas",
+          "113,081 ± 14,973",
+          "112,070 ± 983",
+          "112,703 ± 1,886"
+        ],
+        [
+          "每个事件gas",
+          "58,878 ± 4,324",
+          "54,419 ± 2,033",
+          "53,336 ± 653"
+        ],
+        [
+          "非零存储槽数（三份合约合计）",
+          "156 ± 16",
+          "1,153 ± 57",
+          "10,877 ± 278"
+        ],
+        [
+          "存储槽数/交易数",
+          "2.90 ± 0.39",
+          "2.37 ± 0.04",
+          "2.30 ± 0.06"
+        ],
+        [
+          "原始日志载荷（KiB）",
+          "19.3 ± 1.8",
+          "185.3 ± 2.2",
+          "1,855.5 ± 16.0"
+        ],
+        [
+          "每个事件日志载荷（B）",
+          "191.1 ± 9.0",
+          "189.4 ± 2.2",
+          "189.8 ± 1.3"
+        ],
+        [
+          "规范化事件索引JSONL（KiB）",
+          "91.2 ± 7.6",
+          "879.1 ± 6.7",
+          "8,815.4 ± 57.2"
+        ],
+        [
+          "日志获取时延（ms）",
+          "3.01 ± 1.87",
+          "9.86 ± 0.38",
+          "94.36 ± 6.42"
+        ],
+        [
+          "回放时延（ms）",
+          "0.30 ± 0.20",
+          "2.06 ± 0.43",
+          "14.79 ± 3.72"
+        ],
+        [
+          "每个事件回放时延（μs）",
+          "2.94 ± 2.08",
+          "2.06 ± 0.42",
+          "1.48 ± 0.37"
+        ],
+        [
+          "ARC / NRI / PCR",
+          "全部为1.00",
+          "全部为1.00",
+          "全部为1.00"
+        ]
+      ],
+      "rowMetrics": [
+        {
+          "key": "transactions",
+          "digits": 0,
+          "divisor": 1
+        },
+        {
+          "key": "acceptedEvents",
+          "digits": 0,
+          "divisor": 1
+        },
+        {
+          "key": "gasPerTransaction",
+          "digits": 0,
+          "divisor": 1
+        },
+        {
+          "key": "gasPerEvent",
+          "digits": 0,
+          "divisor": 1
+        },
+        {
+          "key": "storageSlots",
+          "digits": 0,
+          "divisor": 1
+        },
+        {
+          "key": "storageSlotsPerTransaction",
+          "digits": 2,
+          "divisor": 1
+        },
+        {
+          "key": "rawPayloadBytes",
+          "digits": 1,
+          "divisor": 1024
+        },
+        {
+          "key": "rawPayloadBytesPerEvent",
+          "digits": 1,
+          "divisor": 1
+        },
+        {
+          "key": "normalizedJsonlBytes",
+          "digits": 1,
+          "divisor": 1024
+        },
+        {
+          "key": "getLogsMs",
+          "digits": 2,
+          "divisor": 1
+        },
+        {
+          "key": "replayMs",
+          "digits": 2,
+          "divisor": 1
+        },
+        {
+          "key": "replayUsPerEvent",
+          "digits": 2,
+          "divisor": 1
+        }
+      ]
+    },
+    "12": {
+      "sources": [
+        "C-case-summary.json#/steps",
+        "chains/*.jsonl.gz"
+      ],
+      "displayedCells": [
+        [
+          "阶段",
+          "规则依据",
+          "操作",
+          "链上结果"
+        ],
+        [
+          "开户与资格",
+          "FATF R.10",
+          "完成尽职调查后准入A、B、C",
+          "C01 接受；C02 接受；C03 接受"
+        ],
+        [
+          "首发申购",
+          "Rule 22c-1(a)(b)",
+          "A申购后批准发行NAV 1.00，登记代理按该NAV接受",
+          "C04 接受；C05 接受；C06 接受"
+        ],
+        [
+          "远期定价申购",
+          "Rule 22c-1(a)(b)",
+          "B申购后批准D1 NAV 1.01，按D1 NAV接受",
+          "C07 接受；C08 接受；C09 接受"
+        ],
+        [
+          "定价例外",
+          "Rule 22c-1(a)",
+          "C于D2申购，登记代理在D2 NAV计算前即以D1 NAV接受",
+          "C10 接受；C11 接受"
+        ],
+        [
+          "赎回与错误NAV",
+          "Rule 22c-1(a)(b)",
+          "A赎回100,000份，按随后批准的D2 NAV 1.03结算",
+          "C12 接受；C13 接受；C14 接受"
+        ],
+        [
+          "受限转让",
+          "转让限制",
+          "A向合格投资者B转让50,000份",
+          "C15 接受"
+        ],
+        [
+          "持续尽职调查失败",
+          "FATF R.10",
+          "撤销C的资格，C随后申请赎回",
+          "C16 接受；C17 拒绝（NOT_WHITELISTED）"
+        ],
+        [
+          "暂停交易",
+          "UCITS第84条",
+          "董事会暂停，B在暂停期间申请赎回，登记代理尝试结算",
+          "C18 接受；C19 接受；C20 拒绝（PAUSED）"
+        ],
+        [
+          "NAV更正与恢复",
+          "CSSF 24/856；Rule 22c-1；UCITS第84条",
+          "以同一估值日期追加更正后的D2 NAV 1.02，批准D4 NAV，恢复交易，标记B的结算延迟后结算",
+          "C21 接受；C22 接受；C23 接受；C24 接受；C25 接受"
+        ],
+        [
+          "延迟更正探测",
+          "CSSF 24/856",
+          "在D4 NAV存在后尝试更正D1 NAV",
+          "C26 拒绝（AS_OF_BEFORE_LATEST）"
+        ]
+      ]
+    },
+    "13": {
+      "sources": [
+        "C-case-summary.json#/answers",
+        "E-next-nav-counterexample.json#/pricing"
+      ],
+      "displayedCells": [
+        [
+          "问题",
+          "审计关注点",
+          "回放结果"
+        ],
+        [
+          "Q1",
+          "是否使用请求后下一个适用常规NAV，而非仅检查估值日期晚于请求",
+          "4/5笔匹配；C提前受理被标记。原asOf日期代理也为4/5，但两者不等价。另行链上反例中的请求跳过首个NAV，原代理通过，新审计识别为skipped-next-NAV"
+        ],
+        [
+          "Q2",
+          "哪些已处理业务引用了随后被更正的NAV版本",
+          "仅A的赎回请求0；按同日更正NAV计算的差额为多付1,000货币单位。该算术差额不等于已确定的法律补偿责任或已执行补救"
+        ],
+        [
+          "Q3",
+          "每次份额变动发生时相关方是否具备资格",
+          "6/6次份额变动（3次铸造、1次转让、2次销毁）的相关方在变动时均具备资格"
+        ],
+        [
+          "Q4",
+          "暂停期间发生了哪些业务",
+          "份额变动0次；受理赎回请求1笔；登记NAV版本2个（更正版本与D4版本）"
+        ],
+        [
+          "Q5",
+          "各NAV版本的提交主体与证据引用",
+          "5个版本均可追溯至估值代理及非零证据哈希，其中1个为同一估值日期的更正版本"
+        ],
+        [
+          "Q6",
+          "各检查点的重构投影是否与链上状态一致",
+          "23/23个检查点一致"
+        ],
+        [
+          "Q7",
+          "哪些赎回发生结算延迟及其原因与时长",
+          "B的赎回被标记延迟并附原因哈希，自请求至结算历时26.5小时"
+        ]
+      ]
+    }
+  },
+  "historicalInputs": {
+    "docs/evidence/paper85/v2.1/gas-run-summary.ci.json": "ae631ca318d67b9ec31353b046e26a842c2a756fddfbc85f1cee8ef394db9e5c",
+    "docs/evidence/paper85/v2.1/m0-run-summary.local.json": "46ceebad4a24ffff1226ee1da23252388462e1f6830b9f4649d74c42f792cbce",
+    "docs/evidence/paper85/v2.1/ablation-run-summary.local.json": "78e073919319fe871e60e1c1424a5b03fb280a8a750fd4e6a4a2dc99185814c8",
+    "docs/evidence/paper85/v2.1/replay-run.local.json": "bc454883f085b7549132c2317108bf4e670d30336c5a8d26516c4112e68b7c18",
+    "docs/evidence/paper85/v2.1/m0-run-summary.ci.json": "0ffc7ffa0342fa524e8b02984d6dc40ecd5e03409167caf1c788b1c56e369130",
+    "docs/evidence/paper85/v2.1/replay-run-summary.ci.json": "a27c270a3956981251a1a15fe485fc33810cd343d560bc00a5eece7d53b82f33",
+    "docs/evidence/paper85/v2.1/replay-run-summary.local.json": "566fbc15aeb9e6eef52ef59cadd673f091fabd8b4796f94ef31f91e234023fe8",
+    "docs/evidence/paper85/v2.1/replay-semantic-observations.json": "22b4025eb3ce32809b32c4060bcaff26b6001078f41060d6e971d4e8cfa4a953",
+    "docs/evidence/paper85/v2.1/gas-runs.local.json": "bf5f611591bfc482282b36a7f3640996c50454ca3c2e8f69753aabef3d3c1bc7",
+    "docs/evidence/paper85/v2.1/ci-artifacts.json": "261fafedfa3b9c80f1a63e22adbde0d83f87ddc8421aae8141499d4381699b86",
+    "docs/evidence/paper85/v2.1/gas-run-summary.local.json": "c91917d0d2225e474613b2d8b58da27c7b11acfb5ff742743f982bbc798adc43",
+    "docs/evidence/paper85/v2.1/ablation-run-summary.ci.json": "bc14137f7b7ba0c27b40398213e78c35e5b2bbf41677e9e4345a13bbf52f60cb",
+    "docs/evidence/paper85/v2.1/m0-observations.json": "56e78b202a16f5a8b236f107991b4c5804db54cfe7784b6b1681682b499f1c19",
+    "docs/evidence/paper85/v2.1/gas-table.json": "920f4022e6eeb8c2295820da59e8a7214c8b17a91336f528da8e97f4afc5ee4f"
+  },
+  "historicalManifestSha256": "5f6101c43bffea0a4f4d11b2e5ac7211ad663e0eefdc2e8d9c56229e7b62d714",
+  "outputSha256": "26ffe786f8c9067dab2a1838aca47ac9bde2383ee093cfaeb5af71d6903f60f2",
+  "legalSources": {
+    "FATF R.10": "https://www.fatf-gafi.org/en/publications/Fatfrecommendations/Fatf-recommendations.html",
+    "Rule 22c-1(a)(b)(d)": "https://www.ecfr.gov/current/title-17/chapter-II/part-270/section-270.22c-1",
+    "UCITS Art.84 / amendment EU 2024/927": "https://eur-lex.europa.eu/eli/dir/2024/927/oj/eng",
+    "CSSF 24/856 Chapter 4": "https://www.cssf.lu/wp-content/uploads/CSSF24_856eng.pdf"
+  }
+}

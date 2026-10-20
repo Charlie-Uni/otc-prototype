@@ -1,0 +1,34 @@
+{
+  "status": "detected",
+  "pricing": [
+    {
+      "type": "subscription",
+      "requestId": 0,
+      "investor": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+      "requestedAt": 1710000310,
+      "processedAt": 1710000430,
+      "navAsOf": 1710000370,
+      "observedNavIndex": 0,
+      "nextApplicableNavIndex": 0,
+      "nextComputedAt": 1710000370,
+      "originalAsOfProxy": true,
+      "nextApplicableNavMatches": true,
+      "reason": "next-applicable-NAV"
+    },
+    {
+      "type": "subscription",
+      "requestId": 1,
+      "investor": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+      "requestedAt": 1710000490,
+      "processedAt": 1710000670,
+      "navAsOf": 1710000610,
+      "observedNavIndex": 2,
+      "nextApplicableNavIndex": 1,
+      "nextComputedAt": 1710000550,
+      "originalAsOfProxy": true,
+      "nextApplicableNavMatches": false,
+      "reason": "skipped-next-NAV"
+    }
+  ],
+  "evidence": "next-nav/replay.json.gz"
+}

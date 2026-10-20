@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "outputSha256": "26ffe786f8c9067dab2a1838aca47ac9bde2383ee093cfaeb5af71d6903f60f2",
+  "generatorSha256": "c36c3acb1431a12564cd0bcd0d8bf9cc067215681248b224ef554340ebc7178e",
+  "tableCellsMatchSourceMap": true,
+  "scaleCellsRecomputed": 36,
+  "historicalInputHashesMatch": true,
+  "sealedRunManifestMatches": true,
+  "tables": 13,
+  "chapter5Tables": 11,
+  "renderedPages": 39,
+  "visualInspection": "All pages inspected; pages 1–22 of the final render are pixel-identical to the inspected prefix. Chapter 5 has no clipping or orphan table rows. Earlier chapters retain supplied draft content.",
+  "pdfSha256ForInternalQA": "e44888ed1fc278932751cebc97fc8332595545e6b83be44c8d0cbd80af65142f"
+}
