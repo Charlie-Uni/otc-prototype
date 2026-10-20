@@ -4,7 +4,7 @@
   "evidenceRun": "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac",
   "files": {
     "tools/revise-paper85-section5.py": "0f11b861ba7570c99a2559ef2b3c2dfecd658d1d1e08ee97c98fe0921f9d4ee8",
-    "docs/evidence/paper85/v3-revision/README.md": "ca94e84a04741439218fb5c510bfa1aff9e3b49176bf226b4a298a79d4311d3e",
+    "docs/evidence/paper85/v3-revision/README.md": "6a5cef88406e8ba33d47d6dd9e86a6e1c8f137675077751995f0369af1508f67",
     "docs/evidence/paper85/v3-revision/regression-tests.tap": "e069251b053073e109ddf82f04cc74aa2585e4b4688938d5d035be1f8d231a00",
     "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/manifest.json": "913cd2aef3cbd861b97f761bc2cabc64027fce15ce9b10c63f1ff1cfef5d1f31",
     "docs/manuscript/paper85-v3.1/paper85-section5-claims.json": "e8aefd3fbe733e7447d15521385d40d335c20fd4c36fdf779b63a044522df309",
@@ -16,14 +16,20 @@
     "docs/evidence/paper85/v3-revision/verification-f0127fa538105974b7721c2289dca0ae480eb249.json": "d02f66057b17721a50e2693d01dfe280edcf0b3859ea55133c4774cfb4af38c7",
     "docs/evidence/paper85/v3-revision/review-tables-candidate/README.md": "a77a110b83919b84a076d276e5f95f521b75d8f3acef56003fbb8141ca1408a6",
     "docs/evidence/paper85/v3-revision/review-tables-candidate/regression-tests.tap": "7fba80b95ab2dad35325933e6d9e7098d5ad404be69e28931f7a340210346b8a",
-    "docs/evidence/paper85/v3-revision/review-tables-candidate/verification-candidate-a8fc7185749b.json": "5ad7c1d9c8e4d47d7a0d368c505899c182236287e6e7022ddb2f670a64113c6d"
+    "docs/evidence/paper85/v3-revision/review-tables-candidate/verification-candidate-a8fc7185749b.json": "5ad7c1d9c8e4d47d7a0d368c505899c182236287e6e7022ddb2f670a64113c6d",
+    "docs/evidence/paper85/v3-revision/verification-11840900ea10c1231758bd37e1d39739b67e534c.json": "ae563410be41986b5685f1f02b4ca9725c30d300d62da329f0d17e19b09198df"
   },
-  "verificationCodeCommit": "f0127fa538105974b7721c2289dca0ae480eb249",
-  "verificationReport": "docs/evidence/paper85/v3-revision/verification-f0127fa538105974b7721c2289dca0ae480eb249.json",
+  "verificationCodeCommit": "11840900ea10c1231758bd37e1d39739b67e534c",
+  "verificationReport": "docs/evidence/paper85/v3-revision/verification-11840900ea10c1231758bd37e1d39739b67e534c.json",
   "reviewCandidate": {
-    "status": "pending user approval; no commit or push",
+    "status": "approved; historical precommit snapshot retained",
     "sourceSha256": "a8fc7185749be72ea3fd546fa41f31cc85499e2da1ad5389aecaffac1d1e5a64",
     "report": "docs/evidence/paper85/v3-revision/review-tables-candidate/verification-candidate-a8fc7185749b.json",
-    "readme": "docs/evidence/paper85/v3-revision/review-tables-candidate/README.md"
+    "readme": "docs/evidence/paper85/v3-revision/review-tables-candidate/README.md",
+    "approvedCodeCommit": "11840900ea10c1231758bd37e1d39739b67e534c"
+  },
+  "previousVerification": {
+    "codeCommit": "f0127fa538105974b7721c2289dca0ae480eb249",
+    "report": "docs/evidence/paper85/v3-revision/verification-f0127fa538105974b7721c2289dca0ae480eb249.json"
   }
 }

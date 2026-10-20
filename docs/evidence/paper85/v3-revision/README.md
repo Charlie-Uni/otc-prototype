@@ -4,16 +4,19 @@ Run: [2026-10-20T01-15-00.607Z-f5edfdac](2026-10-20T01-15-00.607Z-f5edfdac/manif
 
 Measurement code: `347ea2636dce91b5381f72c084006de8aea971aa` (generated the sealed run)
 
-Previous approved verification code: `f0127fa538105974b7721c2289dca0ae480eb249`.
+Verification code: `11840900ea10c1231758bd37e1d39739b67e534c` (approved case and Table 8–10 repairs).
 
-The [Table 8–10 review candidate](review-tables-candidate/README.md) adds raw-data
-baseline checks and table-level coverage. It is pending approval, has no new
-commit yet, and preserves the earlier formal report below.
+The [formal verification report](verification-11840900ea10c1231758bd37e1d39739b67e534c.json) records that exact code
+commit, clean governed inputs and all source hashes. It revalidates the complete
+Q1–Q7 answers, baseline classifications, component recoverability, receipt gas
+and displayed Table 8–10 values. Its source digest matches the 71-test
+[preapproval candidate](review-tables-candidate/README.md):
+`a8fc7185749be72ea3fd546fa41f31cc85499e2da1ad5389aecaffac1d1e5a64`.
+The report is stored outside the sealed measurement directory.
 
-The [formal verification report](verification-f0127fa538105974b7721c2289dca0ae480eb249.json)
-records that exact code commit, clean governed inputs, all source hashes and
-complete Q1–Q7 revalidation. Its source digest matches the tested review
-candidate. The report is outside the sealed measurement directory.
+The [previous formal report](verification-f0127fa538105974b7721c2289dca0ae480eb249.json)
+and both preapproval review packages remain unchanged. Their pending/uncommitted
+labels describe historical review states, not the current approved code.
 
 Manifest SHA-256: `913cd2aef3cbd861b97f761bc2cabc64027fce15ce9b10c63f1ff1cfef5d1f31`
 
@@ -98,16 +101,16 @@ real-world adoption, actual valuation computation or regulatory approval.
 The preserved [preapproval review package](review-candidate/README.md) contains
 the code diff, all 54 passing regression results and the earlier candidate
 verification. Its uncommitted labels describe that historical review state.
-The approved code has the same governed source bytes and was verified again
-after commit as recorded in the formal report above. All 101 sealed file hashes,
+The approved f0127fa code has the same governed source bytes and was verified
+again after commit in the [historical formal report](verification-f0127fa538105974b7721c2289dca0ae480eb249.json). All 101 sealed file hashes,
 17 replay streams, 33,527 events, 199 projections, 4,114 NAV references and all
 nine scale runs pass. Case Q1–Q7, including the complete Q2 affected set and
 Q3/Q4/Q5/Q7 details, reproduce the archived answers.
 
 The original `verification.json` and all 101 manifest-bound files remain
 unchanged. No gas or latency measurements were repeated. In that historical
-report, baseline rows were summary-consistency checks. The current review
-candidate below adds reconstruction from preserved records; it still does not
+report, baseline rows were summary-consistency checks. The approved Table 8–10
+repair below adds reconstruction from preserved records; it still does not
 re-execute EVM transitions. The formal report is archived in a separate documentation commit;
 its `verifier.commit` identifies the code commit used for the check.
 
@@ -161,6 +164,8 @@ python tools/audit-paper85-followup.py docs/evidence/paper85/v3-revision/2026-10
 
 ## Current review candidate: baseline tables and verifier portability
 
+Approved verification code: `11840900ea10c1231758bd37e1d39739b67e534c`.
+
 This follow-up fixes the undefined `q1` reference in fresh case-summary creation,
 removes duplicate inline step expectations, and makes historical Git references
 unnecessary for offline verification. New measurement runs still require clean
@@ -191,6 +196,24 @@ rendering. The manuscript and source map have not been edited in this round.
 | 13 | Complete Q1–Q7 answers and next-NAV pricing probe | Case-policy assumptions, not independent regulatory or expert validation |
 
 The original preregistration, amendment, frozen production and baseline
-contracts, and 101 manifest-bound run files remain unchanged. Candidate reports
-and tests are stored outside the sealed run. The candidate report records a
-source digest and dirty review state; approval and a new commit are still pending.
+contracts, and 101 manifest-bound run files remain unchanged. The preapproval
+candidate report, diff, 71-test log and integrity record are preserved as
+historical review snapshots. The formal report above records the approved code
+commit with `governedInputsDirty: false`; all reconstructed values agree with the
+candidate. Both reports are outside the sealed measurement directory.
+
+To reproduce this formal verification with its exact code version, create a
+separate checkout (the example destination must not already exist), install the
+pinned Node/viem dependencies, and write a new report outside the sealed run:
+
+```sh
+git worktree add --detach ../paper85-verifier-1184090 11840900ea10c1231758bd37e1d39739b67e534c
+cd ../paper85-verifier-1184090
+node experiments/paper85-evaluation/scripts/v3/verify-run.mjs docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac /path/outside/sealed-run/verification-1184090.json
+```
+
+This post-commit check passed: 101 manifest-bound hashes, 17 original replay
+streams, 33,527 events, 199 projections, 4,114 NAV references, all nine scale runs,
+all Q1–Q7 answers, 84 baseline classifications and 130 baseline-comparison
+operation receipts. Displayed-cell checks pass for Tables 8–10 within the
+coverage limits above. No EVM or timing measurements were repeated.
