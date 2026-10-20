@@ -1,7 +1,9 @@
-// Part B of the v3 pre-registration: scale and stress runs on the production
+// Part B: sequential scale/growth runs on the production
 // contracts. Usage: node run-scale.mjs [targets=100,1000,10000] [seeds=1,2,3]
-import { resolve } from 'node:path';
+import { resolve, relative } from 'node:path';
 import { performance } from 'node:perf_hooks';
+import { readFile } from 'node:fs/promises';
+import { save } from './evidence.mjs';
 import {
   E18, EVAL_DIR, GENESIS_TIMESTAMP, RESULTS_DIR, ZERO_ROLE,
   account, artifact, decodeLogs, deploy, getLogsPaged, gitHead, invariant, lower, makeRng,
@@ -79,7 +81,7 @@ async function runOne(target, seed, port) {
     const record = (type, receipt) => {
       const lifecycleLogs = receipt.logs.filter((l) => [lower(fund.address), lower(nav.address)].includes(lower(l.address)));
       events += lifecycleLogs.length;
-      ops.push({ type, gasUsed: Number(receipt.gasUsed), events: lifecycleLogs.length, blockNumber: receipt.blockNumber });
+      ops.push({ type, transactionHash: receipt.transactionHash, gasUsed: Number(receipt.gasUsed), events: lifecycleLogs.length, blockNumber: receipt.blockNumber });
     };
     // Checkpoints: the first operation at which cumulative events reach each
     // tenth of the target, plus the final operation. Views are read live at
@@ -160,7 +162,7 @@ async function runOne(target, seed, port) {
         await exec('settlementDelay', w(admin), fund, 'flagSettlementDelayed', [BigInt(req.id), keccak256(stringToHex(`DELAY_${req.id}`))]);
         req.delayed = true;
       } else if (choice === 'navSubmission') {
-        const asOf = BigInt(clock); // timestamp of the latest mined block, <= next block time
+        const asOf = BigInt(clock + STEP_SEC); // same timestamp as the upcoming exec/tick
         if (S.navCount === 0) {
           await exec('navSubmission', w(manager), nav, 'postInitialNAV', [FUND_ID, E18, asOf, keccak256(stringToHex(`NAV_${S.navCount}`))]);
           S.nav = E18;
@@ -203,6 +205,7 @@ async function runOne(target, seed, port) {
       fetchTimes.push(performance.now() - t0);
     }
     const decoded = decodeLogs(raw, contracts);
+    for (const e of decoded.filter((e) => e.eventName === 'NAVUpdatedEvent')) invariant(e.args.asOf === e.args.storedAt, 'NAV asOf must equal its submission block timestamp');
     invariant(decoded.length === events, `event count mismatch ${decoded.length} vs ${events}`);
     const jsonl = decoded.map((e) => JSON.stringify({ ...e, blockNumber: e.blockNumber.toString() })).join('\n');
 
@@ -234,6 +237,9 @@ async function runOne(target, seed, port) {
       while (cursor < decoded.length && decoded[cursor].blockNumber <= cp.block) { applyReplayEvent(replayState, decoded[cursor]); cursor += 1; }
       if (JSON.stringify(normalizedProjection(replayState)) === JSON.stringify(cp.view)) pcrMatched += 1;
     }
+    invariant(pcrMatched === checkpoints.length && navRefs.every((r) => r.valid), 'Scale correctness failed');
+    const evidence = `scale/${target}-s${seed}`;
+    await save(resolve(RESULTS_DIR, evidence, 'replay.json.gz'), { genesis, chainTape: `${relative(RESULTS_DIR, env.client.evidencePath)}.gz`, contracts: contracts.map(({ name, address, abi }) => ({ name, address, abi })), rawLogs: raw, decoded, checkpoints, operations: ops, navReferences: navRefs, finalProjection: normalizedProjection(final.state), timingSamplesMs: { getLogs: fetchTimes, replay: replayTimes }, normalizedJsonl: jsonl });
     const checkpointIdx = checkpoints;
     const byType = {};
     for (const op of ops) (byType[op.type] ??= []).push(op.gasUsed);
@@ -241,7 +247,7 @@ async function runOne(target, seed, port) {
     const eventsByType = {};
     for (const e of decoded) eventsByType[e.eventName] = (eventsByType[e.eventName] ?? 0) + 1;
     return {
-      target, seed, investors: INVESTOR_COUNT,
+      target, seed, investors: INVESTOR_COUNT, evidence: `${evidence}/replay.json.gz`,
       transactions: ops.length, acceptedEvents: decoded.length, eventsByType,
       operationsByType: Object.fromEntries(Object.entries(byType).map(([k, v]) => [k, v.length])),
       gas: {
@@ -252,8 +258,8 @@ async function runOne(target, seed, port) {
       storage: { nonZeroSlots: Object.fromEntries(contracts.map((c) => [c.name, slots[lower(c.address)]])), totalNonZeroSlots: Object.values(slots).reduce((a, b) => a + b, 0) },
       eventIndex: { logs: raw.length, rawPayloadBytes: rawLogBytes(raw), normalizedJsonlBytes: Buffer.byteLength(jsonl) },
       latencyMs: {
-        getLogs: { repetitions: 5, mean: mean(fetchTimes), sd: sd(fetchTimes) },
-        replay: { repetitions: 10, mean: mean(replayTimes), sd: sd(replayTimes) },
+        getLogs: { samples: fetchTimes, repetitions: 5, mean: mean(fetchTimes), sd: sd(fetchTimes) },
+        replay: { samples: replayTimes, repetitions: 10, mean: mean(replayTimes), sd: sd(replayTimes) },
       },
       correctness: {
         arc: { replayed: decoded.length, accepted: events },
@@ -284,9 +290,10 @@ async function main() {
       const run = await runOne(target, seed, port);
       port += 1;
       run.wallClockSec = (performance.now() - t0) / 1000;
-      runs.push(run);
-      console.log(JSON.stringify({ target, seed, tx: run.transactions, events: run.acceptedEvents, gasPerEvent: Math.round(run.gas.perEvent), slots: run.storage.totalNonZeroSlots, rawBytes: run.eventIndex.rawPayloadBytes, replayMs: run.latencyMs.replay.mean.toFixed(2), arc: run.correctness.arc, nri: run.correctness.nri, pcr: run.correctness.pcr, wall: run.wallClockSec.toFixed(1) }));
+      // Aggregate only committed-to-disk run records; never mix a prior run.
       await writeJson(resolve(RESULTS_DIR, `B-scale-run-${target}-s${seed}.json`), run);
+      runs.push(JSON.parse(await readFile(resolve(RESULTS_DIR, `B-scale-run-${target}-s${seed}.json`))));
+      console.log(JSON.stringify({ target, seed, tx: run.transactions, events: run.acceptedEvents, gasPerEvent: Math.round(run.gas.perEvent), slots: run.storage.totalNonZeroSlots, rawBytes: run.eventIndex.rawPayloadBytes, replayMs: run.latencyMs.replay.mean.toFixed(2), arc: run.correctness.arc, nri: run.correctness.nri, pcr: run.correctness.pcr, wall: run.wallClockSec.toFixed(1) }));
     }
   }
   const metric = (rs, f) => { const v = rs.map(f); return { mean: mean(v), sd: sd(v), values: v }; };

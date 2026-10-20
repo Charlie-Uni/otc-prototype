@@ -8,11 +8,13 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { gunzipSync } from 'node:zlib';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { RUN_DIR, assertRuntime, record, recordReceipt } from './evidence.mjs';
 
 export const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 export const EVAL_DIR = resolve(SCRIPT_DIR, '..', '..');
 export const REPO_ROOT = resolve(EVAL_DIR, '..', '..');
-export const RESULTS_DIR = resolve(EVAL_DIR, 'results', 'v3');
+// Runners are launched by run-revision.mjs into a fresh, unsealed directory.
+export const RESULTS_DIR = RUN_DIR;
 
 const requireFromApi = createRequire(resolve(REPO_ROOT, 'apps/api/package.json'));
 export const viem = requireFromApi('viem');
@@ -56,13 +58,14 @@ export function stableStringify(value) {
 export async function writeJson(path, value) {
   await mkdir(dirname(path), { recursive: true });
   const text = `${stableStringify(value)}\n`;
-  await writeFile(path, text);
+  await writeFile(path, text, { flag: 'wx' });
   return sha256(text);
 }
 
 export function gitHead() {
   const commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: REPO_ROOT }).toString().trim();
-  const dirty = execFileSync('git', ['status', '--porcelain', '--', 'experiments/paper85-evaluation/spec-v3', 'experiments/paper85-evaluation/baselines/src', 'contracts/src'], { cwd: REPO_ROOT }).toString().trim() !== '';
+  const dirty = execFileSync('git', ['status', '--porcelain', '--', 'experiments/paper85-evaluation/scripts', 'experiments/paper85-evaluation/spec-v3', 'experiments/paper85-evaluation/spec', 'experiments/paper85-evaluation/baselines', 'contracts/src', 'contracts/foundry.toml', 'apps/api/package.json', 'pnpm-lock.yaml'], { cwd: REPO_ROOT }).toString().trim() !== '';
+  invariant(!dirty, 'Uncommitted governed execution inputs; commit before running');
   return { commit, governedInputsDirty: dirty };
 }
 
@@ -79,11 +82,16 @@ export function toolVersions() {
 export async function artifact(name, { baseline = false } = {}) {
   const root = baseline ? resolve(EVAL_DIR, 'baselines/out') : resolve(REPO_ROOT, 'contracts/out');
   const value = JSON.parse(await readFile(resolve(root, `${name}.sol/${name}.json`)));
+  invariant(RESULTS_DIR, 'Use run-revision.mjs to create an isolated evidence run');
+  const verified = JSON.parse(await readFile(resolve(RESULTS_DIR, 'build', `${name}.artifact.json`)));
+  invariant(sha256(JSON.stringify(value)) === sha256(JSON.stringify(verified)), `${name}: artifact changed after verified build`);
   invariant(/^0x[0-9a-f]+$/i.test(value.bytecode.object), `${name}: missing bytecode`);
   return {
     name,
     abi: value.abi,
     bytecode: value.bytecode.object,
+    runtime: value.deployedBytecode.object,
+    immutableReferences: value.deployedBytecode.immutableReferences,
     deployedSize: (value.deployedBytecode.object.length - 2) / 2,
     initcodeSize: (value.bytecode.object.length - 2) / 2,
   };
@@ -94,6 +102,7 @@ export function account(index) {
 }
 
 export async function startAnvil(port, { accounts = 10, extraArgs = [] } = {}) {
+  invariant(RESULTS_DIR, 'Use run-revision.mjs');
   let stderr = '';
   const child = spawn('anvil', [
     '--port', String(port),
@@ -108,6 +117,11 @@ export async function startAnvil(port, { accounts = 10, extraArgs = [] } = {}) {
   child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
   const rpcUrl = `http://127.0.0.1:${port}`;
   const client = createPublicClient({ transport: http(rpcUrl, { batch: false }), pollingInterval: 5 });
+  const tapeDir = resolve(RESULTS_DIR, 'chains');
+  await mkdir(tapeDir, { recursive: true });
+  client.evidencePath = resolve(tapeDir, `${port}-${Date.now()}.jsonl`);
+  await record(client, { kind: 'chain', port, accounts, chainId: CHAIN_ID, genesisTimestamp: GENESIS_TIMESTAMP,
+    hardfork: 'osaka', automine: true, mnemonic: MNEMONIC, extraArgs });
   for (let attempt = 0; attempt < 200; attempt += 1) {
     if (child.exitCode !== null) throw new Error(`anvil exited: ${stderr}`);
     try {
@@ -150,6 +164,10 @@ export async function deploy({ client, wallet, art, args, at }) {
   const hash = await wallet.deployContract({ abi: art.abi, bytecode: art.bytecode, args });
   const receipt = await receiptOf(client, hash, `deploy ${art.name}`);
   invariant(receipt.status === 'success' && receipt.contractAddress, `deploy ${art.name} failed`);
+  const runtime = await client.getCode({ address: receipt.contractAddress });
+  assertRuntime(runtime, art);
+  await recordReceipt(client, receipt, { deployment: art.name, args, at, runtime,
+    verifiedArtifact: `build/${art.name}.artifact.json` });
   return { address: receipt.contractAddress, abi: art.abi, name: art.name, receipt };
 }
 
@@ -181,23 +199,42 @@ export function revertReason(error) {
 // Simulate first so that a rejected call never mines a block; a rejected
 // lifecycle request therefore leaves state and the event log unchanged.
 export async function tryWrite({ client, wallet, contract, functionName, args = [], at }) {
+  // Encoding errors are harness errors, never evidence of a contract rejection.
+  const data = viem.encodeFunctionData({ abi: contract.abi, functionName, args });
+  const input = { from: wallet.account.address, to: contract.address, contract: contract.name, functionName, args, data, at };
   try {
     // Simulate in the environment of the block that will include the call
     // (its timestamp is pinned below), so time-dependent guards are exact.
     await client.call({
       account: wallet.account,
       to: contract.address,
-      data: viem.encodeFunctionData({ abi: contract.abi, functionName, args }),
+      data,
       ...(at !== undefined ? { blockOverrides: { time: BigInt(at) } } : {}),
     });
   } catch (error) {
-    return { status: 'rejected', reason: decodeRevert(error, contract.abi) };
+    // viem wraps JSON-RPC execution reverts in an error cause chain. Only the
+    // EVM's execution-reverted code (3) or a typed revert qualifies. Transport,
+    // rate-limit, timeout and encoding failures must abort the experiment.
+    if (!isEvmRevert(error)) throw error;
+    const result = { status: 'rejected', stage: 'eth_call', reason: decodeRevert(error, contract.abi) };
+    await record(client, { kind: 'simulated-rejection', input, ...result,
+      error: { name: error.name, message: error.message, details: error.details } });
+    return result;
   }
   if (at !== undefined) await setNextTimestamp(client, at);
   const hash = await wallet.writeContract({ address: contract.address, abi: contract.abi, functionName, args, gas: 3_000_000n });
   const receipt = await receiptOf(client, hash, functionName);
   invariant(receipt.status === 'success', `${functionName}: mined but reverted`);
+  await recordReceipt(client, receipt, input);
   return { status: 'accepted', receipt };
+}
+
+export function isEvmRevert(error) {
+  for (let cause = error; cause; cause = cause.cause) {
+    if (cause instanceof ContractFunctionRevertedError || cause instanceof viem.ExecutionRevertedError) return true;
+    if (cause.code === 3 && /execution reverted/i.test(cause.message ?? '')) return true;
+  }
+  return false;
 }
 
 export async function mustWrite(opts) {
@@ -247,6 +284,9 @@ export async function storageSlots(client, addresses) {
   const dumpHex = await client.request({ method: 'anvil_dumpState', params: [] });
   const json = JSON.parse(gunzipSync(Buffer.from(dumpHex.slice(2), 'hex')).toString());
   const accounts = json.accounts ?? {};
+  // Preserve slot keys/values, not merely the count. Exclude funded EOA state.
+  await record(client, { kind: 'storage', accounts: Object.fromEntries(Object.entries(accounts)
+    .filter(([addr]) => addresses.map(lower).includes(lower(addr)))) });
   const result = {};
   for (const addr of addresses) {
     const entry = Object.entries(accounts).find(([key]) => lower(key) === lower(addr));

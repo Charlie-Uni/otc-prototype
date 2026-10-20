@@ -4,6 +4,7 @@
 //   A3 receipt gas of comparator counterpart operations (5 fresh deployments)
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { assertRuntime, record, recordReceipt, save } from './evidence.mjs';
 import {
   E18, EVAL_DIR, GENESIS_TIMESTAMP, RESULTS_DIR, ZERO_ADDRESS, ZERO_ROLE,
   account, artifact, decodeLogs, deploy, gitHead, invariant, lower, mean, mustWrite, sd,
@@ -171,6 +172,7 @@ async function runScenarioComparison(mapping, sealed) {
       const { token } = await deployComparator(env, kind);
       let snap = await env.client.request({ method: 'evm_snapshot', params: [] });
       for (const scenario of mapping.scenarios) {
+        await record(env.client, { kind: 'scenario', id: scenario.id, comparator: kind, fixture: fixtureOf[scenario.id] });
         const expected = scenario[kind].expected;
         const valid = scenario.id.startsWith('V');
         await buildFixture(env, kind, token, fixtureOf[scenario.id]);
@@ -189,10 +191,11 @@ async function runScenarioComparison(mapping, sealed) {
           else if (valid) observed = 'represented_accept';
           else observed = ledgerChanged ? 'accepted_state_change' : 'accepted_no_state_change';
           const logs = result.receipt ? result.receipt.logs.length : 0;
-          detail = { call: `${fn} by ${who}`, status: result.status, reason: result.reason ?? null, ledgerChanged, logsWritten: logs, before, after };
+          detail = { call: `${fn} by ${who}`, status: result.status, stage: result.stage ?? 'mined', reason: result.reason ?? null, transactionHash: result.receipt?.transactionHash ?? null, ledgerChanged, logsWritten: logs, before, after };
         }
         rows.push({ comparator: kind, id: scenario.id, class: valid ? 'valid' : 'invalid', targetPredicate: sealed.scenarios.find((s) => s.id === scenario.id).targetPredicate ?? null, expected, observed, match: expected === observed, ...detail });
         await env.client.request({ method: 'evm_revert', params: [snap] });
+        await record(env.client, { kind: 'snapshot-revert', scenario: scenario.id, snapshot: snap });
         snap = await env.client.request({ method: 'evm_snapshot', params: [] });
       }
     } finally {
@@ -293,14 +296,26 @@ async function runComparatorTrajectory(kind, port) {
     const fromBlock = deployReceipts.at(-1).blockNumber + 1n;
     const raw = await env.client.request({ method: 'eth_getLogs', params: [{ address: [token.address], fromBlock: toHex(fromBlock), toBlock: 'latest' }] });
     const decoded = decodeLogs(raw, [token]);
+    await save(resolve(RESULTS_DIR, 'trajectories', `${kind}-${port}.json`), { steps, contracts: [{ name: token.name, address: token.address, abi: token.abi }], rawLogs: raw, decoded, deployReceipts });
     return { steps, decoded, deployGas: deployReceipts.map((r) => Number(r.gasUsed)), deployedSize: (await artifact(token.name, { baseline: true })).deployedSize };
   } finally {
     await env.stop();
   }
 }
 
-async function productionCheckpointProjections() {
-  const scenario = await startReplayScenario(18660);
+async function productionCheckpointProjections(port = 18660) {
+  const scenario = await startReplayScenario(port, { observeClient: async (client) => {
+    client.evidencePath = resolve(RESULTS_DIR, `chains/canonical-${port}.jsonl`);
+    client.onReceipt = async (receipt, input) => {
+      await recordReceipt(client, receipt, input);
+      if (receipt.contractAddress) {
+        const art = await artifact(input.label.replace('deploy ', ''));
+        const runtime = await client.getCode({ address: receipt.contractAddress });
+        assertRuntime(runtime, art);
+        await record(client, { kind: 'deployment-runtime', name: art.name, address: receipt.contractAddress, runtime });
+      }
+    };
+  } });
   try {
     scenario.markReplayComplete();
     const nameOf = new Map([
@@ -316,9 +331,12 @@ async function productionCheckpointProjections() {
     const state = createReplayState(scenario.genesis);
     let navRefs = 0;
     for (const event of scenario.rawLogs) navRefs += applyReplayEvent(state, event).length;
+    await save(resolve(RESULTS_DIR, `canonical/${port}.json.gz`), { genesis: scenario.genesis, rawLogs: scenario.rawRpcLogs,
+      contracts: Object.entries(scenario.contracts).map(([key, c]) => ({ ...c, name: { fundToken: 'FundToken', navRegistry: 'NAVRegistry', riskRegistry: 'RiskRegistry' }[key] })),
+      decoded: scenario.rawLogs, checkpoints: projections.map((p, i) => ({ block: scenario.checkpoints[i].blockNumber, view: p.projection })), finalProjection: normalizedProjection(state) });
     const eventTypes = {};
     for (const event of scenario.rawLogs) eventTypes[event.eventName] = (eventTypes[event.eventName] ?? 0) + 1;
-    return { projections, acceptedEvents: scenario.rawLogs.length, eventTypes, navReferences: navRefs, finalProjection: normalizedProjection(state) };
+    return { projections, checkpoints: scenario.checkpoints, deploymentGas: scenario.bootstrapReceipts.slice(0, 3).map((r) => Number(r.gasUsed)), acceptedEvents: scenario.rawLogs.length, eventTypes, navReferences: navRefs, finalProjection: normalizedProjection(state) };
   } finally {
     await scenario.close();
   }
@@ -420,14 +438,24 @@ async function main() {
   const comparison = await runScenarioComparison(mapping, sealed);
   const recoverability = await runRecoverability();
   const gas = await runComparatorGas(5);
+  const productionSamples = [];
+  for (let i = 0; i < 5; i++) productionSamples.push(await productionCheckpointProjections(19100 + i));
+  const productionGas = { repetitions: 5, deploymentGas: productionSamples[0].deploymentGas,
+    samples: productionSamples.map((r) => r.checkpoints), operations: {} };
+  for (let i = 0; i < 14; i++) {
+    const values = productionSamples.map((r) => Number(r.checkpoints[i].gasUsed));
+    productionGas.operations[productionSamples[0].checkpoints[i].operationId] = { samples: values, meanGas: mean(values), sdGas: sd(values) };
+  }
   const summary = {
     experiment: 'paper85-v3-part-A-comparators',
     provenance,
     scenarioComparison: { totals: comparison.totals, preregisteredTotals: comparison.preregisteredTotals, byPredicate: comparison.byPredicate, allRowsMatchPreregistration: comparison.rows.every((r) => r.match) },
     recoverability,
     comparatorGas: gas,
+    productionGas,
   };
   const rowsHash = await writeJson(resolve(RESULTS_DIR, 'A-scenario-rows.json'), comparison.rows);
+  invariant(comparison.rows.every((r) => r.match), 'Baseline scenario mismatch');
   summary.rowsSha256 = rowsHash;
   const summaryHash = await writeJson(resolve(RESULTS_DIR, 'A-summary.json'), summary);
   console.log(JSON.stringify({ summaryHash, totals: comparison.totals, mismatches: comparison.rows.filter((r) => !r.match).map((r) => `${r.comparator}:${r.id} expected ${r.expected} observed ${r.observed}`), recoverability: Object.fromEntries(Object.entries(recoverability.comparators).map(([k, v]) => [k, v.components])), gas }, null, 2));

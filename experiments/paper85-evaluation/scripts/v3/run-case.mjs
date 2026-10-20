@@ -3,6 +3,8 @@
 // replayed event log and the genesis configuration only; contract views are
 // read afterwards solely to check projection consistency (Q6).
 import { resolve } from 'node:path';
+import { save } from './evidence.mjs';
+import { auditPricing } from './audit-pricing.mjs';
 import {
   E18, EVAL_DIR, GENESIS_TIMESTAMP, RESULTS_DIR, ZERO_ADDRESS, ZERO_ROLE,
   account, artifact, decodeLogs, deploy, gitHead, invariant, lower, mustWrite, readChainProjection,
@@ -154,11 +156,11 @@ async function main() {
       projections.set(e.blockNumber.toString(), normalizedProjection(state));
     }
     const finalizedRefs = finalizeNavReferences(state, navRefs);
-    // Q1: forward pricing (NAV asOf strictly after order receipt)
-    const q1 = [
-      ...state.subscriptions.map((s, i) => [s, i]).filter(([s]) => s.accepted).map(([s, i]) => ({ type: 'subscription', requestId: i, investor: NAME[s.investor], requestedAt: Number(s.requestedAt), navAsOf: Number(s.navAsOf), forwardPriced: Number(s.navAsOf) > Number(s.requestedAt) })),
-      ...state.redemptions.map((r, i) => [r, i]).filter(([r]) => r.settled).map(([r, i]) => ({ type: 'redemption', requestId: i, investor: NAME[r.investor], requestedAt: Number(r.requestedAt), navAsOf: Number(r.settlementNavAsOf), forwardPriced: Number(r.settlementNavAsOf) > Number(r.requestedAt) })),
-    ];
+    // Explicit case policy. NAV index 3 is a historical correction, not a new
+    // dealing NAV. Queued suspension orders use the resumption valuation at
+    // D4 17:00; share execution resumes at 17:10. storedAt proxies computation.
+    const pricingPolicy = { correctionIndices: [3], suspensions: [{ from: at(3, 14), resume: at(4, 17) }] };
+    const q1 = auditPricing(state, finalizedRefs, pricingPolicy).map((r) => ({ ...r, investor: NAME[r.investor] }));
     // Q2: requests processed at a NAV version later superseded by a same-asOf correction
     const superseded = new Set(navProvenance.filter((v) => v.correctionOf !== null).map((v) => v.correctionOf));
     const q2 = finalizedRefs.filter((r) => superseded.has(r.latestRecoverableNavIndex)).map((r) => ({ event: r.eventName, requestId: r.requestId, navIndex: r.latestRecoverableNavIndex, nav: r.referencedNav }));
@@ -174,15 +176,17 @@ async function main() {
     }
     // Q6: projection consistency after every accepted operation
     let pcrMatched = 0;
+    const checkpoints = [];
     for (const entry of accepted) {
       const view = await readChainProjection(env.client, fund, nav, genesis, entry.blockNumber, FUND_ID);
+      checkpoints.push({ block: entry.blockNumber, view });
       const replayed = projections.get(entry.blockNumber.toString());
       entry.projectionMatches = JSON.stringify(replayed) === JSON.stringify(view);
       if (entry.projectionMatches) pcrMatched += 1;
     }
 
     const answers = {
-      Q1: { compliant: q1.filter((x) => x.forwardPriced).length, total: q1.length, exceptions: q1.filter((x) => !x.forwardPriced), detail: q1 },
+      Q1: { matchingCasePolicy: q1.filter((x) => x.nextApplicableNavMatches).length, total: q1.length, exceptions: q1.filter((x) => !x.nextApplicableNavMatches), originalProxyMatching: q1.filter((x) => x.originalAsOfProxy).length, detail: q1 },
       Q2: { affected: q2 },
       Q3: { movements: eligibilityChecks.length, eligibleAtTime: eligibilityChecks.filter((x) => x.eligible).length, detail: eligibilityChecks },
       Q4: suspension,
@@ -191,7 +195,7 @@ async function main() {
       Q7: { delayed: delays },
     };
     const expected = {
-      Q1: answers.Q1.compliant === 4 && answers.Q1.total === 5 && answers.Q1.exceptions.length === 1 && answers.Q1.exceptions[0].investor === 'C' && answers.Q1.exceptions[0].type === 'subscription',
+      Q1: answers.Q1.matchingCasePolicy === 4 && answers.Q1.total === 5 && answers.Q1.exceptions.length === 1 && answers.Q1.exceptions[0].investor === 'C' && answers.Q1.exceptions[0].type === 'subscription',
       Q2: q2.length === 1 && q2[0].investor === 'A' && q2[0].event === 'RedemptionSettled',
       Q3: answers.Q3.eligibleAtTime === answers.Q3.movements,
       Q4: suspension.shareMovements === 0 && suspension.redemptionRequests === 1 && suspension.navVersions === 2,
@@ -210,9 +214,12 @@ async function main() {
       arc: { replayed: events.length, accepted: events.length },
       nri: { valid: finalizedRefs.filter((r) => r.valid).length, total: finalizedRefs.length },
       answers,
-      preregisteredAnswersMatch: expected,
+      revisedAnswersMatch: expected,
+      originalPreregisteredQ1Proxy: { matching: answers.Q1.originalProxyMatching, total: q1.length },
       finalProjectionSha256: sha256(JSON.stringify(normalizedProjection(state))),
     };
+    invariant(log.every((e) => e.match) && Object.values(expected).every(Boolean) && finalizedRefs.every((r) => r.valid), 'Case validation failed');
+    await save(resolve(RESULTS_DIR, 'case/replay.json.gz'), { genesis, contracts: contracts.map(({ name, address, abi }) => ({ name, address, abi })), rawLogs: raw, decoded: events, checkpoints, pricingPolicy, navReferences: finalizedRefs, finalProjection: normalizedProjection(state) });
     const hash = await writeJson(resolve(RESULTS_DIR, 'C-case-summary.json'), summary);
     console.log(JSON.stringify({ hash, steps: `${summary.stepsMatchingPreregistration}/${log.length}`, accepted: accepted.length, events: events.length, nri: summary.nri, pcr: answers.Q6, expected, q1: answers.Q1.exceptions, q2, q4: suspension, q7: delays }, null, 1));
   } finally {

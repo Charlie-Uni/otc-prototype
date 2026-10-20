@@ -95,6 +95,7 @@ async function setNextTimestamp(client, atSec) {
 async function waitReceipt(client, hash, label) {
   const receipt = await client.waitForTransactionReceipt({ hash });
   invariant(receipt.status === 'success', `${label}: transaction reverted`);
+  await client.onReceipt?.(receipt, { label });
   return receipt;
 }
 
@@ -273,7 +274,7 @@ function decodeLogs(rawLogs, contracts) {
   ));
 }
 
-export async function startReplayScenario(port) {
+export async function startReplayScenario(port, { observeClient } = {}) {
   const rpcUrl = `http://127.0.0.1:${port}`;
   let stderr = '';
   const child = spawn('anvil', [
@@ -289,6 +290,7 @@ export async function startReplayScenario(port) {
   const client = createPublicClient({ transport: http(rpcUrl) });
   try {
     await waitForAnvil(client, child, () => stderr);
+    await observeClient?.(client);
     const accounts = {
       admin: mnemonicToAccount(MNEMONIC, { addressIndex: 0 }),
       manager: mnemonicToAccount(MNEMONIC, { addressIndex: 1 }),
@@ -425,8 +427,10 @@ export async function startReplayScenario(port) {
       actors,
       roleChecks,
       checkpoints,
+      bootstrapReceipts,
       bootstrapLogs: decodeLogs(bootstrapRawLogs, contracts),
       rawLogs: decodedLogs,
+      rawRpcLogs: rawLogs,
       markReplayComplete() {
         replayComplete = true;
       },
