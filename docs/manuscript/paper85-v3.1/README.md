@@ -26,3 +26,14 @@ The manuscript is explicit about simulated rejections, the post-review NAV
 criterion, case-policy assumptions, sequential scale limits, current host and
 rebuild deployment gas. It does not claim expert validation, production
 operation, complete legal applicability, or per-operation history independence.
+
+The follow-up revision labels both supplementary probes as non-preregistered,
+describes the skipped-next-NAV design, and identifies C26 as a historical
+correction gap. Table 4 distinguishes the verified FundToken constructor-input
+gas difference from the unconfirmed B2 metadata hypothesis. Table 11 is traced
+to the nine revised per-run files, including the 12-gas raw difference hidden by
+display rounding. Reproduce `docs/evidence/paper85/v3-revision/followup-audit.json`
+with `tools/audit-paper85-followup.py` before regenerating the DOCX; the generator
+checks its input hashes and binds it in the claims map. The original
+preregistration, frozen production sources and sealed measurement run remain
+unchanged.

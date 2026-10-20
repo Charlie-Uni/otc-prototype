@@ -3,8 +3,12 @@
   "run": "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac",
   "manifestSha256": "913cd2aef3cbd861b97f761bc2cabc64027fce15ce9b10c63f1ff1cfef5d1f31",
   "executionCommit": "347ea2636dce91b5381f72c084006de8aea971aa",
-  "generatorSha256": "c36c3acb1431a12564cd0bcd0d8bf9cc067215681248b224ef554340ebc7178e",
-  "sourceResolution": "Run-relative paths first; spec-v3 and scripts are relative to experiments/paper85-evaluation; contracts and experiments paths are repository-relative. Wildcards select all matching archived evidence.",
+  "generatorSha256": "0f11b861ba7570c99a2559ef2b3c2dfecd658d1d1e08ee97c98fe0921f9d4ee8",
+  "followupAudit": {
+    "path": "docs/evidence/paper85/v3-revision/followup-audit.json",
+    "sha256": "17c0ac2847dda798ff73fdeb3cc58add627f23c8d43c544a11992c8875c2eca6"
+  },
+  "sourceResolution": "Run-relative paths first; spec-v3 and scripts are relative to experiments/paper85-evaluation; contracts, experiments and docs paths are repository-relative. Wildcards select all matching archived evidence.",
   "blocks": {
     "99": {
       "sources": [
@@ -22,6 +26,12 @@
         "chains/*.jsonl.gz"
       ],
       "text": "原型由三份Solidity合约构成。FundToken维护份额、资格、申购赎回请求、待赎回锁定份额及运营状态；NAVRegistry维护追加式NAV序列；RiskRegistry提供赎回控制接口，本评价仅配置该依赖，不提交风险指标或触发风险控制。实现采用OpenZeppelin的ERC-20、AccessControl与Pausable组件。生产源码与chapter3-artifact-v1.4.0逐字节一致。本次运行先核对冻结源码与原预注册，再重建并以归档的字面源码和设置独立编译，比较创建及运行时字节码；部署后再次核对代码（构造器不可变值位置单独保留）。表4报告本次实际环境和构建结果。"
+    },
+    "table4-note": {
+      "sources": [
+        "docs/evidence/paper85/v3-revision/followup-audit.json#/deployment"
+      ],
+      "text": "注：FundToken标准轨迹部署为4,855,363 gas，规模轨迹为4,855,351 gas；两者创建字节码相同，构造参数不同，标准轨迹输入少1个零字节，输入计费恰好多12 gas。B2本次为1,763,501 gas，较原v3多12 gas；元数据哈希的零字节分布变化可产生此差异，但旧v3未归档创建输入与字节码，无法确认其具体成因。相同字节码长度不保证相同部署gas。"
     },
     "106": {
       "sources": [
@@ -51,7 +61,7 @@
       "sources": [
         "../../v2.1/ablation-run-summary.local.json#/counts"
       ],
-      "text": "EQ2保留五类单谓词消融，每次只移除一个谓词检查，其余逻辑不变，运行全部42个场景。移除guard后放行相应操作具有同义反复，因此消融用于检查剩余约束能否在这些场景中阻止同类无效转换，不证明一般必要性。表7中24个目标场景有22个被接受；I10在M3下仍因无NAV记录回退，M5中另有一个场景触发算术下溢。全部210项分类与预期一致，24个目标场景的62项字段断言通过。两类独立实现的比较基线进一步检验原型相对常规代币账本所增加的约束范围。"
+      "text": "EQ2保留五类单谓词消融，每次只移除一个谓词检查，其余逻辑不变，运行全部42个场景。移除guard后放行相应操作具有同义反复，因此消融用于检查剩余约束能否在这些场景中阻止同类无效转换，不证明一般必要性。表7中24个目标场景有22个被接受；I10在M3下仍因无NAV记录回退，M5中另有一个场景触发算术下溢。全部210项分类与预期一致，24个目标场景的62项字段断言通过。两类自建比较基线进一步检验原型相对常规代币账本所增加的约束范围。"
     },
     "122": {
       "sources": [
@@ -72,7 +82,7 @@
       "sources": [
         "A-summary.json#/recoverability"
       ],
-      "text": "为说明这一结果并非任何链上账本都具备，将同一业务轨迹在B1和B2上执行，并在每个检查点按组件比较其事件回放结果与完整机制的投影（表9）。两类基线都能由Transfer事件恢复余额与总份额。B2还能恢复资格、运营状态和执行角色分配，但两类基线都没有记录NAV版本历史和请求记录，两项NAV引用也都没有链上记录。组件不被记录时，即使其真实取值恰好为空也不计为可恢复，因此两类基线的完整投影一致数均为0/14。若改为按取值相等计算，B2在首个NAV记录产生之前的2个检查点上可视为一致，结论不变。 B2的执行角色项只比较候选发行人权限与原型申购执行权的对应，不代表完整机构权限模型。"
+      "text": "为说明这一结果并非任何链上账本都具备，将同一业务轨迹在B1和B2上执行，并在每个检查点按组件比较其事件回放结果与完整机制的投影（表9）。两类基线都能由Transfer事件恢复余额与总份额。B2还能恢复资格、运营状态和执行角色分配，但两类基线都没有记录NAV版本历史和请求记录，两项NAV引用也都没有链上记录。组件不被记录时，即使其真实取值恰好为空也不计为可恢复，因此两类基线的完整投影一致数均为0/14。若改为按取值相等计算，B2在首个NAV记录产生之前的2个检查点上可视为一致，结论不变。B2的执行角色项只比较候选发行人权限与原型申购执行权的对应，不代表完整机构权限模型。"
     },
     "129": {
       "sources": [
@@ -113,15 +123,16 @@
       "sources": [
         "spec-v3/review-amendment.v3.1.md",
         "run.json#/timingScope",
-        "manifest.json"
+        "manifest.json",
+        "docs/evidence/paper85/v3-revision/followup-audit.json#/scaleRuns"
       ],
-      "text": "原v3执行存在三项方案偏离：检查点改为累计事件首次达到各十分之一及最终操作，并实时读取视图；首次运行出现历史状态落盘问题，旧稿采用关闭落盘后重跑的时延；原代码的NAV asOf实际早于提交区块60秒，旧稿未披露。v3.1保留前两项历史说明，并纠正第三项后完整重跑9次；旧结果不覆盖、不混用。当前套件顺序运行并记录实际硬件，未保证主机独占，也不选择性替换时延。源码、构建和文件清单校验未完成的运行不得进入正文。"
+      "text": "原v3执行存在三项方案偏离：检查点改为累计事件首次达到各十分之一及最终操作，并实时读取视图；首次运行出现历史状态落盘问题，旧稿采用关闭落盘后重跑的时延；原代码的NAV asOf实际早于提交区块60秒，旧稿未披露。v3.1保留前两项历史说明，并纠正第三项后完整重跑9次；旧结果不覆盖、不混用。表11由本次9份逐次运行JSON重新汇总，交易数、存储槽和日志字节与原v3相同；10,000事件种子1的总gas少12，源于时钟修正改变1个输入零字节，表中舍入后数值仍相同。当前套件顺序运行并记录实际硬件，未保证主机独占，也不选择性替换时延。源码、构建和文件清单校验未完成的运行不得进入正文。"
     },
     "141": {
       "sources": [
         "B-scale-summary.json#/aggregate/2"
       ],
-      "text": "在本混合负载的三个规模点上，槽数与索引随事件数增加；单位事件平均gas见表11，这不足以证明每类单项操作的成本不随历史长度变化。10,000事件目标的纯回放为14.79 ± 3.72 ms，日志获取为94.36 ± 6.42 ms。后者在本机均值上更高，但两项不等同于端到端审计时延，仍需解码、校验与业务规则分析。结果来自单基金、本地节点和未持久化历史状态的顺序负载，不能推断生产吞吐量、网络共识性能或普遍优于集中式系统。"
+      "text": "在本混合负载的三个规模点上，槽数与索引随事件数增加；单位事件平均gas见表11，这不足以证明每类单项操作的成本不随历史长度变化。10,000事件目标的纯回放为14.79 ± 3.72 ms，日志获取为94.36 ± 6.42 ms。日志获取耗时高于纯回放，但两项不等同于端到端审计时延，仍需解码、校验与业务规则分析。结果来自单基金、本地节点和未持久化历史状态的顺序负载，不能推断生产吞吐量、网络共识性能或普遍优于集中式系统。"
     },
     "143": {
       "sources": [
@@ -134,9 +145,10 @@
       "sources": [
         "C-case-summary.json",
         "case/replay.json.gz#/pricingPolicy",
-        "spec-v3/review-amendment.v3.1.md"
+        "spec-v3/review-amendment.v3.1.md",
+        "E-next-nav-counterexample.json"
       ],
-      "text": "原26步全部与脚本固定的预期结果一致，其中23笔被接受、3次eth_call预检拒绝，产生39个生命周期事件。Q1修订为下一适用NAV匹配检查：storedAt作为本案例中计算与批准时点的代理，历史更正不作为新的常规定价批次，暂停期收到的指令使用D4 17:00的恢复估值，份额执行在17:10恢复。这些是公开的案例政策输入，无法由事件自身证明。表13同时报告原日期代理判据与修订结果；Q2–Q7保留原问题。本次答案符合补充方案，Q1不得称为原判据未改动的预注册验证。"
+      "text": "原26步全部与脚本固定的预期结果一致，其中23笔被接受、3次eth_call预检拒绝，产生39个生命周期事件。Q1修订为下一适用NAV匹配检查：storedAt作为本案例中计算与批准时点的代理，历史更正不作为新的常规定价批次，暂停期收到的指令使用D4 17:00的恢复估值，份额执行在17:10恢复。这些是公开的案例政策输入，无法由事件自身证明。表13同时报告原日期代理判据与修订结果；Q2–Q7保留原问题。本次答案符合补充方案，Q1不得称为原判据未改动的预注册验证。原v3结果审查后另做一项非预注册的补充探测：同一申购请求后依次登记两个常规NAV，再按第二个NAV受理，以检验审计能否识别跳过首个适用NAV的情况；结果随本次修订运行归档。"
     },
     "147": {
       "sources": [],
@@ -149,7 +161,7 @@
         "E-next-nav-counterexample.json",
         "chains/*.jsonl.gz"
       ],
-      "text": "案例支持对资格、暂停、请求和版本引用之间关系的分析，也暴露实现缺口。提前使用旧NAV和跳过下一NAV均可被冻结合约接受，事后审计必须结合明确政策；链上授权写入不能证明实际估值计算或业务批准。资格撤销后无法新申请赎回，受控退出尚未实现；补充探测仍观察到撤销资格的持有人可以向合格接收方转让，构成不符合模型双边资格条件的退出路径。更晚估值日登记后，C26的历史更正被拒绝，限制了历史错误登记。补偿、现金交割与监管通知仍在链下；本案例仅计算差额并定位受影响业务，不测试完整补救规则。模拟拒绝不进入事件流，其调用及错误另行归档。"
+      "text": "案例支持对资格、暂停、请求和版本引用之间关系的分析，也暴露实现缺口。提前使用旧NAV和跳过下一NAV均可被冻结合约接受，事后审计必须结合明确政策；链上授权写入不能证明实际估值计算或业务批准。资格撤销后无法新申请赎回，受控退出尚未实现；另一项非预注册的补充探测观察到撤销资格的持有人仍可向合格接收方转让，构成不符合模型双边资格条件的退出路径。更晚估值日登记后，C26的历史更正被拒绝；若错误在后续NAV登记后才发现，原型无法记录相应更正，与案例所参照的CSSF 24/856重大NAV错误事后更正要求存在差距。补偿、现金交割与监管通知仍在链下；本案例仅计算差额并定位受影响业务，不测试完整补救规则。模拟拒绝不进入事件流，其调用及错误另行归档。"
     },
     "151": {
       "sources": [
@@ -248,7 +260,7 @@
         ],
         [
           "部署gas",
-          "NAVRegistry 2,330,636；FundToken 4,855,363；RiskRegistry 4,579,664；B1 1,132,724；B2 1,763,501；B2另有3笔角色授予。采用本次重建的实测值，不以源码不变推定部署gas等于历史值"
+          "NAVRegistry 2,330,636；FundToken 4,855,363；RiskRegistry 4,579,664；B1 1,132,724；B2 1,763,501；B2另有3笔角色授予；均采用本次实测值，输入差异见表下注"
         ],
         [
           "重复与gas采集",
@@ -872,7 +884,7 @@
         [
           "Q1",
           "是否使用请求后下一个适用常规NAV，而非仅检查估值日期晚于请求",
-          "4/5笔匹配；C提前受理被标记。原asOf日期代理也为4/5，但两者不等价。另行链上反例中的请求跳过首个NAV，原代理通过，新审计识别为skipped-next-NAV"
+          "4/5笔匹配；C提前受理被标记。原asOf日期代理也为4/5，但两者不等价。非预注册的补充探测（见正文）中，请求跳过首个NAV，原代理通过，新审计识别为skipped-next-NAV"
         ],
         [
           "Q2",
@@ -924,7 +936,11 @@
     "docs/evidence/paper85/v2.1/gas-table.json": "920f4022e6eeb8c2295820da59e8a7214c8b17a91336f528da8e97f4afc5ee4f"
   },
   "historicalManifestSha256": "5f6101c43bffea0a4f4d11b2e5ac7211ad663e0eefdc2e8d9c56229e7b62d714",
-  "outputSha256": "26ffe786f8c9067dab2a1838aca47ac9bde2383ee093cfaeb5af71d6903f60f2",
+  "technicalSources": {
+    "metadata": "https://docs.soliditylang.org/en/v0.8.30/metadata.html",
+    "inputDataGas": "https://eips.ethereum.org/EIPS/eip-7623"
+  },
+  "outputSha256": "a73b5201dd0dacf5262a5b8f1250edd751f18aa19f00c96c8b319f6850b2814c",
   "legalSources": {
     "FATF R.10": "https://www.fatf-gafi.org/en/publications/Fatfrecommendations/Fatf-recommendations.html",
     "Rule 22c-1(a)(b)(d)": "https://www.ecfr.gov/current/title-17/chapter-II/part-270/section-270.22c-1",

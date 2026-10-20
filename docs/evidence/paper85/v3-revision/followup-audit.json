@@ -1,0 +1,450 @@
+{
+  "schema": 1,
+  "kind": "post-review verification of existing archived measurements",
+  "measurementCommit": "347ea2636dce91b5381f72c084006de8aea971aa",
+  "run": "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac",
+  "sealedFilesVerified": 101,
+  "scaleRuns": [
+    {
+      "file": "B-scale-run-100-s1.json",
+      "evidence": "scale/100-s1/replay.json.gz",
+      "chainTape": "chains/18700-1792458939506.jsonl.gz",
+      "equalToHistorical": {
+        "transactions": true,
+        "acceptedEvents": true,
+        "eventsByType": true,
+        "operationsByType": true,
+        "gas": true,
+        "storage": true,
+        "eventIndex": true
+      },
+      "oldTotalGas": 6274011,
+      "newReceiptTotalGas": 6274011,
+      "totalGasDelta": 0,
+      "alignedNavEvents": 6,
+      "timestampDataChanges": [],
+      "finalProjectionHashChanged": true
+    },
+    {
+      "file": "B-scale-run-100-s2.json",
+      "evidence": "scale/100-s2/replay.json.gz",
+      "chainTape": "chains/18701-1792458942150.jsonl.gz",
+      "equalToHistorical": {
+        "transactions": true,
+        "acceptedEvents": true,
+        "eventsByType": true,
+        "operationsByType": true,
+        "gas": true,
+        "storage": true,
+        "eventIndex": true
+      },
+      "oldTotalGas": 5420701,
+      "newReceiptTotalGas": 5420701,
+      "totalGasDelta": 0,
+      "alignedNavEvents": 7,
+      "timestampDataChanges": [],
+      "finalProjectionHashChanged": true
+    },
+    {
+      "file": "B-scale-run-100-s3.json",
+      "evidence": "scale/100-s3/replay.json.gz",
+      "chainTape": "chains/18702-1792458945346.jsonl.gz",
+      "equalToHistorical": {
+        "transactions": true,
+        "acceptedEvents": true,
+        "eventsByType": true,
+        "operationsByType": true,
+        "gas": true,
+        "storage": true,
+        "eventIndex": true
+      },
+      "oldTotalGas": 6565414,
+      "newReceiptTotalGas": 6565414,
+      "totalGasDelta": 0,
+      "alignedNavEvents": 3,
+      "timestampDataChanges": [],
+      "finalProjectionHashChanged": true
+    },
+    {
+      "file": "B-scale-run-1000-s1.json",
+      "evidence": "scale/1000-s1/replay.json.gz",
+      "chainTape": "chains/18703-1792458948298.jsonl.gz",
+      "equalToHistorical": {
+        "transactions": true,
+        "acceptedEvents": true,
+        "eventsByType": true,
+        "operationsByType": true,
+        "gas": true,
+        "storage": true,
+        "eventIndex": true
+      },
+      "oldTotalGas": 56704765,
+      "newReceiptTotalGas": 56704765,
+      "totalGasDelta": 0,
+      "alignedNavEvents": 56,
+      "timestampDataChanges": [],
+      "finalProjectionHashChanged": true
+    },
+    {
+      "file": "B-scale-run-1000-s2.json",
+      "evidence": "scale/1000-s2/replay.json.gz",
+      "chainTape": "chains/18704-1792458958921.jsonl.gz",
+      "equalToHistorical": {
+        "transactions": true,
+        "acceptedEvents": true,
+        "eventsByType": true,
+        "operationsByType": true,
+        "gas": true,
+        "storage": true,
+        "eventIndex": true
+      },
+      "oldTotalGas": 52585965,
+      "newReceiptTotalGas": 52585965,
+      "totalGasDelta": 0,
+      "alignedNavEvents": 42,
+      "timestampDataChanges": [],
+      "finalProjectionHashChanged": true
+    },
+    {
+      "file": "B-scale-run-1000-s3.json",
+      "evidence": "scale/1000-s3/replay.json.gz",
+      "chainTape": "chains/18705-1792458966558.jsonl.gz",
+      "equalToHistorical": {
+        "transactions": true,
+        "acceptedEvents": true,
+        "eventsByType": true,
+        "operationsByType": true,
+        "gas": true,
+        "storage": true,
+        "eventIndex": true
+      },
+      "oldTotalGas": 54241863,
+      "newReceiptTotalGas": 54241863,
+      "totalGasDelta": 0,
+      "alignedNavEvents": 46,
+      "timestampDataChanges": [],
+      "finalProjectionHashChanged": true
+    },
+    {
+      "file": "B-scale-run-10000-s1.json",
+      "evidence": "scale/10000-s1/replay.json.gz",
+      "chainTape": "chains/18706-1792458976328.jsonl.gz",
+      "equalToHistorical": {
+        "transactions": true,
+        "acceptedEvents": true,
+        "eventsByType": true,
+        "operationsByType": true,
+        "gas": false,
+        "storage": true,
+        "eventIndex": true
+      },
+      "oldTotalGas": 542417463,
+      "newReceiptTotalGas": 542417451,
+      "totalGasDelta": -12,
+      "alignedNavEvents": 488,
+      "timestampDataChanges": [
+        {
+          "transactionHash": "0xe2be4e1f144f15f1f9ac301a009e89e164cc6200350fc9d5e801c6559517cb3c",
+          "blockNumber": "3791",
+          "asOf": 1710227470,
+          "oldCodeAsOf": 1710227410,
+          "inputDataGasDelta": -12
+        }
+      ],
+      "finalProjectionHashChanged": true
+    },
+    {
+      "file": "B-scale-run-10000-s2.json",
+      "evidence": "scale/10000-s2/replay.json.gz",
+      "chainTape": "chains/18707-1792459114081.jsonl.gz",
+      "equalToHistorical": {
+        "transactions": true,
+        "acceptedEvents": true,
+        "eventsByType": true,
+        "operationsByType": true,
+        "gas": true,
+        "storage": true,
+        "eventIndex": true
+      },
+      "oldTotalGas": 529553973,
+      "newReceiptTotalGas": 529553973,
+      "totalGasDelta": 0,
+      "alignedNavEvents": 412,
+      "timestampDataChanges": [],
+      "finalProjectionHashChanged": true
+    },
+    {
+      "file": "B-scale-run-10000-s3.json",
+      "evidence": "scale/10000-s3/replay.json.gz",
+      "chainTape": "chains/18708-1792459270345.jsonl.gz",
+      "equalToHistorical": {
+        "transactions": true,
+        "acceptedEvents": true,
+        "eventsByType": true,
+        "operationsByType": true,
+        "gas": true,
+        "storage": true,
+        "eventIndex": true
+      },
+      "oldTotalGas": 529675542,
+      "newReceiptTotalGas": 529675542,
+      "totalGasDelta": 0,
+      "alignedNavEvents": 450,
+      "timestampDataChanges": [],
+      "finalProjectionHashChanged": true
+    }
+  ],
+  "table11DeterministicCells": [
+    {
+      "target": 100,
+      "metric": "transactions",
+      "newDisplayedValue": "54 ± 2",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 100,
+      "metric": "acceptedEvents",
+      "newDisplayedValue": "103 ± 6",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 100,
+      "metric": "gasPerTransaction",
+      "newDisplayedValue": "113,081 ± 14,973",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 100,
+      "metric": "gasPerEvent",
+      "newDisplayedValue": "58,878 ± 4,324",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 100,
+      "metric": "storageSlots",
+      "newDisplayedValue": "156 ± 16",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 100,
+      "metric": "storageSlotsPerTransaction",
+      "newDisplayedValue": "2.90 ± 0.39",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 100,
+      "metric": "rawPayloadBytes",
+      "newDisplayedValue": "19.3 ± 1.8",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 100,
+      "metric": "rawPayloadBytesPerEvent",
+      "newDisplayedValue": "191.1 ± 9.0",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 100,
+      "metric": "normalizedJsonlBytes",
+      "newDisplayedValue": "91.2 ± 7.6",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 1000,
+      "metric": "transactions",
+      "newDisplayedValue": "486 ± 15",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 1000,
+      "metric": "acceptedEvents",
+      "newDisplayedValue": "1,002 ± 2",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 1000,
+      "metric": "gasPerTransaction",
+      "newDisplayedValue": "112,070 ± 983",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 1000,
+      "metric": "gasPerEvent",
+      "newDisplayedValue": "54,419 ± 2,033",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 1000,
+      "metric": "storageSlots",
+      "newDisplayedValue": "1,153 ± 57",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 1000,
+      "metric": "storageSlotsPerTransaction",
+      "newDisplayedValue": "2.37 ± 0.04",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 1000,
+      "metric": "rawPayloadBytes",
+      "newDisplayedValue": "185.3 ± 2.2",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 1000,
+      "metric": "rawPayloadBytesPerEvent",
+      "newDisplayedValue": "189.4 ± 2.2",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 1000,
+      "metric": "normalizedJsonlBytes",
+      "newDisplayedValue": "879.1 ± 6.7",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 10000,
+      "metric": "transactions",
+      "newDisplayedValue": "4,737 ± 44",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 10000,
+      "metric": "acceptedEvents",
+      "newDisplayedValue": "10,010 ± 16",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 10000,
+      "metric": "gasPerTransaction",
+      "newDisplayedValue": "112,703 ± 1,886",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 10000,
+      "metric": "gasPerEvent",
+      "newDisplayedValue": "53,336 ± 653",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 10000,
+      "metric": "storageSlots",
+      "newDisplayedValue": "10,877 ± 278",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 10000,
+      "metric": "storageSlotsPerTransaction",
+      "newDisplayedValue": "2.30 ± 0.06",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 10000,
+      "metric": "rawPayloadBytes",
+      "newDisplayedValue": "1,855.5 ± 16.0",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 10000,
+      "metric": "rawPayloadBytesPerEvent",
+      "newDisplayedValue": "189.8 ± 1.3",
+      "sameDisplayAsHistorical": true
+    },
+    {
+      "target": 10000,
+      "metric": "normalizedJsonlBytes",
+      "newDisplayedValue": "8,815.4 ± 57.2",
+      "sameDisplayAsHistorical": true
+    }
+  ],
+  "deployment": {
+    "FundToken": {
+      "inputs": {
+        "canonical": {
+          "chainTape": "chains/canonical-19100.jsonl.gz",
+          "transactionHash": "0x027b2c3bb994e7038246a660ad63ed4a254f6908593ba4ee7afcba3a365d0f42",
+          "gasUsed": 4855363,
+          "inputBytes": 24659,
+          "creationBytecodeSha256": "4726e3744c653487f65312a0e3ceb7584de0bc670babf2a004831b89c7da1b15",
+          "constructorZeroBytes": 193,
+          "inputDataGas": 364136,
+          "name": "OTC Fund Replay",
+          "symbol": "OTCR",
+          "fundId": "0x74f8e4a57351f638d68a42a3d6306dcef9bcc1dd29dc76768e90777da85d0b35"
+        },
+        "scale": {
+          "chainTape": "chains/18700-1792458939506.jsonl.gz",
+          "transactionHash": "0x460c1efa157957a2fcb6b9958d3e532a61b6571e766403755e97c2e7656a1ad8",
+          "gasUsed": 4855351,
+          "inputBytes": 24659,
+          "creationBytecodeSha256": "4726e3744c653487f65312a0e3ceb7584de0bc670babf2a004831b89c7da1b15",
+          "constructorZeroBytes": 194,
+          "inputDataGas": 364124,
+          "name": "OTC Fund Scale",
+          "symbol": "OTCS",
+          "fundId": "0xb044237da3f4a4e573ea4f63aefad111a2e1ae4dff0a0361104d3757370ff62f"
+        }
+      },
+      "gasDifference": 12,
+      "finding": "Same archived creation bytecode, different constructor arguments. Canonical input has one fewer zero byte; input data cost accounts for all 12 gas. This comparison is not evidence of a metadata change."
+    },
+    "B2": {
+      "oldGas": 1763489,
+      "newGas": 1763501,
+      "gasDifference": 12,
+      "originalV3CreationInputArchived": false,
+      "finding": "A metadata zero-byte change is compatible with 12 gas but is unconfirmed: original v3 archived no creation input or compiled artifact. Equal length alone cannot establish the cause."
+    }
+  },
+  "sources": {
+    "metadata": "https://docs.soliditylang.org/en/v0.8.30/metadata.html",
+    "inputDataGas": "https://eips.ethereum.org/EIPS/eip-7623"
+  },
+  "inputs": {
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/manifest.json": "913cd2aef3cbd861b97f761bc2cabc64027fce15ce9b10c63f1ff1cfef5d1f31",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/B-scale-summary.json": "95c19a8435c2614b6dd56893f49a7be7c8b26e66e20b025e9501673c7f576b04",
+    "docs/evidence/paper85/v3/B-scale-run-100-s1.json": "ba1b2b633d38d78157de4145a251f52c49b6d38b78cf79834148181b9ef04ee1",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/B-scale-run-100-s1.json": "12d121bef60e7cf36b3ce99676cac92524353554bf76ea234d36b202a35134b5",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/scale/100-s1/replay.json.gz": "ae296bbbb164c867cf816a7c2d890472b6ed094f5bdad42e2902783d2e4a7496",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/chains/18700-1792458939506.jsonl.gz": "6281d66bc89df1767cf912621227fc111d7c383e85f40045184870877701623a",
+    "docs/evidence/paper85/v3/B-scale-run-100-s2.json": "17c1df08602af23bbb6fa1060f72f5bc80cbd321d84e08cb5869909e5ab1aec2",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/B-scale-run-100-s2.json": "efc15a54892bdd09379bc8b72e6bb811af10541c20d6dbe61d19771d4624e558",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/scale/100-s2/replay.json.gz": "74be6dfd256113605f85c425b62465103bb6df27a98e30798badaf3ef3537203",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/chains/18701-1792458942150.jsonl.gz": "4dd3adb10aa0a93ecd4893e87d6bea3cdd725cd0fa166436523d4446da95d344",
+    "docs/evidence/paper85/v3/B-scale-run-100-s3.json": "9c87fac9e46bcd3265e5d95415ed09a34532a314d67b1188ee7ef06dd36a9bdc",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/B-scale-run-100-s3.json": "2201b6d8d40e4318fd84327f8f1946b418440c28f688fea02e92c42d9bda440a",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/scale/100-s3/replay.json.gz": "ca2c84599b4dd63bd8c8a13c8b50c70b41cd858f876f6ad4bd938a3503823df2",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/chains/18702-1792458945346.jsonl.gz": "c9437264f6b4ef73914a14e6fe275254b0eb15f955f1074d14d313e98486bf21",
+    "docs/evidence/paper85/v3/B-scale-run-1000-s1.json": "dcf2c8bf0cbaca25e700603ed45e828a52f666dfed0e4b1c28dcfac4960983c1",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/B-scale-run-1000-s1.json": "95f2c7b01706a7dd5751865ee3d5d65f10041c7a9be6df5d5a817e0deb296f9c",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/scale/1000-s1/replay.json.gz": "d0b72abb0cc3a030b98d5e65fb2f65df58abcbc64e2f63863cce5e2d25ca0c51",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/chains/18703-1792458948298.jsonl.gz": "4c12c36f4cfbf85f8e2e01d1854ee5eb22857ebc34f48da3be5cfa8fa8412e9e",
+    "docs/evidence/paper85/v3/B-scale-run-1000-s2.json": "57401f1b306f77cbbcf7df4db1d5a37d8ce7df75900ead473405b32845a9a7df",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/B-scale-run-1000-s2.json": "9549fd5b6e901064f0ca2918e985e749a573d71153bed9d8fca1edb3830e9b09",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/scale/1000-s2/replay.json.gz": "0ff965298f0a43a4140463fede2beab71b89813b2e8543c28e96462760691ae5",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/chains/18704-1792458958921.jsonl.gz": "3ca8375b729545088947c2872757eaf889d77b3e99113b82b5aedbd1a639bb6e",
+    "docs/evidence/paper85/v3/B-scale-run-1000-s3.json": "7048bf94b97be7e7a1ff67536d50c7fba3fdf6554d87d9e10cbc641f58f9d843",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/B-scale-run-1000-s3.json": "acad2351dcc32c63598c949b95f4acd9608bbc50c028f4948e2a0b1738248353",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/scale/1000-s3/replay.json.gz": "09df8c18eac503d1dd28db9d3b5bbbe6236ba04c3a60d1cbe8fe82e33ee68875",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/chains/18705-1792458966558.jsonl.gz": "f7ec71d52e3468b16a3e2e525d5ffc22c751048549b75b2d25cba44f62d16ec5",
+    "docs/evidence/paper85/v3/B-scale-run-10000-s1.json": "60a714826e9708999380a0044c143f35cd22cf80e8998f06938a1dbc0432841e",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/B-scale-run-10000-s1.json": "bc731d891ae1f3e259743ca0f3ade60cb9d1d86a73cf282401ee712f91eb0e93",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/scale/10000-s1/replay.json.gz": "7f444aa7b0b83bb93e2599b33e1ab488bfab8b5d9a68b4077016463303845313",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/chains/18706-1792458976328.jsonl.gz": "6fec08a0f0d65ffe0f5ce61031d1be4f9c99df2ea822545bc7099449d84acbfe",
+    "docs/evidence/paper85/v3/B-scale-run-10000-s2.json": "8b438879e3600488ae97f0220e14a181f933285854ad2b19e5c6f81e172b3897",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/B-scale-run-10000-s2.json": "7ea653d5b2e57a178a39c5467ba78cb6d32e08bb19ae6306aa5386bc320e903c",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/scale/10000-s2/replay.json.gz": "a6dd1bff14c39b9dad24cf31a17d880205f39fd8acd291229927df2f1c4c06c3",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/chains/18707-1792459114081.jsonl.gz": "e2f0c54543e8a54ef10ae2df62ad62c5a78c498fdf1ab8e5f4b6c20ab5cdf762",
+    "docs/evidence/paper85/v3/B-scale-run-10000-s3.json": "42fe4e6f260f73ca4409e500a5714b74b5832a46d8bc0945c06ae013b42d0f58",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/B-scale-run-10000-s3.json": "094152eadce15cbca458edf218ca81369412f5e3bc2830d7cb00b840f7235302",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/scale/10000-s3/replay.json.gz": "16186bd19da2eecce7a773f64148fbd7c16b3361efecce2ae4491563f1a9d597",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/chains/18708-1792459270345.jsonl.gz": "99e5f97864a061f59170f31547485288b53b33f41a14c32f069c14602499e0ea",
+    "docs/evidence/paper85/v3/B-scale-summary.json": "46ce40eede78e8461805eecd0a3825a6e4865dacea9cc7abf016603a56c50450",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/build/FundToken.artifact.json": "9c644dce98edda04349f9baa89bde4d89c67b26d373e14ac3bcd3a00f63ec639",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/chains/canonical-19100.jsonl.gz": "f18eabb80b4f741752020e74de634fff2ee79717aa0ccfd8d80bae42cfde8672",
+    "docs/evidence/paper85/v3/A-summary.json": "be1e30732a3548d2cdd4826f6b7c7f857ee194c65dc58837202df084be70a9e8",
+    "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/A-summary.json": "8c01209a15e2d5185724eb7ed037e7604b0941fc000943aaf7d4f8f708686aa6"
+  },
+  "verifierSha256": "05ef9360674789aad5cc9b7fa81da9da13022b7badd68246290b195b0916250d"
+}

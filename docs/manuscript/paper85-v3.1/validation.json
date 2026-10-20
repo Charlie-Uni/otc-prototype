@@ -1,14 +1,26 @@
 {
   "status": "passed",
-  "outputSha256": "26ffe786f8c9067dab2a1838aca47ac9bde2383ee093cfaeb5af71d6903f60f2",
-  "generatorSha256": "c36c3acb1431a12564cd0bcd0d8bf9cc067215681248b224ef554340ebc7178e",
+  "outputSha256": "a73b5201dd0dacf5262a5b8f1250edd751f18aa19f00c96c8b319f6850b2814c",
+  "generatorSha256": "0f11b861ba7570c99a2559ef2b3c2dfecd658d1d1e08ee97c98fe0921f9d4ee8",
   "tableCellsMatchSourceMap": true,
   "scaleCellsRecomputed": 36,
   "historicalInputHashesMatch": true,
   "sealedRunManifestMatches": true,
+  "frozenContractsUnchanged": true,
+  "originalPreregistrationUnchanged": true,
+  "outsideChapter5TextUnchanged": true,
+  "followupAuditSha256": "17c0ac2847dda798ff73fdeb3cc58add627f23c8d43c544a11992c8875c2eca6",
+  "offlineReplayVerification": {
+    "status": "passed",
+    "replayStreams": 17,
+    "replayedEvents": 33527,
+    "checkedProjections": 199,
+    "validNavReferences": 4114,
+    "baselineRows": 84
+  },
   "tables": 13,
   "chapter5Tables": 11,
-  "renderedPages": 39,
-  "visualInspection": "All pages inspected; pages 1–22 of the final render are pixel-identical to the inspected prefix. Chapter 5 has no clipping or orphan table rows. Earlier chapters retain supplied draft content.",
-  "pdfSha256ForInternalQA": "e44888ed1fc278932751cebc97fc8332595545e6b83be44c8d0cbd80af65142f"
+  "renderedPages": 40,
+  "visualInspection": "Pages 23–40 inspected; pages 1–22 are pixel-identical to the previously inspected render. No clipping, missing glyphs or orphan table rows. Earlier chapters retain supplied draft content.",
+  "pdfSha256ForInternalQA": "7a4d01020ac5218843855e339e4965ba88340476cee3a6e1d8710c1a907752cf"
 }

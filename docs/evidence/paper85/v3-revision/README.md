@@ -18,7 +18,9 @@ were verified unchanged.
 1. Next-applicable-NAV audit replaces the asOf-date proxy. The original case
    still yields 4/5 matches under the stated case policy. An additional on-chain
    order/NAV1/NAV2/acceptance counterexample passes the old proxy but is flagged
-   `skipped-next-NAV`. Computation time and dealing applicability remain disclosed
+   `skipped-next-NAV`. This is a non-preregistered supplementary probe added after
+   review of the original v3 results and archived in the revised run. Computation
+   time and dealing applicability remain disclosed
    assumptions, not independently established legal compliance.
 2. Only positively identified EVM reverts count as blocked attempts. Encoding,
    transport, timeout, non-revert RPC and receipt failures abort. Rejections are
@@ -79,3 +81,36 @@ node experiments/paper85-evaluation/scripts/v3/verify-run.mjs docs/evidence/pape
 
 Checksums establish internal integrity. They do not attest external inputs,
 real-world adoption, actual valuation computation or regulatory approval.
+
+## Follow-up verification of Tables 4, 11 and 13
+
+[followup-audit.json](followup-audit.json) reads the sealed run and original v3
+archive. It adds no benchmark measurements and does not modify either archive.
+Reproduce it with:
+
+```sh
+python tools/audit-paper85-followup.py docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac docs/evidence/paper85/v3-revision/followup-audit.json
+```
+
+- Table 4: FundToken canonical deployment uses 4,855,363 gas and scale deployment
+  4,855,351 gas with identical creation bytecode. The constructor names, symbols
+  and fund identifiers differ. Canonical input has one fewer zero byte; the
+  12-gas input-data difference accounts for the receipt difference. Attributing
+  this comparison to an IPFS metadata change would be incorrect.
+- B2 deployment is 1,763,501 gas versus 1,763,489 in original v3. A change in
+  metadata zero-byte distribution could explain 12 gas, but the old archive has
+  no creation input or artifact to test this hypothesis. The cause remains
+  unconfirmed; equal bytecode lengths do not establish byte equality.
+- Table 11: all nine new per-run files are tied to new raw logs, transaction
+  receipts and storage maps. All 1,510 NAV events have asOf equal to storedAt and
+  their recorded block time. Every final projection hash differs from old v3.
+  Transaction counts, storage and log/index byte counts are unchanged. Eight
+  runs also have identical gas; 10,000-s1 totals 542,417,451 gas, versus
+  542,417,463 previously. Its NAV at block 3,791 changes an input zero-byte
+  count after the 60-second clock repair, accounting for −12 gas. All 27 displayed
+  deterministic cells remain equal after the table's stated rounding. The
+  complete offline replay verifier was run again and passed.
+- Table 13 and the body explicitly label the skipped-next-NAV probe as
+  non-preregistered and describe its order/NAV1/NAV2/acceptance design. The C26
+  rejection is reported as a gap in historical correction support under the
+  case's CSSF 24/856 grounding, not as an implementation benefit.

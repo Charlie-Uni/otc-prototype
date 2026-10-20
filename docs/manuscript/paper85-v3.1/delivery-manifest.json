@@ -3,13 +3,15 @@
   "measurementCommit": "347ea2636dce91b5381f72c084006de8aea971aa",
   "evidenceRun": "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac",
   "files": {
-    "tools/revise-paper85-section5.py": "c36c3acb1431a12564cd0bcd0d8bf9cc067215681248b224ef554340ebc7178e",
-    "docs/evidence/paper85/v3-revision/README.md": "82b5dd3020d285bf96a438e17002126aa22dc608532839e85d9e87a360e875f1",
+    "tools/revise-paper85-section5.py": "0f11b861ba7570c99a2559ef2b3c2dfecd658d1d1e08ee97c98fe0921f9d4ee8",
+    "docs/evidence/paper85/v3-revision/README.md": "3a2e540482635ae46c62cc72d261cf79d8d35d08955fd4339f74a44bcc5c229e",
     "docs/evidence/paper85/v3-revision/regression-tests.tap": "e069251b053073e109ddf82f04cc74aa2585e4b4688938d5d035be1f8d231a00",
     "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/manifest.json": "913cd2aef3cbd861b97f761bc2cabc64027fce15ce9b10c63f1ff1cfef5d1f31",
-    "docs/manuscript/paper85-v3.1/paper85-section5-claims.json": "dbaa90c814da191c73542b97b87fc815620a8644c7c7207c1f6d4cdd84ab4bc6",
-    "docs/manuscript/paper85-v3.1/README.md": "2602e146f28e404bad51326130b0822f395876166d0a3b74842bb9dd12821bfa",
-    "docs/manuscript/paper85-v3.1/validation.json": "4e1c6815e3b5b7ddc5c92177d95a108e89261c8aa107960e9b3af93c685981c9",
-    "docs/manuscript/paper85-v3.1/From_Tokenization_to_Lifecycle_Execution_v11_Section5_Revised.docx": "26ffe786f8c9067dab2a1838aca47ac9bde2383ee093cfaeb5af71d6903f60f2"
+    "docs/manuscript/paper85-v3.1/paper85-section5-claims.json": "e8aefd3fbe733e7447d15521385d40d335c20fd4c36fdf779b63a044522df309",
+    "docs/manuscript/paper85-v3.1/README.md": "8c3238b3323430ce3abedcaa713edfa2410e9d984bef3271f86294f9c19e1d3b",
+    "docs/manuscript/paper85-v3.1/validation.json": "1a4c43d781c421eefc51fd2324ba780735e6a1e027d1b99611f302e994d6e35e",
+    "docs/manuscript/paper85-v3.1/From_Tokenization_to_Lifecycle_Execution_v11_Section5_Revised.docx": "a73b5201dd0dacf5262a5b8f1250edd751f18aa19f00c96c8b319f6850b2814c",
+    "tools/audit-paper85-followup.py": "05ef9360674789aad5cc9b7fa81da9da13022b7badd68246290b195b0916250d",
+    "docs/evidence/paper85/v3-revision/followup-audit.json": "17c0ac2847dda798ff73fdeb3cc58add627f23c8d43c544a11992c8875c2eca6"
   }
 }
