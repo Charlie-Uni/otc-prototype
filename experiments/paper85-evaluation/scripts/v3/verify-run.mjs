@@ -1,17 +1,38 @@
 // Offline verifier. Needs archived inputs and the pinned replay code, no RPC.
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
-import { resolve, relative } from 'node:path';
+import { isAbsolute, resolve, relative, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 import { decodeLogs, mean, sd, rawLogBytes } from './common.mjs';
-import { digest } from './evidence.mjs';
+import { digest, ROOT, save, verificationIdentity } from './evidence.mjs';
 import { auditPricing } from './audit-pricing.mjs';
+import { actorNames, auditCase, assertCaseAnswers, assertCaseExpectations } from './audit-case.mjs';
 import { applyReplayEvent, createReplayState, finalizeNavReferences, normalizedProjection } from '../replay-engine.mjs';
 
 const json = async (p) => JSON.parse(await readFile(p, 'utf8'));
 const zipped = async (p) => JSON.parse(gunzipSync(await readFile(p)));
 const plain = (v) => JSON.parse(JSON.stringify(v, (_, x) => typeof x === 'bigint' ? x.toString() : x));
+const expectationsPath = resolve(ROOT, 'experiments/paper85-evaluation/spec-v3/case-expectations.postreview.json');
+
+export function verifyCase(input, summary, expectations) {
+  const audit = auditCase({ genesis: input.genesis, events: decodeLogs(input.rawLogs, input.contracts),
+    checkpoints: input.checkpoints, pricingPolicy: input.pricingPolicy, names: actorNames(expectations) });
+  assertCaseAnswers(audit.answers, summary.answers);
+  assertCaseExpectations(audit.answers, expectations);
+  assert.deepEqual(normalizedProjection(audit.state), input.finalProjection, 'Case final projection');
+  assert(audit.references.every((r) => r.valid), 'Case NAV references');
+  assert.deepEqual(summary.nri, { valid: audit.references.length, total: audit.references.length });
+  assert.deepEqual(summary.arc, { replayed: input.rawLogs.length, accepted: input.rawLogs.length });
+  assert.equal(summary.lifecycleEvents, input.rawLogs.length);
+  assert.deepEqual(summary.originalPreregisteredQ1Proxy,
+    { matching: audit.answers.Q1.originalProxyMatching, total: audit.answers.Q1.total });
+  const steps = Object.fromEntries(summary.steps.map((step) => [step.id, step.observed]));
+  assert.equal(Object.keys(steps).length, summary.steps.length, 'Duplicate case step');
+  assert.deepEqual(steps, expectations.steps, 'Complete case step outcomes');
+  return { questions: Object.keys(audit.answers), corrections: audit.corrections,
+    affectedBusinesses: audit.answers.Q2.affected.length, answersMatchArchive: true, expectationsMatch: true };
+}
 
 async function filesBelow(dir) {
   const paths = [];
@@ -23,6 +44,8 @@ async function filesBelow(dir) {
 }
 
 export async function verifyRun(dir, { sealed = true } = {}) {
+  const verifier = await verificationIdentity();
+  const measurement = await json(resolve(dir, 'run.json'));
   const allFiles = await filesBelow(dir);
   if (sealed) {
     const manifest = await json(resolve(dir, 'manifest.json'));
@@ -31,6 +54,7 @@ export async function verifyRun(dir, { sealed = true } = {}) {
     assert.deepEqual(allFiles.map((p) => relative(dir, p)).filter((p) => p !== 'manifest.json').sort(), Object.keys(manifest.files).sort(), 'Unmanifested files');
   }
   let streams = 0; let events = 0; let checkpoints = 0; let references = 0;
+  let caseCoverage = null; let scaleRuns = 0; let nextNavProbe = false;
   for (const path of allFiles.filter((p) => /\/(?:scale|case|next-nav|canonical)\/.*\.json\.gz$/.test(p))) {
     const input = await zipped(path);
     const decoded = decodeLogs(input.rawLogs, input.contracts);
@@ -47,11 +71,15 @@ export async function verifyRun(dir, { sealed = true } = {}) {
     assert(finalized.every((r) => r.valid), `${path}: NAV references`);
     assert.deepEqual(normalizedProjection(state), input.finalProjection, `${path}: final projection`);
     if (path.includes('/scale/')) {
+      scaleRuns++;
       const [target, seed] = relative(resolve(dir, 'scale'), path).split('/')[0].split('-s').map(Number);
       const metrics = await json(resolve(dir, `B-scale-run-${target}-s${seed}.json`));
       assert.equal(metrics.acceptedEvents, decoded.length);
       assert.equal(metrics.transactions, input.operations.length);
       assert.equal(metrics.gas.total, input.operations.reduce((n, op) => n + op.gasUsed, 0));
+      assert.equal(metrics.gas.perTransaction, metrics.gas.total / metrics.transactions);
+      assert.equal(metrics.gas.perEvent, metrics.gas.total / metrics.acceptedEvents);
+      assert.equal(metrics.storage.totalNonZeroSlots, Object.values(metrics.storage.nonZeroSlots).reduce((a, b) => a + b, 0));
       assert.equal(metrics.eventIndex.rawPayloadBytes, rawLogBytes(input.rawLogs));
       assert.equal(metrics.eventIndex.normalizedJsonlBytes, Buffer.byteLength(input.normalizedJsonl));
       assert.equal(input.normalizedJsonl, decoded.map((e) => JSON.stringify({ ...e, blockNumber: e.blockNumber.toString() })).join('\n'));
@@ -81,16 +109,12 @@ export async function verifyRun(dir, { sealed = true } = {}) {
     }
     if (path.includes('/case/')) {
       const summary = await json(resolve(dir, 'C-case-summary.json'));
-      const pricing = auditPricing(state, finalized, input.pricingPolicy);
-      assert.equal(pricing.filter((r) => r.nextApplicableNavMatches).length, summary.answers.Q1.matchingCasePolicy);
-      assert.equal(pricing.length, summary.answers.Q1.total);
-      assert.equal(summary.answers.Q6.matched, input.checkpoints.length);
-      assert.equal(summary.nri.valid, finalized.length);
-      for (const affected of summary.answers.Q2.affected) {
-        const record = state.redemptions[Number(affected.requestId)];
-        const corrected = state.navHistory[affected.navIndex + 1];
-        assert.equal(affected.overpayment, (BigInt(record.redemptionAmount) - BigInt(record.redeemedShares) * BigInt(corrected.nav) / 10n ** 18n).toString());
-      }
+      caseCoverage = verifyCase(input, summary, await json(expectationsPath));
+    }
+    if (path.includes('/next-nav/')) {
+      const summary = await json(resolve(dir, 'E-next-nav-counterexample.json'));
+      assert.deepEqual(auditPricing(state, finalized, input.pricingPolicy), summary.pricing);
+      nextNavProbe = true;
     }
     streams++; events += decoded.length; references += finalized.length;
   }
@@ -109,7 +133,30 @@ export async function verifyRun(dir, { sealed = true } = {}) {
       assert.deepEqual(aggregate[key], { values, mean: mean(values), sd: sd(values) });
     }
   }
-  return { status: 'passed', replayStreams: streams, replayedEvents: events, checkedProjections: checkpoints, validNavReferences: references, baselineRows: A.length };
+  assert(caseCoverage, 'Missing case evidence');
+  assert.equal(scaleRuns, B.runFiles.length, 'Missing scale evidence');
+  assert.deepEqual(await verificationIdentity(), verifier, 'Verifier sources changed during verification');
+  return { schema: 2, status: 'passed', replayStreams: streams, replayedEvents: events,
+    checkedProjections: checkpoints, validNavReferences: references, baselineRows: A.length,
+    measurement: { commit: measurement.commit,
+      manifestSha256: sealed ? digest(await readFile(resolve(dir, 'manifest.json'))) : null,
+      sealedFilesVerified: sealed ? allFiles.length - 1 : null },
+    verifier: { ...verifier, node: process.version, expectationsSha256: digest(await readFile(expectationsPath)) },
+    coverage: { case: caseCoverage, scaleRuns, nextNavProbe,
+      scale: ['raw-log replay', 'checkpoint projections', 'NAV references', 'receipt gas totals and unit costs',
+        'storage maps', 'raw log/index contents', 'recorded timing samples and statistics'],
+      baseline: 'Archived classification counts checked; comparator transitions not independently re-executed',
+      notReexecuted: ['EVM experiments', 'timing measurements', 'compiler builds', 'revoked-holder probe'] } };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) console.log(JSON.stringify(await verifyRun(resolve(process.argv[2]))));
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  const dir = resolve(process.argv[2]);
+  const output = process.argv[3] && resolve(process.argv[3]);
+  if (output) {
+    const path = relative(dir, output);
+    assert(path === '..' || path.startsWith(`..${sep}`) || isAbsolute(path), 'Report must be outside the sealed run');
+  }
+  const result = await verifyRun(dir);
+  if (output) await save(output, result);
+  console.log(JSON.stringify(result));
+}

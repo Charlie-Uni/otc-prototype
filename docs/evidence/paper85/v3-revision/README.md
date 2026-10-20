@@ -2,7 +2,12 @@
 
 Run: [2026-10-20T01-15-00.607Z-f5edfdac](2026-10-20T01-15-00.607Z-f5edfdac/manifest.json)
 
-Execution commit: `347ea2636dce91b5381f72c084006de8aea971aa`
+Measurement code: `347ea2636dce91b5381f72c084006de8aea971aa` (generated the sealed run)
+
+Verification code: uncommitted review candidate based on `bf96995`;
+exact current source hashes and complete Q1–Q7 revalidation are recorded in
+[the candidate report](review-candidate/verification-candidate-cd6f3dcf7157.json).
+No new code commit has been created pending user review.
 
 Manifest SHA-256: `913cd2aef3cbd861b97f761bc2cabc64027fce15ce9b10c63f1ff1cfef5d1f31`
 
@@ -81,6 +86,23 @@ node experiments/paper85-evaluation/scripts/v3/verify-run.mjs docs/evidence/pape
 
 Checksums establish internal integrity. They do not attest external inputs,
 real-world adoption, actual valuation computation or regulatory approval.
+
+## Candidate verification, pending approval
+
+The [review package](review-candidate/README.md) contains the code diff, all 54
+regression results, and a new verification report outside the sealed directory.
+The original `verification.json` and all 101 manifest-bound files remain
+unchanged. The candidate reconstructs case Q1–Q7, including the full Q2 affected
+set and Q3/Q4/Q5/Q7 details, and reproduces the archived answers. It does not
+remeasure gas or latency. Baseline rows remain summary-consistency checks, not
+an independent re-execution of comparator transitions.
+
+The machine-readable expectation file is explicitly a post-review regression
+oracle. Neither it nor this verification replaces the original preregistration.
+Use the [pinned measurement checkout instructions](../../../../experiments/paper85-evaluation/scripts/v3/README.md#candidate-verification-repairs)
+to remeasure at `347ea26`. Once code review is approved, commit the candidate
+code first and produce a further external verification report with that actual
+code commit. Keep this candidate report as an accurately identified earlier check.
 
 ## Follow-up verification of Tables 4, 11 and 13
 

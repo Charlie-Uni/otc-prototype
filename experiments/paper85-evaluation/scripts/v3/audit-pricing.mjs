@@ -2,8 +2,31 @@
 // Policy classifies regular dealing NAVs and historical corrections separately.
 // storedAt is a simulated computation/approval time, not independent evidence
 // of the institution's actual computation time. asOf alone is insufficient.
+import assert from 'node:assert/strict';
+
+// Explicit case policy: repeated asOf means a correction. Link each correction
+// to the preceding version of that date; retrospective Q2 uses its last version.
+export function navCorrections(history) {
+  const latestByDate = new Map();
+  const correctionOf = history.map((nav, index) => {
+    const date = BigInt(nav.asOf).toString();
+    const previous = latestByDate.get(date) ?? null;
+    latestByDate.set(date, index);
+    return previous;
+  });
+  return { correctionOf,
+    correctionIndices: correctionOf.flatMap((previous, index) => previous === null ? [] : [index]),
+    latestVersion: history.map((nav) => latestByDate.get(BigInt(nav.asOf).toString())) };
+}
+
 export function auditPricing(state, references, policy) {
-  const corrections = new Set(policy.correctionIndices);
+  const { correctionIndices } = navCorrections(state.navHistory);
+  // Old sealed cases carry this redundant index list. Check it, but derive the
+  // classification from the log rather than letting a list drive the answer.
+  if (policy.correctionIndices !== undefined) {
+    assert.deepEqual(policy.correctionIndices, correctionIndices, 'Case correction policy disagrees with NAV history');
+  }
+  const corrections = new Set(correctionIndices);
   const regular = state.navHistory.map((nav, index) => ({ ...nav, index }))
     .filter((nav) => !corrections.has(nav.index));
   return references.map((ref) => {

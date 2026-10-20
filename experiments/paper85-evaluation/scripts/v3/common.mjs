@@ -8,7 +8,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { gunzipSync } from 'node:zlib';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { RUN_DIR, assertRuntime, record, recordReceipt } from './evidence.mjs';
+import { RUN_DIR, assertRuntime, record, recordReceipt, sourceIdentity } from './evidence.mjs';
 
 export const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 export const EVAL_DIR = resolve(SCRIPT_DIR, '..', '..');
@@ -62,10 +62,8 @@ export async function writeJson(path, value) {
   return sha256(text);
 }
 
-export function gitHead() {
-  const commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: REPO_ROOT }).toString().trim();
-  const dirty = execFileSync('git', ['status', '--porcelain', '--', 'experiments/paper85-evaluation/scripts', 'experiments/paper85-evaluation/spec-v3', 'experiments/paper85-evaluation/spec', 'experiments/paper85-evaluation/baselines', 'contracts/src', 'contracts/foundry.toml', 'apps/api/package.json', 'pnpm-lock.yaml'], { cwd: REPO_ROOT }).toString().trim() !== '';
-  invariant(!dirty, 'Uncommitted governed execution inputs; commit before running');
+export async function gitHead() {
+  const { commit, governedInputsDirty: dirty } = await sourceIdentity();
   return { commit, governedInputsDirty: dirty };
 }
 
@@ -103,6 +101,13 @@ export function account(index) {
 
 export async function startAnvil(port, { accounts = 10, extraArgs = [] } = {}) {
   invariant(RESULTS_DIR, 'Use run-revision.mjs');
+  const rpcUrl = `http://127.0.0.1:${port}`;
+  const client = createPublicClient({ transport: http(rpcUrl, { batch: false }), pollingInterval: 5 });
+  const tapeDir = resolve(RESULTS_DIR, 'chains');
+  await mkdir(tapeDir, { recursive: true });
+  client.evidencePath = resolve(tapeDir, `${port}-${Date.now()}.jsonl`);
+  await record(client, { kind: 'chain', port, accounts, chainId: CHAIN_ID, genesisTimestamp: GENESIS_TIMESTAMP,
+    hardfork: 'osaka', automine: true, mnemonic: MNEMONIC, extraArgs });
   let stderr = '';
   const child = spawn('anvil', [
     '--port', String(port),
@@ -115,13 +120,6 @@ export async function startAnvil(port, { accounts = 10, extraArgs = [] } = {}) {
     ...extraArgs,
   ], { stdio: ['ignore', 'ignore', 'pipe'] });
   child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
-  const rpcUrl = `http://127.0.0.1:${port}`;
-  const client = createPublicClient({ transport: http(rpcUrl, { batch: false }), pollingInterval: 5 });
-  const tapeDir = resolve(RESULTS_DIR, 'chains');
-  await mkdir(tapeDir, { recursive: true });
-  client.evidencePath = resolve(tapeDir, `${port}-${Date.now()}.jsonl`);
-  await record(client, { kind: 'chain', port, accounts, chainId: CHAIN_ID, genesisTimestamp: GENESIS_TIMESTAMP,
-    hardfork: 'osaka', automine: true, mnemonic: MNEMONIC, extraArgs });
   for (let attempt = 0; attempt < 200; attempt += 1) {
     if (child.exitCode !== null) throw new Error(`anvil exited: ${stderr}`);
     try {
@@ -198,7 +196,7 @@ export function revertReason(error) {
 
 // Simulate first so that a rejected call never mines a block; a rejected
 // lifecycle request therefore leaves state and the event log unchanged.
-export async function tryWrite({ client, wallet, contract, functionName, args = [], at }) {
+export async function tryWrite({ client, wallet, contract, functionName, args = [], at, recordEvidence = record }) {
   // Encoding errors are harness errors, never evidence of a contract rejection.
   const data = viem.encodeFunctionData({ abi: contract.abi, functionName, args });
   const input = { from: wallet.account.address, to: contract.address, contract: contract.name, functionName, args, data, at };
@@ -217,7 +215,7 @@ export async function tryWrite({ client, wallet, contract, functionName, args = 
     // rate-limit, timeout and encoding failures must abort the experiment.
     if (!isEvmRevert(error)) throw error;
     const result = { status: 'rejected', stage: 'eth_call', reason: decodeRevert(error, contract.abi) };
-    await record(client, { kind: 'simulated-rejection', input, ...result,
+    await recordEvidence(client, { kind: 'simulated-rejection', input, ...result,
       error: { name: error.name, message: error.message, details: error.details } });
     return result;
   }

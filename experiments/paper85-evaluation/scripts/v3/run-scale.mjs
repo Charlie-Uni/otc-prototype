@@ -275,7 +275,7 @@ async function runOne(target, seed, port) {
 
 async function main() {
   const provenance = {
-    ...gitHead(),
+    ...(await gitHead()),
     planSha256: await sha256File(resolve(EVAL_DIR, 'spec-v3/evaluation-plan.v3.md')),
     tools: toolVersions(),
     weights: WEIGHTS, investors: INVESTOR_COUNT, stepSec: STEP_SEC,

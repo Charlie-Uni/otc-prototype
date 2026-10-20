@@ -1,0 +1,151 @@
+{
+  "schema": 1,
+  "status": "post-review regression expectations, not preregistration",
+  "measurementCommit": "347ea2636dce91b5381f72c084006de8aea971aa",
+  "historicalRun": "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac",
+  "note": "Transcribed from the preserved case plan and sealed results before implementing the expanded verifier. This is a regression oracle, not independent empirical validation.",
+  "correctionPolicy": "In this stylized case, identical asOf identifies corrections; retrospective impact uses the last version of that date. It does not establish general regulatory applicability.",
+  "actors": {
+    "admin": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+    "registrar": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+    "navAgent": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+    "board": "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+    "A": "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65",
+    "B": "0x9965507d1a55bcc2695c58ba16fb37d819b0a4dc",
+    "C": "0x976ea74026e726554db657fa54763abd0c3a0aa9"
+  },
+  "steps": {
+    "C01": "accepted",
+    "C02": "accepted",
+    "C03": "accepted",
+    "C04": "accepted",
+    "C05": "accepted",
+    "C06": "accepted",
+    "C07": "accepted",
+    "C08": "accepted",
+    "C09": "accepted",
+    "C10": "accepted",
+    "C11": "accepted",
+    "C12": "accepted",
+    "C13": "accepted",
+    "C14": "accepted",
+    "C15": "accepted",
+    "C16": "accepted",
+    "C17": "rejected:NOT_WHITELISTED",
+    "C18": "accepted",
+    "C19": "accepted",
+    "C20": "rejected:PAUSED",
+    "C21": "accepted",
+    "C22": "accepted",
+    "C23": "accepted",
+    "C24": "accepted",
+    "C25": "accepted",
+    "C26": "rejected:AS_OF_BEFORE_LATEST"
+  },
+  "expected": {
+    "Q1.matchingCasePolicy": 4,
+    "Q1.total": 5,
+    "Q1.originalProxyMatching": 4,
+    "Q1.exceptions": [
+      {
+        "type": "subscription",
+        "requestId": 2,
+        "investor": "C",
+        "requestedAt": 1710235800,
+        "processedAt": 1710237600,
+        "navAsOf": 1710176400,
+        "observedNavIndex": 1,
+        "nextApplicableNavIndex": 2,
+        "nextComputedAt": 1710262800,
+        "originalAsOfProxy": false,
+        "nextApplicableNavMatches": false,
+        "reason": "priced-before-next-NAV"
+      }
+    ],
+    "Q2.affected": [
+      {
+        "event": "RedemptionSettled",
+        "requestId": "0",
+        "navIndex": 2,
+        "nav": "1029999999999999999",
+        "investor": "A",
+        "paidAmount": "102999999999999999900000",
+        "amountAtCorrectedNav": "101999999999999999900000",
+        "overpayment": "1000000000000000000000"
+      }
+    ],
+    "Q3": {
+      "movements": 6,
+      "eligibleAtTime": 6,
+      "detail": [
+        {
+          "kind": "mint",
+          "parties": [
+            "A"
+          ],
+          "eligible": true
+        },
+        {
+          "kind": "mint",
+          "parties": [
+            "B"
+          ],
+          "eligible": true
+        },
+        {
+          "kind": "mint",
+          "parties": [
+            "C"
+          ],
+          "eligible": true
+        },
+        {
+          "kind": "burn",
+          "parties": [
+            "A"
+          ],
+          "eligible": true
+        },
+        {
+          "kind": "transfer",
+          "parties": [
+            "A",
+            "B"
+          ],
+          "eligible": true
+        },
+        {
+          "kind": "burn",
+          "parties": [
+            "B"
+          ],
+          "eligible": true
+        }
+      ]
+    },
+    "Q4": {
+      "shareMovements": 0,
+      "redemptionRequests": 1,
+      "subscriptionRequests": 0,
+      "navVersions": 2
+    },
+    "Q5.versions": 5,
+    "Q5.corrections": 1,
+    "Q5.allWithSubmitterAndPayload": true,
+    "Q5.detail.3.correctionOf": 2,
+    "Q6": {
+      "matched": 23,
+      "checkpoints": 23
+    },
+    "Q7.delayed": [
+      {
+        "requestId": "1",
+        "investor": "B",
+        "reasonHash": "0x89f64f775bb17ea9ac7b046fedda29189d13237bcdd2b5daad64c485ae1d3fbb",
+        "requestedAt": 1710342000,
+        "delayedAt": 1710436500,
+        "settlementLagSec": 95400
+      }
+    ]
+  }
+}

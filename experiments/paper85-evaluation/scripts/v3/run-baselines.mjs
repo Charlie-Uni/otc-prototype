@@ -425,7 +425,7 @@ async function main() {
   const mapping = JSON.parse(await readFile(MAPPING_PATH, 'utf8'));
   const sealed = JSON.parse(await readFile(resolve(EVAL_DIR, 'spec/scenarios.v1.json'), 'utf8'));
   const provenance = {
-    ...gitHead(),
+    ...(await gitHead()),
     mappingSha256: await sha256File(MAPPING_PATH),
     planSha256: await sha256File(PLAN_PATH),
     sealedManifestSha256: await sha256File(resolve(EVAL_DIR, 'spec/scenarios.v1.json')),

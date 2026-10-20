@@ -30,7 +30,7 @@ try {
   const result = {
     experiment: 'paper85-v3-posthoc-revoked-holder-transfer',
     preregistered: false,
-    provenance: { ...gitHead(), tools: toolVersions(), runAt: new Date().toISOString() },
+    provenance: { ...(await gitHead()), tools: toolVersions(), runAt: new Date().toISOString() },
     revokedHolderTransferToEligible: transfer.status === 'accepted' ? 'accepted' : `rejected:${transfer.reason}`,
     revokedHolderRedemptionRequest: redemption.status === 'accepted' ? 'accepted' : `rejected:${redemption.reason}`,
   };

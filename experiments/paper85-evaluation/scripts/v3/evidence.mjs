@@ -12,28 +12,50 @@ export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../.
 export const RUN_DIR = process.env.PAPER85_RUN_DIR;
 const encode = (v) => JSON.stringify(v, (_, x) => typeof x === 'bigint' ? x.toString() : x);
 export const digest = (v) => createHash('sha256').update(v).digest('hex');
-const git = (...args) => execFileSync('git', args, { cwd: ROOT }).toString().trim();
-const governed = ['experiments/paper85-evaluation/scripts', 'experiments/paper85-evaluation/spec',
+const git = (root, ...args) => execFileSync('git', args, { cwd: root }).toString().trim();
+export const GOVERNED_INPUTS = Object.freeze(['experiments/paper85-evaluation/scripts', 'experiments/paper85-evaluation/spec',
   'experiments/paper85-evaluation/spec-v3', 'experiments/paper85-evaluation/baselines/src',
   'experiments/paper85-evaluation/baselines/foundry.toml', 'contracts/src', 'contracts/foundry.toml',
-  'apps/api/package.json', 'apps/api/pnpm-lock.yaml', 'pnpm-lock.yaml', 'package.json'];
+  'apps/api/package.json', 'apps/api/pnpm-lock.yaml', 'pnpm-lock.yaml', 'package.json']);
 
-export async function sourceIdentity() {
-  const dirty = git('status', '--porcelain', '--untracked-files=all', '--', ...governed);
-  if (dirty) throw new Error(`Uncommitted governed inputs:\n${dirty}`);
-  const paths = git('ls-files', '--', ...governed).split('\n').filter(Boolean);
+async function sourceFiles(root) {
+  const paths = git(root, 'ls-files', '--cached', '--others', '--exclude-standard', '--', ...GOVERNED_INPUTS)
+    .split('\n').filter(Boolean).sort();
   const files = {};
-  for (const path of paths) files[path] = digest(await readFile(resolve(ROOT, path)));
-  for (const path of paths.filter((p) => p.startsWith('contracts/src/'))) {
-    const frozen = execFileSync('git', ['show', `chapter3-artifact-v1.4.0:${path}`], { cwd: ROOT });
+  for (const path of paths) files[path] = digest(await readFile(resolve(root, path)));
+  return files;
+}
+
+function checkFrozenInputs(root, files, productionRef, preregistrationRef) {
+  for (const path of Object.keys(files).filter((p) => p.startsWith('contracts/src/'))) {
+    const frozen = execFileSync('git', ['show', `${productionRef}:${path}`], { cwd: root });
     if (files[path] !== digest(frozen)) throw new Error(`Frozen production source changed: ${path}`);
   }
   for (const name of ['evaluation-plan.v3.md', 'baseline-mapping.v3.json']) {
     const path = `experiments/paper85-evaluation/spec-v3/${name}`;
-    const original = execFileSync('git', ['show', `4ce5d24:${path}`], { cwd: ROOT });
+    const original = execFileSync('git', ['show', `${preregistrationRef}:${path}`], { cwd: root });
     if (files[path] !== digest(original)) throw new Error(`Original preregistration changed: ${path}`);
   }
-  return { commit: git('rev-parse', 'HEAD'), governedInputsDirty: false, files };
+}
+
+export async function sourceIdentity({ root = ROOT,
+  productionRef = 'chapter3-artifact-v1.4.0', preregistrationRef = '4ce5d24' } = {}) {
+  const dirty = git(root, 'status', '--porcelain', '--untracked-files=all', '--', ...GOVERNED_INPUTS);
+  if (dirty) throw new Error(`Uncommitted governed inputs:\n${dirty}`);
+  const files = await sourceFiles(root);
+  checkFrozenInputs(root, files, productionRef, preregistrationRef);
+  return { commit: git(root, 'rev-parse', 'HEAD'), governedInputsDirty: false, files };
+}
+
+// Historical evidence can be verified by a review candidate before approval to
+// commit. Record exact bytes and disclose dirtiness; never call it a clean run.
+export async function verificationIdentity() {
+  const files = await sourceFiles(ROOT);
+  checkFrozenInputs(ROOT, files, 'chapter3-artifact-v1.4.0', '4ce5d24');
+  const dirty = Boolean(git(ROOT, 'status', '--porcelain', '--untracked-files=all', '--', ...GOVERNED_INPUTS));
+  const baseCommit = git(ROOT, 'rev-parse', 'HEAD');
+  return { commit: dirty ? null : baseCommit, baseCommit, governedInputsDirty: dirty,
+    sourceSha256: digest(encode(files)), files };
 }
 
 export async function save(path, value) {
@@ -43,7 +65,7 @@ export async function save(path, value) {
 }
 
 export async function record(client, value) {
-  if (!client.evidencePath) return; // unit tests may use isolated mock clients
+  if (!client.evidencePath) throw new Error('Missing evidencePath; refusing to discard evidence');
   await appendFile(client.evidencePath, `${encode(value)}\n`);
 }
 

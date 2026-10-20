@@ -3,14 +3,15 @@
 // replayed event log and the genesis configuration only; contract views are
 // read afterwards solely to check projection consistency (Q6).
 import { resolve } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { save } from './evidence.mjs';
-import { auditPricing } from './audit-pricing.mjs';
+import { actorNames, auditCase, assertCaseExpectations } from './audit-case.mjs';
 import {
-  E18, EVAL_DIR, GENESIS_TIMESTAMP, RESULTS_DIR, ZERO_ADDRESS, ZERO_ROLE,
+  E18, EVAL_DIR, GENESIS_TIMESTAMP, RESULTS_DIR, ZERO_ROLE,
   account, artifact, decodeLogs, deploy, gitHead, invariant, lower, mustWrite, readChainProjection,
   sha256, sha256File, startAnvil, toolVersions, tryWrite, viem, writeJson,
 } from './common.mjs';
-import { applyReplayEvent, createReplayState, finalizeNavReferences, normalizedProjection } from '../replay-engine.mjs';
+import { normalizedProjection } from '../replay-engine.mjs';
 
 const { keccak256, stringToHex, toHex } = viem;
 const h = (label) => keccak256(stringToHex(label));
@@ -31,6 +32,9 @@ const P = {
 const NAME = Object.fromEntries(Object.entries(P).map(([k, v]) => [lower(v.address), k]));
 
 async function main() {
+  const expectationsPath = resolve(EVAL_DIR, 'spec-v3/case-expectations.postreview.json');
+  const expectations = JSON.parse(await readFile(expectationsPath, 'utf8'));
+  invariant(JSON.stringify(NAME) === JSON.stringify(actorNames(expectations)), 'Case actors differ from expectations');
   const env = await startAnvil(18800, { accounts: 8 });
   const w = (a) => env.walletFor(a);
   const log = [];
@@ -125,87 +129,24 @@ async function main() {
         { contractName: 'NAVRegistry', role: ROLE.MANAGER_ROLE, account: lower(P.navAgent.address), enabled: true },
       ],
     };
-    const state = createReplayState(genesis);
-    const navRefs = [];
-    const eligibilityChecks = [];
-    let window = null; const suspension = { shareMovements: 0, redemptionRequests: 0, subscriptionRequests: 0, navVersions: 0 };
-    const navProvenance = [];
-    const delays = [];
-    const projections = new Map();
-    for (const e of events) {
-      // Q3: eligibility of counterparties immediately before each share movement
-      if (e.eventName === 'Transfer') {
-        const from = lower(e.args.from); const to = lower(e.args.to);
-        const kind = from === ZERO_ADDRESS ? 'mint' : to === ZERO_ADDRESS ? 'burn' : 'transfer';
-        const parties = kind === 'mint' ? [to] : kind === 'burn' ? [from] : [from, to];
-        eligibilityChecks.push({ kind, parties: parties.map((p) => NAME[p]), eligible: parties.every((p) => state.whitelist[p]) });
-        if (window) suspension.shareMovements += 1;
-      }
-      if (window && e.eventName === 'RedemptionRequested') suspension.redemptionRequests += 1;
-      if (window && e.eventName === 'SubscriptionRequested') suspension.subscriptionRequests += 1;
-      if (window && e.eventName === 'NAVUpdatedEvent') suspension.navVersions += 1;
-      if (e.eventName === 'Paused') window = { start: e.blockNumber };
-      if (e.eventName === 'Unpaused') { window.end = e.blockNumber; window = null; }
-      if (e.eventName === 'NAVUpdatedEvent') {
-        const prev = state.navHistory.at(-1);
-        navProvenance.push({ index: state.navHistory.length, nav: e.args.nav, asOf: e.args.asOf, by: NAME[lower(e.args.by)], payloadHash: e.args.payloadHash, correctionOf: prev && prev.asOf === String(e.args.asOf) ? state.navHistory.length - 1 : null });
-      }
-      if (e.eventName === 'SettlementDelayed') delays.push({ requestId: e.args.requestId, investor: NAME[lower(e.args.investor)], reasonHash: e.args.reasonHash, requestedAt: Number(e.args.requestedAt), delayedAt: Number(e.args.delayedAt) });
-      if (e.eventName === 'RedemptionSettled') { const d = delays.find((x) => x.requestId === e.args.requestId); if (d) d.settlementLagSec = Number(e.args.settledAt) - d.requestedAt; }
-      navRefs.push(...applyReplayEvent(state, e).map((r) => ({ ...r, investor: null })));
-      projections.set(e.blockNumber.toString(), normalizedProjection(state));
-    }
-    const finalizedRefs = finalizeNavReferences(state, navRefs);
-    // Explicit case policy. NAV index 3 is a historical correction, not a new
-    // dealing NAV. Queued suspension orders use the resumption valuation at
-    // D4 17:00; share execution resumes at 17:10. storedAt proxies computation.
-    const pricingPolicy = { correctionIndices: [3], suspensions: [{ from: at(3, 14), resume: at(4, 17) }] };
-    const q1 = auditPricing(state, finalizedRefs, pricingPolicy).map((r) => ({ ...r, investor: NAME[r.investor] }));
-    // Q2: requests processed at a NAV version later superseded by a same-asOf correction
-    const superseded = new Set(navProvenance.filter((v) => v.correctionOf !== null).map((v) => v.correctionOf));
-    const q2 = finalizedRefs.filter((r) => superseded.has(r.latestRecoverableNavIndex)).map((r) => ({ event: r.eventName, requestId: r.requestId, navIndex: r.latestRecoverableNavIndex, nav: r.referencedNav }));
-    for (const item of q2) {
-      const rec = item.event === 'RedemptionSettled' ? state.redemptions[Number(item.requestId)] : state.subscriptions[Number(item.requestId)];
-      item.investor = NAME[rec.investor];
-      const corrected = state.navHistory[item.navIndex + 1];
-      if (item.event === 'RedemptionSettled') {
-        item.paidAmount = rec.redemptionAmount;
-        item.amountAtCorrectedNav = ((BigInt(rec.redeemedShares) * BigInt(corrected.nav)) / E18).toString();
-        item.overpayment = (BigInt(rec.redemptionAmount) - BigInt(item.amountAtCorrectedNav)).toString();
-      }
-    }
-    // Q6: projection consistency after every accepted operation
-    let pcrMatched = 0;
+    // The same pure queries are used by the offline verifier. Contract views
+    // are comparison targets only and never feed reconstructed business state.
     const checkpoints = [];
     for (const entry of accepted) {
       const view = await readChainProjection(env.client, fund, nav, genesis, entry.blockNumber, FUND_ID);
       checkpoints.push({ block: entry.blockNumber, view });
-      const replayed = projections.get(entry.blockNumber.toString());
-      entry.projectionMatches = JSON.stringify(replayed) === JSON.stringify(view);
-      if (entry.projectionMatches) pcrMatched += 1;
     }
-
-    const answers = {
-      Q1: { matchingCasePolicy: q1.filter((x) => x.nextApplicableNavMatches).length, total: q1.length, exceptions: q1.filter((x) => !x.nextApplicableNavMatches), originalProxyMatching: q1.filter((x) => x.originalAsOfProxy).length, detail: q1 },
-      Q2: { affected: q2 },
-      Q3: { movements: eligibilityChecks.length, eligibleAtTime: eligibilityChecks.filter((x) => x.eligible).length, detail: eligibilityChecks },
-      Q4: suspension,
-      Q5: { versions: navProvenance.length, corrections: navProvenance.filter((v) => v.correctionOf !== null).length, allWithSubmitterAndPayload: navProvenance.every((v) => v.by && /^0x[0-9a-f]{64}$/.test(v.payloadHash) && !/^0x0+$/.test(v.payloadHash)), detail: navProvenance },
-      Q6: { matched: pcrMatched, checkpoints: accepted.length },
-      Q7: { delayed: delays },
-    };
-    const expected = {
-      Q1: answers.Q1.matchingCasePolicy === 4 && answers.Q1.total === 5 && answers.Q1.exceptions.length === 1 && answers.Q1.exceptions[0].investor === 'C' && answers.Q1.exceptions[0].type === 'subscription',
-      Q2: q2.length === 1 && q2[0].investor === 'A' && q2[0].event === 'RedemptionSettled',
-      Q3: answers.Q3.eligibleAtTime === answers.Q3.movements,
-      Q4: suspension.shareMovements === 0 && suspension.redemptionRequests === 1 && suspension.navVersions === 2,
-      Q5: answers.Q5.versions === 5 && answers.Q5.corrections === 1 && answers.Q5.allWithSubmitterAndPayload,
-      Q6: pcrMatched === accepted.length,
-      Q7: delays.length === 1 && delays[0].investor === 'B' && typeof delays[0].settlementLagSec === 'number',
-    };
+    const pricingPolicy = { suspensions: [{ from: at(3, 14), resume: at(4, 17) }] };
+    const audit = auditCase({ genesis, events, checkpoints, pricingPolicy, names: NAME });
+    const { state, references: finalizedRefs, answers } = audit;
+    accepted.forEach((entry, index) => { entry.projectionMatches = audit.checkpointMatches[index]; });
+    const expected = assertCaseExpectations(answers, expectations);
+    invariant(log.every((entry) => entry.observed === expectations.steps[entry.id]), 'Case step expectations differ');
     const summary = {
       experiment: 'paper85-v3-part-C-case',
-      provenance: { ...gitHead(), planSha256: await sha256File(resolve(EVAL_DIR, 'spec-v3/evaluation-plan.v3.md')), tools: toolVersions(), D0, runAt: new Date().toISOString() },
+      provenance: { ...(await gitHead()),
+        planSha256: await sha256File(resolve(EVAL_DIR, 'spec-v3/evaluation-plan.v3.md')),
+        expectationsSha256: await sha256File(expectationsPath), tools: toolVersions(), D0, runAt: new Date().toISOString() },
       steps: log,
       stepsMatchingPreregistration: log.filter((e) => e.match).length,
       acceptedOperations: accepted.length,
@@ -221,7 +162,9 @@ async function main() {
     invariant(log.every((e) => e.match) && Object.values(expected).every(Boolean) && finalizedRefs.every((r) => r.valid), 'Case validation failed');
     await save(resolve(RESULTS_DIR, 'case/replay.json.gz'), { genesis, contracts: contracts.map(({ name, address, abi }) => ({ name, address, abi })), rawLogs: raw, decoded: events, checkpoints, pricingPolicy, navReferences: finalizedRefs, finalProjection: normalizedProjection(state) });
     const hash = await writeJson(resolve(RESULTS_DIR, 'C-case-summary.json'), summary);
-    console.log(JSON.stringify({ hash, steps: `${summary.stepsMatchingPreregistration}/${log.length}`, accepted: accepted.length, events: events.length, nri: summary.nri, pcr: answers.Q6, expected, q1: answers.Q1.exceptions, q2, q4: suspension, q7: delays }, null, 1));
+    console.log(JSON.stringify({ hash, steps: `${summary.stepsMatchingPreregistration}/${log.length}`,
+      accepted: accepted.length, events: events.length, nri: summary.nri, pcr: answers.Q6,
+      expected, q1: answers.Q1.exceptions, q2: answers.Q2.affected, q4: answers.Q4, q7: answers.Q7.delayed }, null, 1));
   } finally {
     await env.stop();
   }

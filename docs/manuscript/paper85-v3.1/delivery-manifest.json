@@ -4,7 +4,7 @@
   "evidenceRun": "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac",
   "files": {
     "tools/revise-paper85-section5.py": "0f11b861ba7570c99a2559ef2b3c2dfecd658d1d1e08ee97c98fe0921f9d4ee8",
-    "docs/evidence/paper85/v3-revision/README.md": "3a2e540482635ae46c62cc72d261cf79d8d35d08955fd4339f74a44bcc5c229e",
+    "docs/evidence/paper85/v3-revision/README.md": "63013f78c036324201d9087f128abc37af1dcd664e44cab47c231f1678295b89",
     "docs/evidence/paper85/v3-revision/regression-tests.tap": "e069251b053073e109ddf82f04cc74aa2585e4b4688938d5d035be1f8d231a00",
     "docs/evidence/paper85/v3-revision/2026-10-20T01-15-00.607Z-f5edfdac/manifest.json": "913cd2aef3cbd861b97f761bc2cabc64027fce15ce9b10c63f1ff1cfef5d1f31",
     "docs/manuscript/paper85-v3.1/paper85-section5-claims.json": "e8aefd3fbe733e7447d15521385d40d335c20fd4c36fdf779b63a044522df309",
